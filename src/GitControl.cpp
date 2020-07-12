@@ -17,7 +17,7 @@
 const wchar_t* GitControl::m_ExtensionName = L"GitFor1C";
 
 const std::vector<AddInBase::Alias> GitControl::m_PropList{
-	Alias(eVersion  , false , L"version"   , L"version"),
+	Alias(eVersion false, L"Version", L"Версия"),
 };
 
 const std::vector<AddInBase::Alias> GitControl::m_MethList{
