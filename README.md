@@ -1,0 +1,3 @@
+```bat
+cmake.exe -D CMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DBUILD_CLAR=OFF ..
+```
