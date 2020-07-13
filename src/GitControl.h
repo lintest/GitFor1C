@@ -18,6 +18,11 @@ private:
 	enum Methods
 	{
 		eInit = 0,
+		eOpen,
+		eFind,
+		eClone,
+		eCommit,
+		eStatus,
 	};
 
 private:

@@ -17,11 +17,16 @@
 const wchar_t* GitControl::m_ExtensionName = L"GitFor1C";
 
 const std::vector<AddInBase::Alias> GitControl::m_PropList{
-	Alias(eVersion false, L"Version", L"Версия"),
+	Alias(eVersion  , false , L"Version"   , L"Версия"),
 };
 
 const std::vector<AddInBase::Alias> GitControl::m_MethList{
-	Alias(eInit  , 2, true  , L"init"       , L"init"),
+	Alias(eInit   , 2, true  , L"Init"       , L"Init"   ),
+	Alias(eClone  , 2, true  , L"Clone"      , L"Clone"  ),
+	Alias(eFind   , 1, true  , L"Find"       , L"Find"   ),
+	Alias(eOpen   , 1, true  , L"Open"       , L"Open"   ),
+	Alias(eCommit , 1, true  , L"Commit"     , L"Commit"),
+	Alias(eStatus , 0, true  , L"Status"     , L"Status"),
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -55,6 +60,16 @@ bool GitControl::CallAsFunc(const long lMethodNum, tVariant* pvarRetValue, tVari
 	switch (lMethodNum) {
 	case eInit:
 		return VA(pvarRetValue) << m_manager.init(VarToStr(paParams), VarToBool(paParams + 1));
+	case eClone:
+		return VA(pvarRetValue) << m_manager.clone(VarToStr(paParams), VarToStr(paParams + 1));
+	case eOpen:
+		return VA(pvarRetValue) << m_manager.open(VarToStr(paParams));
+	case eFind:
+		return VA(pvarRetValue) << m_manager.find(VarToStr(paParams));
+	case eCommit:
+		return VA(pvarRetValue) << m_manager.commit(VarToStr(paParams));
+	case eStatus:
+		return VA(pvarRetValue) << m_manager.status();
 	default:
 		return false;
 	}

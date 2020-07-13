@@ -1,0 +1,248 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Form xmlns="http://v8.1c.ru/8.3/xcf/logform" xmlns:app="http://v8.1c.ru/8.2/managed-application/core" xmlns:cfg="http://v8.1c.ru/8.1/data/enterprise/current-config" xmlns:dcscor="http://v8.1c.ru/8.1/data-composition-system/core" xmlns:dcsset="http://v8.1c.ru/8.1/data-composition-system/settings" xmlns:ent="http://v8.1c.ru/8.1/data/enterprise" xmlns:lf="http://v8.1c.ru/8.2/managed-application/logform" xmlns:style="http://v8.1c.ru/8.1/data/ui/style" xmlns:sys="http://v8.1c.ru/8.1/data/ui/fonts/system" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:v8ui="http://v8.1c.ru/8.1/data/ui" xmlns:web="http://v8.1c.ru/8.1/data/ui/colors/web" xmlns:win="http://v8.1c.ru/8.1/data/ui/colors/windows" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.4">
+	<AutoTitle>false</AutoTitle>
+	<AutoCommandBar name="ФормаКоманднаяПанель" id="-1">
+		<ChildItems>
+			<ButtonGroup name="FormGroupRepo" id="15">
+				<Title>
+					<v8:item>
+						<v8:lang>ru</v8:lang>
+						<v8:content>Form group repo</v8:content>
+					</v8:item>
+				</Title>
+				<ToolTip>
+					<v8:item>
+						<v8:lang>ru</v8:lang>
+						<v8:content>Form group repo</v8:content>
+					</v8:item>
+				</ToolTip>
+				<Representation>Compact</Representation>
+				<ExtendedTooltip name="FormGroupRepoExtendedTooltip" id="16"/>
+				<ChildItems>
+					<Button name="FormRepoInit" id="21">
+						<Type>CommandBarButton</Type>
+						<CommandName>Form.Command.RepoInit</CommandName>
+						<ExtendedTooltip name="FormRepoInitExtendedTooltip" id="22"/>
+					</Button>
+					<Button name="FormRepoClone" id="19">
+						<Type>CommandBarButton</Type>
+						<CommandName>Form.Command.RepoClone</CommandName>
+						<ExtendedTooltip name="FormRepoCloneExtendedTooltip" id="20"/>
+					</Button>
+					<Button name="FormRepoFind" id="17">
+						<Type>CommandBarButton</Type>
+						<CommandName>Form.Command.RepoFind</CommandName>
+						<ExtendedTooltip name="FormRepoFindExtendedTooltip" id="18"/>
+					</Button>
+					<Button name="FormRepoOpen" id="23">
+						<Type>CommandBarButton</Type>
+						<CommandName>Form.Command.RepoOpen</CommandName>
+						<ExtendedTooltip name="FormRepoOpenExtendedTooltip" id="24"/>
+					</Button>
+					<Button name="FormRepoStatus" id="25">
+						<Type>CommandBarButton</Type>
+						<CommandName>Form.Command.RepoStatus</CommandName>
+						<ExtendedTooltip name="FormRepoStatusExtendedTooltip" id="26"/>
+					</Button>
+					<Button name="FormRepoCommit" id="27">
+						<Type>CommandBarButton</Type>
+						<CommandName>Form.Command.RepoCommit</CommandName>
+						<ExtendedTooltip name="FormRepoCommitExtendedTooltip" id="28"/>
+					</Button>
+				</ChildItems>
+			</ButtonGroup>
+		</ChildItems>
+	</AutoCommandBar>
+	<Events>
+		<Event name="NotificationProcessing">ОбработкаОповещения</Event>
+		<Event name="OnOpen">OnOpen</Event>
+		<Event name="OnCreateAtServer">OnCreateAtServer</Event>
+	</Events>
+	<ChildItems>
+		<InputField name="Path" id="5">
+			<DataPath>LocalPath</DataPath>
+			<ChoiceButton>true</ChoiceButton>
+			<ContextMenu name="PathКонтекстноеМеню" id="6"/>
+			<ExtendedTooltip name="PathРасширеннаяПодсказка" id="7"/>
+			<Events>
+				<Event name="StartChoice">PathStartChoice</Event>
+			</Events>
+		</InputField>
+		<InputField name="URL" id="10">
+			<DataPath>RemoteURL</DataPath>
+			<ContextMenu name="URLКонтекстноеМеню" id="11"/>
+			<ExtendedTooltip name="URLРасширеннаяПодсказка" id="12"/>
+		</InputField>
+		<InputField name="Message" id="29">
+			<DataPath>Message</DataPath>
+			<ContextMenu name="MessageContextMenu" id="30"/>
+			<ExtendedTooltip name="MessageExtendedTooltip" id="31"/>
+		</InputField>
+	</ChildItems>
+	<Attributes>
+		<Attribute name="Object" id="1">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Object</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>cfg:ExternalDataProcessorObject.Example</v8:Type>
+			</Type>
+			<MainAttribute>true</MainAttribute>
+		</Attribute>
+		<Attribute name="AddInURL" id="2">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Add in URL</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>xs:string</v8:Type>
+				<v8:StringQualifiers>
+					<v8:Length>0</v8:Length>
+					<v8:AllowedLength>Variable</v8:AllowedLength>
+				</v8:StringQualifiers>
+			</Type>
+		</Attribute>
+		<Attribute name="LocalPath" id="3">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Local path</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>xs:string</v8:Type>
+				<v8:StringQualifiers>
+					<v8:Length>0</v8:Length>
+					<v8:AllowedLength>Variable</v8:AllowedLength>
+				</v8:StringQualifiers>
+			</Type>
+		</Attribute>
+		<Attribute name="RemoteURL" id="4">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Remote URL</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>xs:string</v8:Type>
+				<v8:StringQualifiers>
+					<v8:Length>0</v8:Length>
+					<v8:AllowedLength>Variable</v8:AllowedLength>
+				</v8:StringQualifiers>
+			</Type>
+		</Attribute>
+		<Attribute name="Message" id="5">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Message</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>xs:string</v8:Type>
+				<v8:StringQualifiers>
+					<v8:Length>0</v8:Length>
+					<v8:AllowedLength>Variable</v8:AllowedLength>
+				</v8:StringQualifiers>
+			</Type>
+		</Attribute>
+	</Attributes>
+	<Commands>
+		<Command name="RepoInit" id="1">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>init</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Repo init</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>RepoInit</Action>
+		</Command>
+		<Command name="RepoClone" id="2">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>clone</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Repo clone</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>RepoClone</Action>
+		</Command>
+		<Command name="RepoFind" id="3">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>find</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Repo find</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>RepoFind</Action>
+		</Command>
+		<Command name="RepoOpen" id="4">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>open</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Repo open</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>RepoOpen</Action>
+		</Command>
+		<Command name="RepoStatus" id="5">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>status</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Repo status</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>RepoStatus</Action>
+		</Command>
+		<Command name="RepoCommit" id="6">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>commit</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Repo commit</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>RepoCommit</Action>
+		</Command>
+	</Commands>
+</Form>
