@@ -139,8 +139,7 @@ EndProcedure
 &AtClient
 Procedure RepoClone(Команда)
 	
-	NotifyDescription = New NotifyDescription("EndCallingGit", ThisForm);
-	git.BeginCallingСlone(GitMessageNotify(), RemoteURL, LocalPath);
+	git.BeginCallingClone(GitMessageNotify(), RemoteURL, LocalPath);
 	
 EndProcedure
 
