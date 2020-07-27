@@ -21,12 +21,15 @@ const std::vector<AddInBase::Alias> GitControl::m_PropList{
 };
 
 const std::vector<AddInBase::Alias> GitControl::m_MethList{
-	Alias(eInit   , 2, true  , L"Init"       , L"Init"   ),
-	Alias(eClone  , 2, true  , L"Clone"      , L"Clone"  ),
-	Alias(eFind   , 1, true  , L"Find"       , L"Find"   ),
-	Alias(eOpen   , 1, true  , L"Open"       , L"Open"   ),
-	Alias(eCommit , 1, true  , L"Commit"     , L"Commit"),
-	Alias(eStatus , 0, true  , L"Status"     , L"Status"),
+	Alias(eInit     , 2, true  , L"Init"       , L"Init"   ),
+	Alias(eClone    , 2, true  , L"Clone"      , L"Clone"  ),
+	Alias(eFind     , 1, true  , L"Find"       , L"Find"   ),
+	Alias(eOpen     , 1, true  , L"Open"       , L"Open"   ),
+	Alias(eInfo     , 1, true  , L"Info"       , L"Info"   ),
+	Alias(eCommit   , 1, true  , L"Commit"     , L"Commit" ),
+	Alias(eStatus   , 0, true  , L"Status"     , L"Status" ),
+	Alias(eAdd      , 1, true  , L"Add"        , L"Add"),
+	Alias(eRemove   , 1, true  , L"Remove"     , L"Remove"),
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -66,8 +69,14 @@ bool GitControl::CallAsFunc(const long lMethodNum, tVariant* pvarRetValue, tVari
 		return VA(pvarRetValue) << m_manager.open(VarToStr(paParams));
 	case eFind:
 		return VA(pvarRetValue) << m_manager.find(VarToStr(paParams));
+	case eInfo:
+		return VA(pvarRetValue) << m_manager.info(VarToStr(paParams));
 	case eCommit:
 		return VA(pvarRetValue) << m_manager.commit(VarToStr(paParams));
+	case eAdd:
+		return VA(pvarRetValue) << m_manager.add(VarToStr(paParams));
+	case eRemove:
+		return VA(pvarRetValue) << m_manager.remove(VarToStr(paParams));
 	case eStatus:
 		return VA(pvarRetValue) << m_manager.status();
 	default:

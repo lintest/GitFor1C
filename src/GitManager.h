@@ -15,8 +15,11 @@ public:
 	virtual ~GitManager();
 	std::wstring init(const std::wstring& path, bool is_bare);
 	std::wstring clone(const std::wstring& url, const std::wstring& path);
+	std::wstring info(const std::wstring& msg);
 	std::wstring open(const std::wstring& path);
 	std::wstring find(const std::wstring& path);
+	std::wstring add(const std::wstring& msg);
+	std::wstring remove(const std::wstring& msg);
 	std::wstring commit(const std::wstring& msg);
 	std::wstring status();
 };

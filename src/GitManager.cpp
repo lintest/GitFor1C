@@ -110,7 +110,7 @@ int status_cb(const char* path, unsigned int status_flags, void* payload)
 	j["filepath"] = path;
 	j["statuses"] = statuses;
 	json->push_back(j);
-	return 1;
+	return 0;
 }
 
 std::wstring GitManager::status()
@@ -139,9 +139,58 @@ std::wstring GitManager::commit(const std::wstring& msg)
 	ok = git_tree_lookup(&tree, m_repo, &tree_id);
 	if (ok < 0) return error("Could not look up initial tree");
 	ok = git_commit_create_v(&commit_id, m_repo, "HEAD", sig, sig, NULL, S(msg), tree, 0);
+	if (ok < 0) return success(ok);
 	if (ok < 0) return error("Could not create the initial commit");
 	git_index_free(index);
 	git_tree_free(tree);
 	git_signature_free(sig);
 	return {};
+}
+
+std::wstring GitManager::add(const std::wstring& filepath)
+{
+	git_index* index;
+	int ok = git_repository_index(&index, m_repo);
+	if (ok < 0) return success(ok);
+	ok = git_index_add_bypath(index, S(filepath));
+	if (ok < 0) return success(ok);
+	ok = git_index_write(index);
+	if (ok < 0) return success(ok);
+	return {};
+}
+
+std::wstring GitManager::remove(const std::wstring& filepath)
+{
+	git_index* index;
+	int ok = git_repository_index(&index, m_repo);
+	if (ok < 0) return success(ok);
+	ok = git_index_remove_bypath(index, S(filepath));
+	if (ok < 0) return success(ok);
+	ok = git_index_write(index);
+	if (ok < 0) return success(ok);
+	return {};
+}
+
+std::wstring GitManager::info(const std::wstring& spec)
+{
+	// Получение HEAD коммита
+	git_object* head_commit;
+	int ok = git_revparse_single(&head_commit, m_repo, S(spec));
+	if (ok < 0) return success(ok);
+	git_commit* commit = (git_commit*)head_commit;
+
+	const size_t size = GIT_OID_HEXSZ + 1;
+	char buf[size];
+
+	nlohmann::json json, j;
+	const git_oid* tree_id = git_commit_tree_id(commit);
+	git_oid_tostr(buf, size, tree_id);
+	j["id"] = buf;
+	j["messsage"] = git_commit_message(commit);
+	const git_signature* author = git_commit_author(commit);
+	j["author.name"] = author->name;
+	j["author.email"] = author->email;
+	json["result"] = j;
+	git_commit_free(commit);
+	return MB2WC(json.dump());
 }
