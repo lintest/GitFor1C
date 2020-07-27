@@ -130,6 +130,10 @@ std::wstring GitManager::commit(const std::wstring& msg)
 	git_index* index;
 	git_oid tree_id, commit_id;
 	git_tree* tree;
+	git_object* head_commit;
+	git_revparse_single(&head_commit, m_repo, "HEAD^{commit}");
+	git_commit* commit = (git_commit*)head_commit;
+	size_t head_count = head_commit ? 1 : 0;
 	int ok = git_signature_default(&sig, m_repo);
 	if (ok < 0) return error("Unable to create a commit signature");
 	ok = git_repository_index(&index, m_repo);
@@ -138,7 +142,7 @@ std::wstring GitManager::commit(const std::wstring& msg)
 	if (ok < 0) return error("Unable to write initial tree from index");
 	ok = git_tree_lookup(&tree, m_repo, &tree_id);
 	if (ok < 0) return error("Could not look up initial tree");
-	ok = git_commit_create_v(&commit_id, m_repo, "HEAD", sig, sig, NULL, S(msg), tree, 0);
+	ok = git_commit_create_v(&commit_id, m_repo, "HEAD", sig, sig, NULL, S(msg), tree, head_count, head_commit);
 	if (ok < 0) return success(ok);
 	if (ok < 0) return error("Could not create the initial commit");
 	git_index_free(index);
@@ -171,25 +175,27 @@ std::wstring GitManager::remove(const std::wstring& filepath)
 	return {};
 }
 
+std::string oid2str(const git_oid* id) 
+{
+	const size_t size = GIT_OID_HEXSZ + 1;
+	char buf[size];
+	git_oid_tostr(buf, size, id);
+	return buf;
+}
+
 std::wstring GitManager::info(const std::wstring& spec)
 {
-	// Получение HEAD коммита
 	git_object* head_commit;
 	int ok = git_revparse_single(&head_commit, m_repo, S(spec));
 	if (ok < 0) return success(ok);
 	git_commit* commit = (git_commit*)head_commit;
-
-	const size_t size = GIT_OID_HEXSZ + 1;
-	char buf[size];
-
-	nlohmann::json json, j;
 	const git_oid* tree_id = git_commit_tree_id(commit);
-	git_oid_tostr(buf, size, tree_id);
-	j["id"] = buf;
-	j["messsage"] = git_commit_message(commit);
 	const git_signature* author = git_commit_author(commit);
+	nlohmann::json json, j;
+	j["id"] = oid2str(tree_id);
 	j["author.name"] = author->name;
 	j["author.email"] = author->email;
+	j["messsage"] = git_commit_message(commit);
 	json["result"] = j;
 	git_commit_free(commit);
 	return MB2WC(json.dump());
