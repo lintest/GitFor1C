@@ -282,3 +282,27 @@ Procedure IndexRemove(Command)
 	
 EndProcedure
 
+&AtClient
+Procedure GetDefaultSignature(Command)
+	
+	signature = JsonLoad(git.signature);
+	Name = signature.result.name;
+	Email = signature.result.email;
+	
+EndProcedure
+
+&AtClient
+Procedure SetSignatureAuthor(Command)
+
+	git.setAuthor(Name, Email);
+	
+EndProcedure
+
+
+&AtClient
+Procedure SetSignatureCommitter(Command)
+
+	git.setCommitter(Name, Email);
+	
+EndProcedure
+

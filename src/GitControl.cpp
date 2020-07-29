@@ -17,20 +17,23 @@
 const wchar_t* GitControl::m_ExtensionName = L"GitFor1C";
 
 const std::vector<AddInBase::Alias> GitControl::m_PropList{
-	Alias(eVersion  , false , L"Version"   , L"Версия"),
+	Alias(eVersion   , false , L"Version"   , L"Версия"),
+	Alias(eSignature , false , L"Signature" , L"Подпись"),
 };
 
 const std::vector<AddInBase::Alias> GitControl::m_MethList{
-	Alias(eInit     , 2, true  , L"Init"       , L"Init"   ),
-	Alias(eClone    , 2, true  , L"Clone"      , L"Clone"  ),
-	Alias(eFind     , 1, true  , L"Find"       , L"Find"   ),
-	Alias(eOpen     , 1, true  , L"Open"       , L"Open"   ),
-	Alias(eInfo     , 1, true  , L"Info"       , L"Info"   ),
-	Alias(eCommit   , 1, true  , L"Commit"     , L"Commit" ),
-	Alias(eStatus   , 0, true  , L"Status"     , L"Status" ),
-	Alias(eAdd      , 1, true  , L"Add"        , L"Add"),
-	Alias(eRemove   , 1, true  , L"Remove"     , L"Remove"),
-	Alias(eHistory  , 1, true  , L"History"    , L"History"),
+	Alias(eInit          , 2, true  , L"Init"            , L"Init"),
+	Alias(eClone   		 , 2, true  , L"Clone"      	 , L"Clone"),
+	Alias(eFind    		 , 1, true  , L"Find"       	 , L"Find"),
+	Alias(eOpen    		 , 1, true  , L"Open"       	 , L"Open"),
+	Alias(eInfo    		 , 1, true  , L"Info"       	 , L"Info"),
+	Alias(eCommit  		 , 1, true  , L"Commit"     	 , L"Commit"),
+	Alias(eStatus  		 , 0, true  , L"Status"     	 , L"Status"),
+	Alias(eAdd     		 , 1, true  , L"Add"        	 , L"Add"),
+	Alias(eRemove  		 , 1, true  , L"Remove"     	 , L"Remove"),
+	Alias(eHistory 		 , 1, true  , L"History"    	 , L"History"),
+	Alias(eSetAuthor     , 2, false , L"SetAuthor"  	 , L"SetAuthor"),
+	Alias(eSetCommitter  , 2, false , L"SetCommitter"    , L"SetCommitter"),
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -41,6 +44,8 @@ bool GitControl::GetPropVal(const long lPropNum, tVariant* pvarPropVal)
 	switch (lPropNum) {
 	case eVersion:
 		return VA(pvarPropVal) << MB2WC(VER_FILE_VERSION_STR);
+	case eSignature:
+		return VA(pvarPropVal) << m_manager.signature();
 	default:
 		return false;
 	}
@@ -56,6 +61,12 @@ bool GitControl::SetPropVal(const long lPropNum, tVariant* pvarPropVal)
 //---------------------------------------------------------------------------//
 bool GitControl::CallAsProc(const long lMethodNum, tVariant* paParams, const long lSizeArray)
 {
+	switch (lMethodNum) {
+	case eSetAuthor:
+		return m_manager.setAuthor(VarToStr(paParams), VarToStr(paParams + 1));
+	case eSetCommitter:
+		return m_manager.setCommitter(VarToStr(paParams), VarToStr(paParams + 1));
+	}
 	return false;
 }
 //---------------------------------------------------------------------------//

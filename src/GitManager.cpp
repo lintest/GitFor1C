@@ -29,6 +29,8 @@ GitManager::GitManager(AddInNative* addin)
 GitManager::~GitManager()
 {
 	if (m_repo) git_repository_free(m_repo);
+	if (m_committer) delete m_committer;
+	if (m_author) delete m_author;
 	git_libgit2_shutdown();
 }
 
@@ -131,10 +133,48 @@ std::wstring GitManager::status()
 	return MB2WC(json.dump());
 }
 
+bool GitManager::setAuthor(const std::wstring& name, const std::wstring& email)
+{
+	if (m_author) delete m_author;
+	m_author = new Signature(name, email);
+	return true;
+}
+
+bool GitManager::setCommitter(const std::wstring& name, const std::wstring& email)
+{
+	if (m_committer) delete m_committer;
+	m_committer = new Signature(name, email);
+	return true;
+}
+
+std::wstring GitManager::signature() 
+{
+	if (!m_repo) return error();
+	git_signature* sig = nullptr;
+	int ok = git_signature_default(&sig, m_repo);
+	if (ok < 0) return success(ok);
+
+	nlohmann::json json, j;
+	j["name"] = sig->name;
+	j["email"] = sig->email;
+	json["result"] = j;
+	return MB2WC(json.dump());
+}
+
 std::wstring GitManager::commit(const std::wstring& msg)
 {
 	if (!m_repo) return error();
-	git_signature* sig;
+	git_signature* sig = nullptr;
+	git_signature* author = nullptr;
+	git_signature* committer = nullptr;
+	if (m_author) m_author->now(&author);
+	if (m_committer) m_committer->now(&committer);
+
+	if (m_author == nullptr || m_committer == nullptr) {
+		git_signature_default(&sig, m_repo);
+	}
+
+	int ok = 0;
 	git_index* index;
 	git_oid tree_id, commit_id;
 	git_tree* tree;
@@ -142,7 +182,6 @@ std::wstring GitManager::commit(const std::wstring& msg)
 	git_revparse_single(&head_commit, m_repo, "HEAD^{commit}");
 	git_commit* commit = (git_commit*)head_commit;
 	size_t head_count = head_commit ? 1 : 0;
-	int ok = git_signature_default(&sig, m_repo);
 	if (ok < 0) return error("Unable to create a commit signature");
 	ok = git_repository_index(&index, m_repo);
 	if (ok < 0) return error("Could not open repository index");
@@ -150,7 +189,19 @@ std::wstring GitManager::commit(const std::wstring& msg)
 	if (ok < 0) return error("Unable to write initial tree from index");
 	ok = git_tree_lookup(&tree, m_repo, &tree_id);
 	if (ok < 0) return error("Could not look up initial tree");
-	ok = git_commit_create_v(&commit_id, m_repo, "HEAD", sig, sig, NULL, S(msg), tree, head_count, head_commit);
+
+	ok = git_commit_create_v(
+		&commit_id, 
+		m_repo, 
+		"HEAD", 
+		author ? author : sig, 
+		committer ? committer : sig, 
+		NULL, S(msg), 
+		tree, 
+		head_count, 
+		head_commit
+	);
+
 	if (ok < 0) return success(ok);
 	if (ok < 0) return error("Could not create the initial commit");
 	git_index_free(index);
@@ -185,7 +236,7 @@ std::wstring GitManager::remove(const std::wstring& filepath)
 	return {};
 }
 
-std::string oid2str(const git_oid* id) 
+std::string oid2str(const git_oid* id)
 {
 	const size_t size = GIT_OID_HEXSZ + 1;
 	char buf[size];

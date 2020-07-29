@@ -13,6 +13,7 @@ private:
 	enum Props
 	{
 		eVersion = 0,
+		eSignature,
 	};
 
 	enum Methods
@@ -27,6 +28,8 @@ private:
 		eCommit,
 		eStatus,
 		eHistory,
+		eSetAuthor,
+		eSetCommitter,
 	};
 
 private:

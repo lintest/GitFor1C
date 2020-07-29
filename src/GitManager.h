@@ -5,15 +5,35 @@
 #include <git2.h> 
 
 class GitManager {
+
+	class Signature {
+	public:
+		Signature(std::wstring name, std::wstring email)
+			: m_name(WC2MB(name)), m_email(WC2MB(email)) {}
+
+		virtual ~Signature() {}
+
+		int now(git_signature** out) {
+			return git_signature_now(out, m_name.c_str(), m_email.c_str());
+		}
+	private:
+		std::string m_name = nullptr;
+		std::string m_email = nullptr;
+	};
+
 private:
 	AddInNative* m_addin = nullptr;
 	git_repository* m_repo = nullptr;
+	Signature* m_author = nullptr;
+	Signature* m_committer = nullptr;
 	static std::wstring success(int error);
 	static std::wstring error(std::string message);
 	static std::wstring error();
 public:
 	GitManager(AddInNative* addin);
 	virtual ~GitManager();
+	bool setAuthor(const std::wstring& name, const std::wstring& email);
+	bool setCommitter(const std::wstring& name, const std::wstring& email);
 	std::wstring init(const std::wstring& path, bool is_bare);
 	std::wstring clone(const std::wstring& url, const std::wstring& path);
 	std::wstring info(const std::wstring& msg);
@@ -23,6 +43,7 @@ public:
 	std::wstring remove(const std::wstring& msg);
 	std::wstring commit(const std::wstring& msg);
 	std::wstring history(const std::wstring& msg);
+	std::wstring signature();
 	std::wstring status();
 };
 
