@@ -26,6 +26,7 @@ private:
 		eClone,
 		eCommit,
 		eStatus,
+		eHistory,
 	};
 
 private:

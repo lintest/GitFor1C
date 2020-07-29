@@ -161,30 +161,44 @@ EndProcedure
 Procedure RepoStatus(Command)
 	
 	git.BeginCallingStatus(GitStatusNotify());
+	Items.FormPages.CurrentPage = Items.PageFiles;
+	
+EndProcedure
+
+&AtClient
+Procedure SetFiles(TextJson) Export
+	
+	Fies.Clear();
+	FileArray = JsonLoad(TextJson).result;
+	If TypeOf(FileArray) = Type("Array") Then
+		For each Item in FileArray Do
+			line = Fies.Add();
+			line.filepath = Item.filepath;
+			line.statuses = "";
+			For each Status in Item.statuses Do
+				If Not IsBlankString(line.statuses) Then 
+					line.statuses = line.statuses + ", ";
+				EndIf;
+				line.statuses = line.statuses + Status;
+			EndDo;
+		EndDo;
+	EndIf;
+	
 	
 EndProcedure
 
 &AtClient
 Procedure EndCallingStatus(ResultCall, ParametersCall, AdditionalParameters) Export
 	
-	Files.Clear();
-	For each Item in JsonLoad(ResultCall).result Do
-		line = Files.Add();
-		line.filepath = Item.filepath;
-		line.statuses = "";
-		For each Status in Item.statuses Do
-			If Not IsBlankString(line.statuses) Then 
-				line.statuses = line.statuses + ", ";
-			EndIf;
-			line.statuses = line.statuses + Status;
-		EndDo;
-	EndDo;
+	SetFiles(ResultCall);
 	
 EndProcedure
 
 &AtClient
 Procedure RepoCommit(Command)
+	
 	git.BeginCallingCommit(GitMessageNotify(), Message);
+	
 EndProcedure
 
 &AtClient
@@ -192,6 +206,28 @@ Procedure RepoInfo(Command)
 	
 	git.BeginCallingInfo(GitMessageNotify(), "HEAD^{commit}");
 	
+EndProcedure
+
+&AtClient
+Procedure RepoHistory(Command)
+	
+	History.Clear();
+	TextJSON = git.history("HEAD^{commit}");
+	For Each Item in JsonLoad(TextJSON).result Do
+		Row = History.Add();
+		FillPropertyValues(Row, Item);
+		Row.Date = ToLocalTime('19700101' + Item.time);
+	EndDo;
+	Items.FormPages.CurrentPage = Items.PageHistory;
+	
+EndProcedure
+
+&AtClient
+Procedure WriteText(FilePath, FileText)
+	TextWriter = New TextWriter;
+	TextWriter.Open(FilePath, TextEncoding.UTF8);
+	TextWriter.Write(FileText);
+	TextWriter.Close();
 EndProcedure
 
 &AtClient
@@ -211,29 +247,24 @@ Procedure AutoTest(Command)
 	For i = 1 To 9 Do
 		FileName = Format(i, "ND=2;NG=") + ".txt";
 		FilePath = LocalPath + "\" + FileName;
-		TextWriter = New TextWriter;
-		TextWriter.Open(FilePath, TextEncoding.UTF8);
-		TextWriter.Write(FileText);
-		TextWriter.Close();
+		WriteText(FilePath, FileText);
 		If i <= 7 Then git.add(FileName); EndIf;
 		If i = 6 Then git.remove(FileName); EndIf;
 		If i = 7 Then DeleteFiles(FilePath); EndIf;
 		if i < 3 Then 
-			TextWriter = New TextWriter;
-			TextWriter.Open(FilePath, TextEncoding.UTF8);
-			TextWriter.Write("Second line");
-			TextWriter.Close();
+			WriteText(FilePath, "Second line");
 		EndIf;
 	EndDo;
-	git.BeginCallingStatus(GitStatusNotify());
+	status = git.status();
+	SetFiles(status);
 	
 EndProcedure
 
 &AtClient
 Procedure IndexAdd(Command)
 	
-	For Each Id In Items.files.SelectedRows Do
-		Row = Files.FindByID(Id);
+	For Each Id In Items.Files.SelectedRows Do
+		Row = Fies.FindByID(Id);
 		git.add(Row.filepath);
 	EndDo;
 	git.BeginCallingStatus(GitStatusNotify());
@@ -243,8 +274,8 @@ EndProcedure
 &AtClient
 Procedure IndexRemove(Command)
 
-	For Each Id In Items.files.SelectedRows Do
-		Row = Files.FindByID(Id);
+	For Each Id In Items.Files.SelectedRows Do
+		Row = Fies.FindByID(Id);
 		git.remove(Row.filepath);
 	EndDo;
 	git.BeginCallingStatus(GitStatusNotify());

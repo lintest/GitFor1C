@@ -29,16 +29,6 @@
 						<CommandName>Form.Command.RepoInit</CommandName>
 						<ExtendedTooltip name="FormRepoInitExtendedTooltip" id="22"/>
 					</Button>
-					<Button name="FormRepoClone" id="19">
-						<Type>CommandBarButton</Type>
-						<CommandName>Form.Command.RepoClone</CommandName>
-						<ExtendedTooltip name="FormRepoCloneExtendedTooltip" id="20"/>
-					</Button>
-					<Button name="FormRepoFind" id="17">
-						<Type>CommandBarButton</Type>
-						<CommandName>Form.Command.RepoFind</CommandName>
-						<ExtendedTooltip name="FormRepoFindExtendedTooltip" id="18"/>
-					</Button>
 					<Button name="FormRepoOpen" id="23">
 						<Type>CommandBarButton</Type>
 						<CommandName>Form.Command.RepoOpen</CommandName>
@@ -59,6 +49,11 @@
 						<CommandName>Form.Command.RepoInfo</CommandName>
 						<ExtendedTooltip name="FormRepoInfoExtendedTooltip" id="35"/>
 					</Button>
+					<Button name="FormRepoHistory" id="69">
+						<Type>CommandBarButton</Type>
+						<CommandName>Form.Command.RepoHistory</CommandName>
+						<ExtendedTooltip name="FormRepoHistoryExtendedTooltip" id="70"/>
+					</Button>
 				</ChildItems>
 			</ButtonGroup>
 		</ChildItems>
@@ -69,91 +64,465 @@
 		<Event name="OnCreateAtServer">OnCreateAtServer</Event>
 	</Events>
 	<ChildItems>
-		<InputField name="Path" id="5">
-			<DataPath>LocalPath</DataPath>
-			<ChoiceButton>true</ChoiceButton>
-			<ContextMenu name="PathКонтекстноеМеню" id="6"/>
-			<ExtendedTooltip name="PathРасширеннаяПодсказка" id="7"/>
-			<Events>
-				<Event name="StartChoice">PathStartChoice</Event>
-			</Events>
-		</InputField>
-		<InputField name="URL" id="10">
-			<DataPath>RemoteURL</DataPath>
-			<ContextMenu name="URLКонтекстноеМеню" id="11"/>
-			<ExtendedTooltip name="URLРасширеннаяПодсказка" id="12"/>
-		</InputField>
-		<InputField name="Message" id="29">
-			<DataPath>Message</DataPath>
-			<ContextMenu name="MessageContextMenu" id="30"/>
-			<ExtendedTooltip name="MessageExtendedTooltip" id="31"/>
-		</InputField>
-		<Table name="files" id="38">
-			<Representation>List</Representation>
-			<ReadOnly>true</ReadOnly>
-			<ChangeRowSet>false</ChangeRowSet>
-			<ChangeRowOrder>false</ChangeRowOrder>
-			<HeightInTableRows>3</HeightInTableRows>
-			<AutoInsertNewRow>true</AutoInsertNewRow>
-			<EnableStartDrag>true</EnableStartDrag>
-			<EnableDrag>true</EnableDrag>
-			<DataPath>files</DataPath>
-			<RowFilter xsi:nil="true"/>
-			<ContextMenu name="filesContextMenu" id="39"/>
-			<AutoCommandBar name="filesCommandBar" id="40">
-				<ChildItems>
-					<Button name="FormIndexAdd" id="36">
-						<Type>CommandBarButton</Type>
-						<CommandName>Form.Command.IndexAdd</CommandName>
-						<ExtendedTooltip name="FormIndexAddExtendedTooltip" id="37"/>
-					</Button>
-					<Button name="filesIndexRemove" id="57">
-						<Type>CommandBarButton</Type>
-						<CommandName>Form.Command.IndexRemove</CommandName>
-						<ExtendedTooltip name="filesIndexRemoveExtendedTooltip" id="58"/>
-					</Button>
-				</ChildItems>
-			</AutoCommandBar>
-			<ExtendedTooltip name="filesExtendedTooltip" id="41"/>
-			<SearchStringAddition name="filesSearchString" id="42">
-				<AdditionSource>
-					<Item>files</Item>
-					<Type>SearchStringRepresentation</Type>
-				</AdditionSource>
-				<ContextMenu name="filesSearchStringContextMenu" id="43"/>
-				<ExtendedTooltip name="filesSearchStringExtendedTooltip" id="44"/>
-			</SearchStringAddition>
-			<ViewStatusAddition name="filesViewStatus" id="45">
-				<AdditionSource>
-					<Item>files</Item>
-					<Type>ViewStatusRepresentation</Type>
-				</AdditionSource>
-				<ContextMenu name="filesViewStatusContextMenu" id="46"/>
-				<ExtendedTooltip name="filesViewStatusExtendedTooltip" id="47"/>
-			</ViewStatusAddition>
-			<SearchControlAddition name="filesSearchControl" id="48">
-				<AdditionSource>
-					<Item>files</Item>
-					<Type>SearchControl</Type>
-				</AdditionSource>
-				<ContextMenu name="filesSearchControlContextMenu" id="49"/>
-				<ExtendedTooltip name="filesSearchControlExtendedTooltip" id="50"/>
-			</SearchControlAddition>
+		<Pages name="FormPages" id="59">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Form pages</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Form pages</v8:content>
+				</v8:item>
+			</ToolTip>
+			<ExtendedTooltip name="FormPagesExtendedTooltip" id="60"/>
 			<ChildItems>
-				<InputField name="filesname" id="51">
-					<DataPath>files.filepath</DataPath>
-					<EditMode>EnterOnInput</EditMode>
-					<ContextMenu name="filesnameContextMenu" id="52"/>
-					<ExtendedTooltip name="filesnameExtendedTooltip" id="53"/>
-				</InputField>
-				<InputField name="filesstatus" id="54">
-					<DataPath>files.statuses</DataPath>
-					<EditMode>EnterOnInput</EditMode>
-					<ContextMenu name="filesstatusContextMenu" id="55"/>
-					<ExtendedTooltip name="filesstatusExtendedTooltip" id="56"/>
-				</InputField>
+				<Page name="PageCommon" id="61">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Common</v8:content>
+						</v8:item>
+					</Title>
+					<ToolTip>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Page common</v8:content>
+						</v8:item>
+					</ToolTip>
+					<ExtendedTooltip name="PageCommonExtendedTooltip" id="62"/>
+					<ChildItems>
+						<UsualGroup name="GroupFInd" id="67">
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Group f ind</v8:content>
+								</v8:item>
+							</Title>
+							<ToolTip>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Group f ind</v8:content>
+								</v8:item>
+							</ToolTip>
+							<Representation>None</Representation>
+							<ShowTitle>false</ShowTitle>
+							<ExtendedTooltip name="GroupFIndExtendedTooltip" id="68"/>
+							<ChildItems>
+								<InputField name="Path" id="5">
+									<DataPath>LocalPath</DataPath>
+									<ChoiceButton>true</ChoiceButton>
+									<ContextMenu name="PathКонтекстноеМеню" id="6"/>
+									<ExtendedTooltip name="PathРасширеннаяПодсказка" id="7"/>
+									<Events>
+										<Event name="StartChoice">PathStartChoice</Event>
+									</Events>
+								</InputField>
+								<Button name="FormRepoFind" id="17">
+									<Type>UsualButton</Type>
+									<CommandName>Form.Command.RepoFind</CommandName>
+									<ExtendedTooltip name="FormRepoFindExtendedTooltip" id="18"/>
+								</Button>
+							</ChildItems>
+						</UsualGroup>
+						<UsualGroup name="GroupRemote" id="65">
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Group remote</v8:content>
+								</v8:item>
+							</Title>
+							<ToolTip>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Group remote</v8:content>
+								</v8:item>
+							</ToolTip>
+							<Representation>None</Representation>
+							<ShowTitle>false</ShowTitle>
+							<ExtendedTooltip name="GroupRemoteExtendedTooltip" id="66"/>
+							<ChildItems>
+								<InputField name="URL" id="10">
+									<DataPath>RemoteURL</DataPath>
+									<ContextMenu name="URLКонтекстноеМеню" id="11"/>
+									<ExtendedTooltip name="URLРасширеннаяПодсказка" id="12"/>
+								</InputField>
+								<Button name="FormRepoClone" id="19">
+									<Type>UsualButton</Type>
+									<CommandName>Form.Command.RepoClone</CommandName>
+									<ExtendedTooltip name="FormRepoCloneExtendedTooltip" id="20"/>
+								</Button>
+							</ChildItems>
+						</UsualGroup>
+						<InputField name="Message" id="29">
+							<DataPath>Message</DataPath>
+							<ContextMenu name="MessageContextMenu" id="30"/>
+							<ExtendedTooltip name="MessageExtendedTooltip" id="31"/>
+						</InputField>
+						<UsualGroup name="GroupSignature" id="98">
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Signature</v8:content>
+								</v8:item>
+							</Title>
+							<ToolTip>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Group signature</v8:content>
+								</v8:item>
+							</ToolTip>
+							<Representation>None</Representation>
+							<ShowTitle>false</ShowTitle>
+							<ExtendedTooltip name="GroupSignatureExtendedTooltip" id="99"/>
+							<ChildItems>
+								<UsualGroup name="GroupAuthor" id="113">
+									<Title>
+										<v8:item>
+											<v8:lang>ru</v8:lang>
+											<v8:content>Group author</v8:content>
+										</v8:item>
+									</Title>
+									<ToolTip>
+										<v8:item>
+											<v8:lang>ru</v8:lang>
+											<v8:content>Group author</v8:content>
+										</v8:item>
+									</ToolTip>
+									<Group>Vertical</Group>
+									<Representation>None</Representation>
+									<ShowTitle>false</ShowTitle>
+									<ExtendedTooltip name="GroupAuthorExtendedTooltip" id="114"/>
+									<ChildItems>
+										<UsualGroup name="GroupCustomizeAuthor" id="109">
+											<Title>
+												<v8:item>
+													<v8:lang>ru</v8:lang>
+													<v8:content>Group customize author</v8:content>
+												</v8:item>
+											</Title>
+											<ToolTip>
+												<v8:item>
+													<v8:lang>ru</v8:lang>
+													<v8:content>Group customize author</v8:content>
+												</v8:item>
+											</ToolTip>
+											<Representation>None</Representation>
+											<ShowTitle>false</ShowTitle>
+											<ExtendedTooltip name="GroupCustomizeAuthorExtendedTooltip" id="110"/>
+											<ChildItems>
+												<CheckBoxField name="CustomizeAuthor" id="106">
+													<DataPath>CustomizeAuthor</DataPath>
+													<TitleLocation>Right</TitleLocation>
+													<CheckBoxType>Auto</CheckBoxType>
+													<ContextMenu name="CustomizeAuthorContextMenu" id="107"/>
+													<ExtendedTooltip name="CustomizeAuthorExtendedTooltip" id="108"/>
+												</CheckBoxField>
+												<Button name="GetSignature" id="111">
+													<Type>UsualButton</Type>
+													<CommandName>Form.Command.GetDefaultAuthor</CommandName>
+													<ExtendedTooltip name="GetSignatureExtendedTooltip" id="112"/>
+												</Button>
+											</ChildItems>
+										</UsualGroup>
+										<InputField name="SignatureName" id="103">
+											<DataPath>AuthorName</DataPath>
+											<ContextMenu name="SignatureNameContextMenu" id="104"/>
+											<ExtendedTooltip name="SignatureNameExtendedTooltip" id="105"/>
+										</InputField>
+										<InputField name="SignatureEmail" id="100">
+											<DataPath>AuthorEmail</DataPath>
+											<ContextMenu name="SignatureEmailContextMenu" id="101"/>
+											<ExtendedTooltip name="SignatureEmailExtendedTooltip" id="102"/>
+										</InputField>
+									</ChildItems>
+								</UsualGroup>
+								<UsualGroup name="GroupCommitter" id="115">
+									<Title>
+										<v8:item>
+											<v8:lang>ru</v8:lang>
+											<v8:content>Group committer</v8:content>
+										</v8:item>
+									</Title>
+									<ToolTip>
+										<v8:item>
+											<v8:lang>ru</v8:lang>
+											<v8:content>Group committer</v8:content>
+										</v8:item>
+									</ToolTip>
+									<Group>Vertical</Group>
+									<Representation>None</Representation>
+									<ShowTitle>false</ShowTitle>
+									<ExtendedTooltip name="GroupCommitterExtendedTooltip" id="116"/>
+									<ChildItems>
+										<UsualGroup name="GroupCustomizeCommitter" id="120">
+											<Title>
+												<v8:item>
+													<v8:lang>ru</v8:lang>
+													<v8:content>Group customize committer</v8:content>
+												</v8:item>
+											</Title>
+											<ToolTip>
+												<v8:item>
+													<v8:lang>ru</v8:lang>
+													<v8:content>Group customize committer</v8:content>
+												</v8:item>
+											</ToolTip>
+											<Representation>None</Representation>
+											<ShowTitle>false</ShowTitle>
+											<ExtendedTooltip name="GroupCustomizeCommitterExtendedTooltip" id="121"/>
+											<ChildItems>
+												<CheckBoxField name="CustomizeCommitter" id="117">
+													<DataPath>CustomizeCommitter</DataPath>
+													<TitleLocation>Right</TitleLocation>
+													<CheckBoxType>Auto</CheckBoxType>
+													<ContextMenu name="CustomizeCommitterContextMenu" id="118"/>
+													<ExtendedTooltip name="CustomizeCommitterExtendedTooltip" id="119"/>
+												</CheckBoxField>
+												<Button name="GetDefaultCommitter" id="122">
+													<Type>UsualButton</Type>
+													<CommandName>Form.Command.GetDefaultCommitter</CommandName>
+													<ExtendedTooltip name="GetDefaultCommitterExtendedTooltip" id="123"/>
+												</Button>
+											</ChildItems>
+										</UsualGroup>
+										<InputField name="CommitterName" id="124">
+											<DataPath>CommitterName</DataPath>
+											<ContextMenu name="CommitterNameContextMenu" id="125"/>
+											<ExtendedTooltip name="CommitterNameExtendedTooltip" id="126"/>
+										</InputField>
+										<InputField name="CommitterEMail" id="127">
+											<DataPath>CommitterEMail</DataPath>
+											<ContextMenu name="CommitterEMailContextMenu" id="128"/>
+											<ExtendedTooltip name="CommitterEMailExtendedTooltip" id="129"/>
+										</InputField>
+									</ChildItems>
+								</UsualGroup>
+							</ChildItems>
+						</UsualGroup>
+					</ChildItems>
+				</Page>
+				<Page name="PageFiles" id="63">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Files</v8:content>
+						</v8:item>
+					</Title>
+					<ToolTip>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Page files</v8:content>
+						</v8:item>
+					</ToolTip>
+					<ExtendedTooltip name="PageFilesExtendedTooltip" id="64"/>
+					<ChildItems>
+						<Table name="Files" id="38">
+							<Representation>List</Representation>
+							<ReadOnly>true</ReadOnly>
+							<HeightInTableRows>3</HeightInTableRows>
+							<AutoInsertNewRow>true</AutoInsertNewRow>
+							<EnableStartDrag>true</EnableStartDrag>
+							<EnableDrag>true</EnableDrag>
+							<DataPath>Fies</DataPath>
+							<RowFilter xsi:nil="true"/>
+							<ContextMenu name="FilesContextMenu" id="39"/>
+							<AutoCommandBar name="FilesCommandBar" id="40">
+								<Autofill>false</Autofill>
+								<ChildItems>
+									<Button name="FormIndexAdd" id="36">
+										<Type>CommandBarButton</Type>
+										<CommandName>Form.Command.IndexAdd</CommandName>
+										<ExtendedTooltip name="FormIndexAddExtendedTooltip" id="37"/>
+									</Button>
+									<Button name="filesIndexRemove" id="57">
+										<Type>CommandBarButton</Type>
+										<CommandName>Form.Command.IndexRemove</CommandName>
+										<ExtendedTooltip name="filesIndexRemoveExtendedTooltip" id="58"/>
+									</Button>
+								</ChildItems>
+							</AutoCommandBar>
+							<ExtendedTooltip name="FilesExtendedTooltip" id="41"/>
+							<SearchStringAddition name="FilesSearchString" id="42">
+								<AdditionSource>
+									<Item>Files</Item>
+									<Type>SearchStringRepresentation</Type>
+								</AdditionSource>
+								<ContextMenu name="FilesSearchStringContextMenu" id="43"/>
+								<ExtendedTooltip name="FilesSearchStringExtendedTooltip" id="44"/>
+							</SearchStringAddition>
+							<ViewStatusAddition name="FilesViewStatus" id="45">
+								<AdditionSource>
+									<Item>Files</Item>
+									<Type>ViewStatusRepresentation</Type>
+								</AdditionSource>
+								<ContextMenu name="FilesViewStatusContextMenu" id="46"/>
+								<ExtendedTooltip name="FilesViewStatusExtendedTooltip" id="47"/>
+							</ViewStatusAddition>
+							<SearchControlAddition name="FilesSearchControl" id="48">
+								<AdditionSource>
+									<Item>Files</Item>
+									<Type>SearchControl</Type>
+								</AdditionSource>
+								<ContextMenu name="FilesSearchControlContextMenu" id="49"/>
+								<ExtendedTooltip name="FilesSearchControlExtendedTooltip" id="50"/>
+							</SearchControlAddition>
+							<ChildItems>
+								<InputField name="filesname" id="51">
+									<DataPath>Fies.filepath</DataPath>
+									<EditMode>EnterOnInput</EditMode>
+									<ContextMenu name="filesnameContextMenu" id="52"/>
+									<ExtendedTooltip name="filesnameExtendedTooltip" id="53"/>
+								</InputField>
+								<InputField name="filesstatus" id="54">
+									<DataPath>Fies.statuses</DataPath>
+									<EditMode>EnterOnInput</EditMode>
+									<ContextMenu name="filesstatusContextMenu" id="55"/>
+									<ExtendedTooltip name="filesstatusExtendedTooltip" id="56"/>
+								</InputField>
+							</ChildItems>
+						</Table>
+					</ChildItems>
+				</Page>
+				<Page name="PageHistory" id="71">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>History</v8:content>
+						</v8:item>
+					</Title>
+					<ToolTip>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Page history</v8:content>
+						</v8:item>
+					</ToolTip>
+					<ExtendedTooltip name="PageHistoryExtendedTooltip" id="72"/>
+					<ChildItems>
+						<Table name="History" id="73">
+							<Representation>List</Representation>
+							<ReadOnly>true</ReadOnly>
+							<AutoInsertNewRow>true</AutoInsertNewRow>
+							<EnableStartDrag>true</EnableStartDrag>
+							<EnableDrag>true</EnableDrag>
+							<DataPath>History</DataPath>
+							<RowFilter xsi:nil="true"/>
+							<ContextMenu name="HistoryContextMenu" id="74"/>
+							<AutoCommandBar name="HistoryCommandBar" id="75">
+								<Autofill>false</Autofill>
+							</AutoCommandBar>
+							<ExtendedTooltip name="HistoryExtendedTooltip" id="76"/>
+							<SearchStringAddition name="HistorySearchString" id="77">
+								<AdditionSource>
+									<Item>History</Item>
+									<Type>SearchStringRepresentation</Type>
+								</AdditionSource>
+								<ContextMenu name="HistorySearchStringContextMenu" id="78"/>
+								<ExtendedTooltip name="HistorySearchStringExtendedTooltip" id="79"/>
+							</SearchStringAddition>
+							<ViewStatusAddition name="HistoryViewStatus" id="80">
+								<AdditionSource>
+									<Item>History</Item>
+									<Type>ViewStatusRepresentation</Type>
+								</AdditionSource>
+								<ContextMenu name="HistoryViewStatusContextMenu" id="81"/>
+								<ExtendedTooltip name="HistoryViewStatusExtendedTooltip" id="82"/>
+							</ViewStatusAddition>
+							<SearchControlAddition name="HistorySearchControl" id="83">
+								<AdditionSource>
+									<Item>History</Item>
+									<Type>SearchControl</Type>
+								</AdditionSource>
+								<ContextMenu name="HistorySearchControlContextMenu" id="84"/>
+								<ExtendedTooltip name="HistorySearchControlExtendedTooltip" id="85"/>
+							</SearchControlAddition>
+							<ChildItems>
+								<InputField name="HistoryDate" id="95">
+									<DataPath>History.Date</DataPath>
+									<EditMode>EnterOnInput</EditMode>
+									<ContextMenu name="HistoryDateContextMenu" id="96"/>
+									<ExtendedTooltip name="HistoryDateExtendedTooltip" id="97"/>
+								</InputField>
+								<ColumnGroup name="HistoryAuthor" id="142">
+									<Title>
+										<v8:item>
+											<v8:lang>ru</v8:lang>
+											<v8:content>Author</v8:content>
+										</v8:item>
+									</Title>
+									<ToolTip>
+										<v8:item>
+											<v8:lang>ru</v8:lang>
+											<v8:content>History author</v8:content>
+										</v8:item>
+									</ToolTip>
+									<Group>InCell</Group>
+									<ShowInHeader>true</ShowInHeader>
+									<ExtendedTooltip name="HistoryAuthorExtendedTooltip" id="143"/>
+									<ChildItems>
+										<InputField name="HistoryAuthorName" id="133">
+											<DataPath>History.AuthorName</DataPath>
+											<EditMode>EnterOnInput</EditMode>
+											<ShowInHeader>false</ShowInHeader>
+											<ContextMenu name="HistoryAuthorNameContextMenu" id="134"/>
+											<ExtendedTooltip name="HistoryAuthorNameExtendedTooltip" id="135"/>
+										</InputField>
+										<InputField name="HistoryAuthorEMail" id="130">
+											<DataPath>History.AuthorEMail</DataPath>
+											<EditMode>EnterOnInput</EditMode>
+											<ShowInHeader>false</ShowInHeader>
+											<ContextMenu name="HistoryAuthorEMailContextMenu" id="131"/>
+											<ExtendedTooltip name="HistoryAuthorEMailExtendedTooltip" id="132"/>
+										</InputField>
+									</ChildItems>
+								</ColumnGroup>
+								<ColumnGroup name="Committer" id="144">
+									<Title>
+										<v8:item>
+											<v8:lang>ru</v8:lang>
+											<v8:content>Committer</v8:content>
+										</v8:item>
+									</Title>
+									<ToolTip>
+										<v8:item>
+											<v8:lang>ru</v8:lang>
+											<v8:content>Committer</v8:content>
+										</v8:item>
+									</ToolTip>
+									<Group>InCell</Group>
+									<ShowInHeader>true</ShowInHeader>
+									<ExtendedTooltip name="CommitterExtendedTooltip" id="145"/>
+									<ChildItems>
+										<InputField name="HistoryCommitterName" id="139">
+											<DataPath>History.CommitterName</DataPath>
+											<EditMode>EnterOnInput</EditMode>
+											<ShowInHeader>false</ShowInHeader>
+											<ContextMenu name="HistoryCommitterNameContextMenu" id="140"/>
+											<ExtendedTooltip name="HistoryCommitterNameExtendedTooltip" id="141"/>
+										</InputField>
+										<InputField name="HistoryCommitterEMail" id="136">
+											<DataPath>History.CommitterEMail</DataPath>
+											<EditMode>EnterOnInput</EditMode>
+											<ShowInHeader>false</ShowInHeader>
+											<ContextMenu name="HistoryCommitterEMailContextMenu" id="137"/>
+											<ExtendedTooltip name="HistoryCommitterEMailExtendedTooltip" id="138"/>
+										</InputField>
+									</ChildItems>
+								</ColumnGroup>
+								<InputField name="HistoryMessage" id="92">
+									<DataPath>History.Message</DataPath>
+									<EditMode>EnterOnInput</EditMode>
+									<ContextMenu name="HistoryMessageContextMenu" id="93"/>
+									<ExtendedTooltip name="HistoryMessageExtendedTooltip" id="94"/>
+								</InputField>
+							</ChildItems>
+						</Table>
+					</ChildItems>
+				</Page>
 			</ChildItems>
-		</Table>
+		</Pages>
 	</ChildItems>
 	<Attributes>
 		<Attribute name="Object" id="1">
@@ -228,11 +597,11 @@
 				</v8:StringQualifiers>
 			</Type>
 		</Attribute>
-		<Attribute name="files" id="6">
+		<Attribute name="Fies" id="6">
 			<Title>
 				<v8:item>
 					<v8:lang>ru</v8:lang>
-					<v8:content>Files</v8:content>
+					<v8:content>Fies</v8:content>
 				</v8:item>
 			</Title>
 			<Type>
@@ -270,6 +639,190 @@
 					</Type>
 				</Column>
 			</Columns>
+		</Attribute>
+		<Attribute name="History" id="7">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>History</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>v8:ValueTable</v8:Type>
+			</Type>
+			<Columns>
+				<Column name="AuthorName" id="1">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Name</v8:content>
+						</v8:item>
+					</Title>
+					<Type>
+						<v8:Type>xs:string</v8:Type>
+						<v8:StringQualifiers>
+							<v8:Length>0</v8:Length>
+							<v8:AllowedLength>Variable</v8:AllowedLength>
+						</v8:StringQualifiers>
+					</Type>
+				</Column>
+				<Column name="AuthorEMail" id="2">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>E-mail</v8:content>
+						</v8:item>
+					</Title>
+					<Type>
+						<v8:Type>xs:string</v8:Type>
+						<v8:StringQualifiers>
+							<v8:Length>0</v8:Length>
+							<v8:AllowedLength>Variable</v8:AllowedLength>
+						</v8:StringQualifiers>
+					</Type>
+				</Column>
+				<Column name="Message" id="3">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Message</v8:content>
+						</v8:item>
+					</Title>
+					<Type>
+						<v8:Type>xs:string</v8:Type>
+						<v8:StringQualifiers>
+							<v8:Length>0</v8:Length>
+							<v8:AllowedLength>Variable</v8:AllowedLength>
+						</v8:StringQualifiers>
+					</Type>
+				</Column>
+				<Column name="Date" id="4">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Date</v8:content>
+						</v8:item>
+					</Title>
+					<Type>
+						<v8:Type>xs:dateTime</v8:Type>
+						<v8:DateQualifiers>
+							<v8:DateFractions>DateTime</v8:DateFractions>
+						</v8:DateQualifiers>
+					</Type>
+				</Column>
+				<Column name="CommitterName" id="5">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Name</v8:content>
+						</v8:item>
+					</Title>
+					<Type>
+						<v8:Type>xs:string</v8:Type>
+						<v8:StringQualifiers>
+							<v8:Length>0</v8:Length>
+							<v8:AllowedLength>Variable</v8:AllowedLength>
+						</v8:StringQualifiers>
+					</Type>
+				</Column>
+				<Column name="CommitterEMail" id="6">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>E-Mail</v8:content>
+						</v8:item>
+					</Title>
+					<Type>
+						<v8:Type>xs:string</v8:Type>
+						<v8:StringQualifiers>
+							<v8:Length>0</v8:Length>
+							<v8:AllowedLength>Variable</v8:AllowedLength>
+						</v8:StringQualifiers>
+					</Type>
+				</Column>
+			</Columns>
+		</Attribute>
+		<Attribute name="AuthorName" id="8">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Name</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>xs:string</v8:Type>
+				<v8:StringQualifiers>
+					<v8:Length>0</v8:Length>
+					<v8:AllowedLength>Variable</v8:AllowedLength>
+				</v8:StringQualifiers>
+			</Type>
+		</Attribute>
+		<Attribute name="AuthorEmail" id="9">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>E-Mail</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>xs:string</v8:Type>
+				<v8:StringQualifiers>
+					<v8:Length>0</v8:Length>
+					<v8:AllowedLength>Variable</v8:AllowedLength>
+				</v8:StringQualifiers>
+			</Type>
+		</Attribute>
+		<Attribute name="CustomizeAuthor" id="10">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Customize author</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>xs:boolean</v8:Type>
+			</Type>
+		</Attribute>
+		<Attribute name="CustomizeCommitter" id="11">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Customize committer</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>xs:boolean</v8:Type>
+			</Type>
+		</Attribute>
+		<Attribute name="CommitterName" id="12">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Name</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>xs:string</v8:Type>
+				<v8:StringQualifiers>
+					<v8:Length>0</v8:Length>
+					<v8:AllowedLength>Variable</v8:AllowedLength>
+				</v8:StringQualifiers>
+			</Type>
+		</Attribute>
+		<Attribute name="CommitterEMail" id="13">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>E-Mail</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>xs:string</v8:Type>
+				<v8:StringQualifiers>
+					<v8:Length>0</v8:Length>
+					<v8:AllowedLength>Variable</v8:AllowedLength>
+				</v8:StringQualifiers>
+			</Type>
 		</Attribute>
 	</Attributes>
 	<Commands>
@@ -422,6 +975,49 @@
 				</v8:item>
 			</ToolTip>
 			<Action>IndexRemove</Action>
+		</Command>
+		<Command name="RepoHistory" id="11">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>history</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Repo history</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>RepoHistory</Action>
+		</Command>
+		<Command name="GetDefaultAuthor" id="12">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Get default</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Get default author</v8:content>
+				</v8:item>
+			</ToolTip>
+		</Command>
+		<Command name="GetDefaultCommitter" id="13">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Get default</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Get default committer</v8:content>
+				</v8:item>
+			</ToolTip>
 		</Command>
 	</Commands>
 </Form>

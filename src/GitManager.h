@@ -10,6 +10,7 @@ private:
 	git_repository* m_repo = nullptr;
 	static std::wstring success(int error);
 	static std::wstring error(std::string message);
+	static std::wstring error();
 public:
 	GitManager(AddInNative* addin);
 	virtual ~GitManager();
@@ -21,6 +22,7 @@ public:
 	std::wstring add(const std::wstring& msg);
 	std::wstring remove(const std::wstring& msg);
 	std::wstring commit(const std::wstring& msg);
+	std::wstring history(const std::wstring& msg);
 	std::wstring status();
 };
 
