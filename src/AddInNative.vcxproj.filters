@@ -59,6 +59,7 @@
       <Filter>Source Files</Filter>
     </None>
     <None Include="Makefile" />
+    <None Include="cpp.hint" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="CMakeLists.txt" />

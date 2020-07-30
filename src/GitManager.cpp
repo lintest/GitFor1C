@@ -20,6 +20,31 @@
 
 #define S(wstr) WC2MB(wstr).c_str()
 
+#define CHECK_REPO() {if (m_repo == nullptr) return error("Repo is null");}
+
+#define ASSERT(t) {if (t < 0) return error();}
+
+#define AUTO_GIT(N, T, F)              \
+class N {                              \
+private:                               \
+	T* h = nullptr;                    \
+public:                                \
+	N() {}                             \
+	N(T* h) { this->h = h; }           \
+	~N() { if (h) (F(h)); }            \
+	operator T*() const { return h; }  \
+	T** operator &() { return &h; }    \
+	T* operator->() { return h; }      \
+}                                      \
+;
+
+AUTO_GIT(GIT_signature, git_signature, git_signature_free)
+AUTO_GIT(GIT_revwalk, git_revwalk, git_revwalk_free)
+AUTO_GIT(GIT_commit, git_commit, git_commit_free)
+AUTO_GIT(GIT_object, git_object, git_object_free)
+AUTO_GIT(GIT_index, git_index, git_index_free)
+AUTO_GIT(GIT_tree, git_tree, git_tree_free)
+
 GitManager::GitManager(AddInNative* addin)
 {
 	m_addin = addin;
@@ -34,57 +59,62 @@ GitManager::~GitManager()
 	git_libgit2_shutdown();
 }
 
-std::wstring GitManager::success(int error)
+static std::wstring success(const nlohmann::json& result)
 {
-	if (error >= 0) return {};
+	nlohmann::json json;
+	json["result"] = result;
+	json["success"] = true;
+	return MB2WC(json.dump());
+}
+
+static std::wstring error()
+{
 	const git_error* e = git_error_last();
 	nlohmann::json json, j;
 	j["code"] = e->klass;
 	j["message"] = e->message;
 	json["error"] = j;
+	json["success"] = false;
 	return MB2WC(json.dump());
 }
 
-std::wstring GitManager::error(std::string message)
+static std::wstring error(const std::string& message)
 {
 	nlohmann::json json, j;
 	j["message"] = message;
 	json["error"] = j;
+	json["success"] = false;
 	return MB2WC(json.dump());
-}
-
-std::wstring GitManager::error()
-{
-	return error("Repo is null");
 }
 
 std::wstring GitManager::init(const std::wstring& path, bool is_bare)
 {
 	if (m_repo) git_repository_free(m_repo);
-	return success(git_repository_init(&m_repo, S(path), is_bare));
+	ASSERT(git_repository_init(&m_repo, S(path), is_bare));
+	return {};
 }
 
 std::wstring GitManager::clone(const std::wstring& url, const std::wstring& path)
 {
 	if (m_repo) git_repository_free(m_repo);
-	return success(git_clone(&m_repo, S(url), S(path), NULL));
+	ASSERT(git_clone(&m_repo, S(url), S(path), nullptr));
+	return {};
 }
 
 std::wstring GitManager::open(const std::wstring& path)
 {
 	if (m_repo) git_repository_free(m_repo);
-	return success(git_repository_open(&m_repo, S(path)));
+	ASSERT(git_repository_open(&m_repo, S(path)));
+	return {};
 }
 
 std::wstring GitManager::find(const std::wstring& path)
 {
 	git_buf root = { 0 };
-	int ok = git_repository_discover(&root, S(path), 0, nullptr);
-	if (ok < 0) return success(ok);
-	nlohmann::json json, j;
+	ASSERT(git_repository_discover(&root, S(path), 0, nullptr));
+	nlohmann::json j;
 	j["path"] = root.ptr;
-	json["result"] = j;
-	return MB2WC(json.dump());
+	return success(j);
 }
 
 static std::string getStatusText(git_status_t status) {
@@ -125,10 +155,9 @@ int status_cb(const char* path, unsigned int status_flags, void* payload)
 
 std::wstring GitManager::status()
 {
-	if (!m_repo) return error();
+	CHECK_REPO();
 	nlohmann::json json, j;
-	int ok = git_status_foreach(m_repo, status_cb, &j);
-	if (ok < 0) return success(ok);
+	ASSERT(git_status_foreach(m_repo, status_cb, &j));
 	json["result"] = j;
 	return MB2WC(json.dump());
 }
@@ -147,92 +176,73 @@ bool GitManager::setCommitter(const std::wstring& name, const std::wstring& emai
 	return true;
 }
 
-std::wstring GitManager::signature() 
+std::wstring GitManager::signature()
 {
-	if (!m_repo) return error();
+	CHECK_REPO();
 	git_signature* sig = nullptr;
-	int ok = git_signature_default(&sig, m_repo);
-	if (ok < 0) return success(ok);
+	ASSERT(git_signature_default(&sig, m_repo));
 
-	nlohmann::json json, j;
+	nlohmann::json j;
 	j["name"] = sig->name;
 	j["email"] = sig->email;
-	json["result"] = j;
-	return MB2WC(json.dump());
+	return success(j);
 }
 
 std::wstring GitManager::commit(const std::wstring& msg)
 {
-	if (!m_repo) return error();
-	git_signature* sig = nullptr;
-	git_signature* author = nullptr;
-	git_signature* committer = nullptr;
+	CHECK_REPO();
+	GIT_signature sig;
+	GIT_signature author;
+	GIT_signature committer;
 	if (m_author) m_author->now(&author);
 	if (m_committer) m_committer->now(&committer);
-
 	if (m_author == nullptr || m_committer == nullptr) {
 		git_signature_default(&sig, m_repo);
 	}
 
 	int ok = 0;
-	git_index* index;
+	GIT_index index;
+	GIT_tree tree;
 	git_oid tree_id, commit_id;
-	git_tree* tree;
-	git_object* head_commit;
+	git_object* head_commit = nullptr;
 	git_revparse_single(&head_commit, m_repo, "HEAD^{commit}");
-	git_commit* commit = (git_commit*)head_commit;
+	GIT_commit commit = (git_commit*)head_commit;
 	size_t head_count = head_commit ? 1 : 0;
-	if (ok < 0) return error("Unable to create a commit signature");
-	ok = git_repository_index(&index, m_repo);
-	if (ok < 0) return error("Could not open repository index");
-	ok = git_index_write_tree(&tree_id, index);
-	if (ok < 0) return error("Unable to write initial tree from index");
-	ok = git_tree_lookup(&tree, m_repo, &tree_id);
-	if (ok < 0) return error("Could not look up initial tree");
+	ASSERT(git_repository_index(&index, m_repo));
+	ASSERT(git_index_write_tree(&tree_id, index));
+	ASSERT(git_tree_lookup(&tree, m_repo, &tree_id));
 
-	ok = git_commit_create_v(
-		&commit_id, 
-		m_repo, 
-		"HEAD", 
-		author ? author : sig, 
-		committer ? committer : sig, 
-		NULL, S(msg), 
-		tree, 
-		head_count, 
+	ASSERT(git_commit_create_v(
+		&commit_id,
+		m_repo,
+		"HEAD",
+		author ? author : sig,
+		committer ? committer : sig,
+		NULL, S(msg),
+		tree,
+		head_count,
 		head_commit
-	);
-
-	if (ok < 0) return success(ok);
-	if (ok < 0) return error("Could not create the initial commit");
-	git_index_free(index);
-	git_tree_free(tree);
-	git_signature_free(sig);
+	));
 	return {};
 }
 
 std::wstring GitManager::add(const std::wstring& filepath)
 {
-	if (!m_repo) return error();
-	git_index* index;
-	int ok = git_repository_index(&index, m_repo);
-	if (ok < 0) return success(ok);
-	ok = git_index_add_bypath(index, S(filepath));
-	if (ok < 0) return success(ok);
-	ok = git_index_write(index);
-	if (ok < 0) return success(ok);
+	CHECK_REPO();
+	GIT_index index;
+	ASSERT(git_repository_index(&index, m_repo));
+	ASSERT(git_index_add_bypath(index, S(filepath)));
+	ASSERT(git_index_write(index));
 	return {};
 }
 
 std::wstring GitManager::remove(const std::wstring& filepath)
 {
-	if (!m_repo) return error();
-	git_index* index;
-	int ok = git_repository_index(&index, m_repo);
-	if (ok < 0) return success(ok);
-	ok = git_index_remove_bypath(index, S(filepath));
-	if (ok < 0) return success(ok);
-	ok = git_index_write(index);
-	if (ok < 0) return success(ok);
+	CHECK_REPO();
+	GIT_index index;
+	ASSERT(git_repository_index(&index, m_repo));
+	ASSERT(git_index_remove_bypath(index, S(filepath)));
+	ASSERT(git_index_write(index));
 	return {};
 }
 
@@ -246,42 +256,34 @@ std::string oid2str(const git_oid* id)
 
 std::wstring GitManager::info(const std::wstring& spec)
 {
-	if (!m_repo) return error();
+	CHECK_REPO();
 	git_object* head_commit;
-	int ok = git_revparse_single(&head_commit, m_repo, S(spec));
-	if (ok < 0) return success(ok);
-	git_commit* commit = (git_commit*)head_commit;
+	ASSERT(git_revparse_single(&head_commit, m_repo, S(spec)));
+	GIT_commit commit = (git_commit*)head_commit;
 	const git_oid* tree_id = git_commit_tree_id(commit);
 	const git_signature* author = git_commit_author(commit);
-	nlohmann::json json, j;
+	nlohmann::json j;
 	j["id"] = oid2str(tree_id);
 	j["author.name"] = author->name;
 	j["author.email"] = author->email;
 	j["message"] = git_commit_message(commit);
-	json["result"] = j;
-	git_commit_free(commit);
-	return MB2WC(json.dump());
+	return success(j);
 }
 
 std::wstring GitManager::history(const std::wstring& spec)
 {
-	if (!m_repo) return error();
-	git_object* head_commit;
-	int ok = git_revparse_single(&head_commit, m_repo, S(spec));
-	if (ok < 0) return success(ok);
+	CHECK_REPO();
 
 	git_oid oid;
-	git_revwalk* walker;
-
+	GIT_revwalk walker;
 	git_revwalk_new(&walker, m_repo);
 	git_revwalk_sorting(walker, GIT_SORT_TIME);
 	git_revwalk_push_head(walker);
 
-	nlohmann::json json, list;
+	nlohmann::json json;
 	while (git_revwalk_next(&oid, walker) == 0) {
-		git_commit* commit;
-		int ok = git_commit_lookup(&commit, m_repo, &oid);
-		if (ok < 0) return success(ok);
+		GIT_commit commit;
+		ASSERT(git_commit_lookup(&commit, m_repo, &oid));
 		const git_oid* tree_id = git_commit_tree_id(commit);
 		const git_signature* author = git_commit_author(commit);
 		const git_signature* committer = git_commit_committer(commit);
@@ -293,10 +295,7 @@ std::wstring GitManager::history(const std::wstring& spec)
 		j["committerEmail"] = committer->email;
 		j["time"] = git_commit_time(commit);
 		j["message"] = git_commit_message(commit);
-		git_commit_free(commit);
-		list.push_back(j);
+		json.push_back(j);
 	}
-	git_revwalk_free(walker);
-	json["result"] = list;
-	return MB2WC(json.dump());
+	return success(json);
 }

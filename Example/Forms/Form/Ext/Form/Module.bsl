@@ -212,7 +212,7 @@ EndProcedure
 Procedure RepoHistory(Command)
 	
 	History.Clear();
-	TextJSON = git.history("HEAD^{commit}");
+	TextJSON = git.history("");
 	For Each Item in JsonLoad(TextJSON).result Do
 		Row = History.Add();
 		FillPropertyValues(Row, Item);

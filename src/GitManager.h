@@ -26,9 +26,6 @@ private:
 	git_repository* m_repo = nullptr;
 	Signature* m_author = nullptr;
 	Signature* m_committer = nullptr;
-	static std::wstring success(int error);
-	static std::wstring error(std::string message);
-	static std::wstring error();
 public:
 	GitManager(AddInNative* addin);
 	virtual ~GitManager();

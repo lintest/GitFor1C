@@ -223,6 +223,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="AddInNative.def" />
+    <None Include="cpp.hint" />
     <None Include="Makefile" />
   </ItemGroup>
   <ItemGroup>

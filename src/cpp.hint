@@ -1,0 +1,7 @@
+// Файлы указаний помогают среде IDE Visual Studio интерпретировать идентификаторы Visual C++
+// (например, имена функций и макросов).
+// Дополнительные сведения: https://go.microsoft.com/fwlink/?linkid=865984
+#define AUTO_GIT(N, T, F) class N { private: T* h = NULL; public: N() {} N(T* h) { this->h = h; } ~N() { if (h) (F(h)); } operator T*() const { return h; } T** operator &() { return &h; } T* operator->() { return h; } } ;
+#define ASSERT(c, m) if (!(c)) { addError(m); return false; }
+#define ASSERT(t) {if (t < 0) return lastError();}
+#define S(wstr) WC2MB(wstr).c_str()

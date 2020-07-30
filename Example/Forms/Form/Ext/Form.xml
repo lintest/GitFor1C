@@ -475,6 +475,12 @@
 									<ContextMenu name="HistoryMessageContextMenu" id="93"/>
 									<ExtendedTooltip name="HistoryMessageExtendedTooltip" id="94"/>
 								</InputField>
+								<InputField name="HistoryId" id="154">
+									<DataPath>History.Id</DataPath>
+									<EditMode>EnterOnInput</EditMode>
+									<ContextMenu name="HistoryIdContextMenu" id="155"/>
+									<ExtendedTooltip name="HistoryIdExtendedTooltip" id="156"/>
+								</InputField>
 							</ChildItems>
 						</Table>
 					</ChildItems>
@@ -688,6 +694,21 @@
 						<v8:item>
 							<v8:lang>ru</v8:lang>
 							<v8:content>E-Mail</v8:content>
+						</v8:item>
+					</Title>
+					<Type>
+						<v8:Type>xs:string</v8:Type>
+						<v8:StringQualifiers>
+							<v8:Length>0</v8:Length>
+							<v8:AllowedLength>Variable</v8:AllowedLength>
+						</v8:StringQualifiers>
+					</Type>
+				</Column>
+				<Column name="Id" id="7">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Id</v8:content>
 						</v8:item>
 					</Title>
 					<Type>
