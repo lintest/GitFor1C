@@ -7,16 +7,14 @@
 #include <string>
 #include <thread>
 
-#ifdef WIN32
+#ifdef _WINDOWS
 #include <windows.h>
 #include <conio.h>
-#endif // WIN32
-
 #pragma comment(lib, "git2")
-#pragma comment(lib, "msvcrtd")
 #pragma comment(lib, "crypt32")
 #pragma comment(lib, "rpcrt4")
 #pragma comment(lib, "winhttp")
+#endif _WINDOWS
 
 #define S(wstr) WC2MB(wstr).c_str()
 
