@@ -149,6 +149,7 @@ void AddInNative::sendEvent(const wchar_t* wsMessage, const wchar_t* wsData)
 
 std::wstring VarToStr(tVariant* paParams)
 {
+	if (paParams->pwstrVal == nullptr) return {};
 	wchar_t* str = nullptr;
 	::convFromShortWchar(&str, paParams->pwstrVal);
 	std::wstring result = str;

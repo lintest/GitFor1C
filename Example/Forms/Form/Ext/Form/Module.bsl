@@ -211,8 +211,8 @@ EndProcedure
 Procedure RepoHistory(Command)
 	
 	History.Clear();
-	TextJSON = git.history("");
-	For Each Item in JsonLoad(TextJSON).result Do
+	TextJSON = git.history();
+	For Each Item In JsonLoad(TextJSON).result Do
 		Row = History.Add();
 		FillPropertyValues(Row, Item);
 		Row.Date = ToLocalTime('19700101' + Item.time);

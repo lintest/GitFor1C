@@ -98,6 +98,12 @@ bool GitControl::CallAsFunc(const long lMethodNum, tVariant* pvarRetValue, tVari
 	}
 }
 //---------------------------------------------------------------------------//
+static bool DefStr(tVariant* pvar)
+{
+	TV_VT(pvar) = VTYPE_PWSTR;
+	TV_BOOL(pvar) = nullptr;
+	return true;
+}
 static bool DefInt(tVariant* pvar, int value = 0)
 {
 	TV_VT(pvar) = VTYPE_I4;
@@ -115,6 +121,7 @@ bool GitControl::GetParamDefValue(const long lMethodNum, const long lParamNum, t
 {
 	switch (lMethodNum) {
 	case eInit: if (lParamNum == 1) return DefBool(pvarParamDefValue);
+	case eHistory: if (lParamNum == 0) return DefStr(pvarParamDefValue);
 	}
 	return false;
 }
