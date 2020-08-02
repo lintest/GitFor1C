@@ -54,6 +54,11 @@
 						<CommandName>Form.Command.RepoHistory</CommandName>
 						<ExtendedTooltip name="FormRepoHistoryExtendedTooltip" id="70"/>
 					</Button>
+					<Button name="FormRepoTree" id="157">
+						<Type>CommandBarButton</Type>
+						<CommandName>Form.Command.RepoTree</CommandName>
+						<ExtendedTooltip name="FormRepoTreeExtendedTooltip" id="158"/>
+					</Button>
 				</ChildItems>
 			</ButtonGroup>
 		</ChildItems>
@@ -998,6 +1003,21 @@
 				</v8:item>
 			</ToolTip>
 			<Action>SetSignatureCommitter</Action>
+		</Command>
+		<Command name="RepoTree" id="16">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>tree</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Repo tree</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>RepoTree</Action>
 		</Command>
 	</Commands>
 </Form>

@@ -10,6 +10,8 @@ Procedure OnCreateAtServer(Cancel, StandardProcessing)
 	LocalPath = "C:\Cpp\TestRepo\";
 	Message = "Init commit";
 	
+	AddInURL = "C:\Cpp\GitFor1C\bin64\libGitFor1CWin64.dll";
+	
 EndProcedure
 
 &AtClient
@@ -297,11 +299,17 @@ Procedure SetSignatureAuthor(Command)
 	
 EndProcedure
 
-
 &AtClient
 Procedure SetSignatureCommitter(Command)
 
 	git.setCommitter(Name, Email);
 	
+EndProcedure
+
+&AtClient
+Procedure RepoTree(Command)
+	TextJSON = git.tree(0);
+	data = JsonLoad(TextJSON).result;
+	Message(TextJSON);
 EndProcedure
 

@@ -32,6 +32,7 @@ const std::vector<AddInBase::Alias> GitControl::m_MethList{
 	Alias(eAdd     		 , 1, true  , L"Add"        	 , L"Add"),
 	Alias(eRemove  		 , 1, true  , L"Remove"     	 , L"Remove"),
 	Alias(eHistory 		 , 1, true  , L"History"    	 , L"History"),
+	Alias(eTree 		 , 1, true  , L"Tree"    	     , L"Tree"),
 	Alias(eSetAuthor     , 2, false , L"SetAuthor"  	 , L"SetAuthor"),
 	Alias(eSetCommitter  , 2, false , L"SetCommitter"    , L"SetCommitter"),
 };
@@ -91,6 +92,8 @@ bool GitControl::CallAsFunc(const long lMethodNum, tVariant* pvarRetValue, tVari
 		return VA(pvarRetValue) << m_manager.remove(VarToStr(paParams));
 	case eHistory:
 		return VA(pvarRetValue) << m_manager.history(VarToStr(paParams));
+	case eTree:
+		return VA(pvarRetValue) << m_manager.tree(VarToStr(paParams));
 	case eStatus:
 		return VA(pvarRetValue) << m_manager.status();
 	default:

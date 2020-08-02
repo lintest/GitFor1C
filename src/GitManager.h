@@ -40,6 +40,7 @@ public:
 	std::wstring remove(const std::wstring& msg);
 	std::wstring commit(const std::wstring& msg);
 	std::wstring history(const std::wstring& msg);
+	std::wstring tree(const std::wstring& msg);
 	std::wstring signature();
 	std::wstring status();
 };

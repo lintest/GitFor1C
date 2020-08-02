@@ -28,6 +28,7 @@ private:
 		eCommit,
 		eStatus,
 		eHistory,
+		eTree,
 		eSetAuthor,
 		eSetCommitter,
 	};

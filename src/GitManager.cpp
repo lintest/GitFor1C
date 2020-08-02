@@ -297,3 +297,36 @@ std::wstring GitManager::history(const std::wstring& spec)
 	}
 	return success(json);
 }
+
+std::string type2str(git_object_t type) {
+	switch (type) {
+	case GIT_OBJECT_TREE: return "tree";
+	case GIT_OBJECT_BLOB: return "blob";
+	default: return {};
+	}
+}
+
+int tree_walk_cb(const char* root, const git_tree_entry* entry, void* payload)
+{
+	nlohmann::json* json = (nlohmann::json*)payload;
+	nlohmann::json j;
+	git_object_t type = git_tree_entry_type(entry);
+	j["id"] = oid2str(git_tree_entry_id(entry));
+	j["name"] = git_tree_entry_name(entry);
+	j["type"] = type2str(type);
+	json->push_back(j);
+	return 0;
+}
+
+std::wstring GitManager::tree(const std::wstring& msg)
+{
+	CHECK_REPO();
+
+	git_object* obj = NULL;
+	int error = git_revparse_single(&obj, m_repo, "HEAD^{tree}");
+	GIT_tree tree = (git_tree*)obj;
+
+	nlohmann::json json;
+	error = git_tree_walk(tree, GIT_TREEWALK_PRE, tree_walk_cb, &json);
+	return success(json);
+}
