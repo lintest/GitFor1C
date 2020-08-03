@@ -59,6 +59,38 @@
 						<CommandName>Form.Command.RepoTree</CommandName>
 						<ExtendedTooltip name="FormRepoTreeExtendedTooltip" id="158"/>
 					</Button>
+					<Popup name="FormGroupDiff" id="183">
+						<Title>
+							<v8:item>
+								<v8:lang>ru</v8:lang>
+								<v8:content>diff</v8:content>
+							</v8:item>
+						</Title>
+						<ToolTip>
+							<v8:item>
+								<v8:lang>ru</v8:lang>
+								<v8:content>Form group diff</v8:content>
+							</v8:item>
+						</ToolTip>
+						<ExtendedTooltip name="FormGroupDiffExtendedTooltip" id="184"/>
+						<ChildItems>
+							<Button name="FormRepoDiff1" id="185">
+								<Type>CommandBarButton</Type>
+								<CommandName>Form.Command.RepoDiff1</CommandName>
+								<ExtendedTooltip name="FormRepoDiff1ExtendedTooltip" id="186"/>
+							</Button>
+							<Button name="FormRepoDiff2" id="187">
+								<Type>CommandBarButton</Type>
+								<CommandName>Form.Command.RepoDiff2</CommandName>
+								<ExtendedTooltip name="FormRepoDiff2ExtendedTooltip" id="188"/>
+							</Button>
+							<Button name="FormRepoDiff3" id="189">
+								<Type>CommandBarButton</Type>
+								<CommandName>Form.Command.RepoDiff3</CommandName>
+								<ExtendedTooltip name="FormRepoDiff3ExtendedTooltip" id="190"/>
+							</Button>
+						</ChildItems>
+					</Popup>
 				</ChildItems>
 			</ButtonGroup>
 		</ChildItems>
@@ -289,7 +321,7 @@
 							<AutoInsertNewRow>true</AutoInsertNewRow>
 							<EnableStartDrag>true</EnableStartDrag>
 							<EnableDrag>true</EnableDrag>
-							<DataPath>Fies</DataPath>
+							<DataPath>Files</DataPath>
 							<RowFilter xsi:nil="true"/>
 							<ContextMenu name="FilesContextMenu" id="39"/>
 							<AutoCommandBar name="FilesCommandBar" id="40">
@@ -334,13 +366,13 @@
 							</SearchControlAddition>
 							<ChildItems>
 								<InputField name="filesname" id="51">
-									<DataPath>Fies.filepath</DataPath>
+									<DataPath>Files.filepath</DataPath>
 									<EditMode>EnterOnInput</EditMode>
 									<ContextMenu name="filesnameContextMenu" id="52"/>
 									<ExtendedTooltip name="filesnameExtendedTooltip" id="53"/>
 								</InputField>
 								<InputField name="filesstatus" id="54">
-									<DataPath>Fies.statuses</DataPath>
+									<DataPath>Files.statuses</DataPath>
 									<EditMode>EnterOnInput</EditMode>
 									<ContextMenu name="filesstatusContextMenu" id="55"/>
 									<ExtendedTooltip name="filesstatusExtendedTooltip" id="56"/>
@@ -490,6 +522,169 @@
 						</Table>
 					</ChildItems>
 				</Page>
+				<Page name="PageTree" id="159">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Tree</v8:content>
+						</v8:item>
+					</Title>
+					<ToolTip>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Page tree</v8:content>
+						</v8:item>
+					</ToolTip>
+					<ExtendedTooltip name="PageTreeExtendedTooltip" id="160"/>
+					<ChildItems>
+						<Table name="Tree" id="161">
+							<Representation>List</Representation>
+							<ReadOnly>true</ReadOnly>
+							<ChangeRowSet>false</ChangeRowSet>
+							<ChangeRowOrder>false</ChangeRowOrder>
+							<AutoInsertNewRow>true</AutoInsertNewRow>
+							<EnableStartDrag>true</EnableStartDrag>
+							<EnableDrag>true</EnableDrag>
+							<DataPath>Tree</DataPath>
+							<RowFilter xsi:nil="true"/>
+							<ContextMenu name="TreeContextMenu" id="162"/>
+							<AutoCommandBar name="TreeCommandBar" id="163">
+								<Autofill>false</Autofill>
+							</AutoCommandBar>
+							<ExtendedTooltip name="TreeExtendedTooltip" id="164"/>
+							<SearchStringAddition name="TreeSearchString" id="165">
+								<AdditionSource>
+									<Item>Tree</Item>
+									<Type>SearchStringRepresentation</Type>
+								</AdditionSource>
+								<ContextMenu name="TreeSearchStringContextMenu" id="166"/>
+								<ExtendedTooltip name="TreeSearchStringExtendedTooltip" id="167"/>
+							</SearchStringAddition>
+							<ViewStatusAddition name="TreeViewStatus" id="168">
+								<AdditionSource>
+									<Item>Tree</Item>
+									<Type>ViewStatusRepresentation</Type>
+								</AdditionSource>
+								<ContextMenu name="TreeViewStatusContextMenu" id="169"/>
+								<ExtendedTooltip name="TreeViewStatusExtendedTooltip" id="170"/>
+							</ViewStatusAddition>
+							<SearchControlAddition name="TreeSearchControl" id="171">
+								<AdditionSource>
+									<Item>Tree</Item>
+									<Type>SearchControl</Type>
+								</AdditionSource>
+								<ContextMenu name="TreeSearchControlContextMenu" id="172"/>
+								<ExtendedTooltip name="TreeSearchControlExtendedTooltip" id="173"/>
+							</SearchControlAddition>
+							<ChildItems>
+								<InputField name="TreeName" id="174">
+									<DataPath>Tree.Name</DataPath>
+									<EditMode>EnterOnInput</EditMode>
+									<ContextMenu name="TreeNameContextMenu" id="175"/>
+									<ExtendedTooltip name="TreeNameExtendedTooltip" id="176"/>
+								</InputField>
+								<InputField name="TreeType" id="177">
+									<DataPath>Tree.Type</DataPath>
+									<EditMode>EnterOnInput</EditMode>
+									<ContextMenu name="TreeTypeContextMenu" id="178"/>
+									<ExtendedTooltip name="TreeTypeExtendedTooltip" id="179"/>
+								</InputField>
+								<InputField name="TreeRoot" id="180">
+									<DataPath>Tree.Root</DataPath>
+									<EditMode>EnterOnInput</EditMode>
+									<ContextMenu name="TreeRootContextMenu" id="181"/>
+									<ExtendedTooltip name="TreeRootExtendedTooltip" id="182"/>
+								</InputField>
+							</ChildItems>
+						</Table>
+					</ChildItems>
+				</Page>
+				<Page name="PageDiff" id="191">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Diff</v8:content>
+						</v8:item>
+					</Title>
+					<ToolTip>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Page diff</v8:content>
+						</v8:item>
+					</ToolTip>
+					<ExtendedTooltip name="PageDiffExtendedTooltip" id="192"/>
+					<ChildItems>
+						<Table name="Diff" id="193">
+							<Representation>List</Representation>
+							<ReadOnly>true</ReadOnly>
+							<ChangeRowSet>false</ChangeRowSet>
+							<ChangeRowOrder>false</ChangeRowOrder>
+							<AutoInsertNewRow>true</AutoInsertNewRow>
+							<EnableStartDrag>true</EnableStartDrag>
+							<EnableDrag>true</EnableDrag>
+							<DataPath>Diff</DataPath>
+							<RowFilter xsi:nil="true"/>
+							<ContextMenu name="DiffContextMenu" id="194"/>
+							<AutoCommandBar name="DiffCommandBar" id="195">
+								<Autofill>false</Autofill>
+							</AutoCommandBar>
+							<ExtendedTooltip name="DiffExtendedTooltip" id="196"/>
+							<SearchStringAddition name="DiffSearchString" id="197">
+								<AdditionSource>
+									<Item>Diff</Item>
+									<Type>SearchStringRepresentation</Type>
+								</AdditionSource>
+								<ContextMenu name="DiffSearchStringContextMenu" id="198"/>
+								<ExtendedTooltip name="DiffSearchStringExtendedTooltip" id="199"/>
+							</SearchStringAddition>
+							<ViewStatusAddition name="DiffViewStatus" id="200">
+								<AdditionSource>
+									<Item>Diff</Item>
+									<Type>ViewStatusRepresentation</Type>
+								</AdditionSource>
+								<ContextMenu name="DiffViewStatusContextMenu" id="201"/>
+								<ExtendedTooltip name="DiffViewStatusExtendedTooltip" id="202"/>
+							</ViewStatusAddition>
+							<SearchControlAddition name="DiffSearchControl" id="203">
+								<AdditionSource>
+									<Item>Diff</Item>
+									<Type>SearchControl</Type>
+								</AdditionSource>
+								<ContextMenu name="DiffSearchControlContextMenu" id="204"/>
+								<ExtendedTooltip name="DiffSearchControlExtendedTooltip" id="205"/>
+							</SearchControlAddition>
+							<Events>
+								<Event name="Selection">DiffSelection</Event>
+							</Events>
+							<ChildItems>
+								<InputField name="Diffold_name" id="206">
+									<DataPath>Diff.old_name</DataPath>
+									<EditMode>EnterOnInput</EditMode>
+									<ContextMenu name="Diffold_nameContextMenu" id="207"/>
+									<ExtendedTooltip name="Diffold_nameExtendedTooltip" id="208"/>
+								</InputField>
+								<InputField name="Diffnew_name" id="209">
+									<DataPath>Diff.new_name</DataPath>
+									<EditMode>EnterOnInput</EditMode>
+									<ContextMenu name="Diffnew_nameContextMenu" id="210"/>
+									<ExtendedTooltip name="Diffnew_nameExtendedTooltip" id="211"/>
+								</InputField>
+								<InputField name="Diffstatus" id="212">
+									<DataPath>Diff.status</DataPath>
+									<EditMode>EnterOnInput</EditMode>
+									<ContextMenu name="DiffstatusContextMenu" id="213"/>
+									<ExtendedTooltip name="DiffstatusExtendedTooltip" id="214"/>
+								</InputField>
+								<InputField name="Diffsimilarity" id="215">
+									<DataPath>Diff.similarity</DataPath>
+									<EditMode>EnterOnInput</EditMode>
+									<ContextMenu name="DiffsimilarityContextMenu" id="216"/>
+									<ExtendedTooltip name="DiffsimilarityExtendedTooltip" id="217"/>
+								</InputField>
+							</ChildItems>
+						</Table>
+					</ChildItems>
+				</Page>
 			</ChildItems>
 		</Pages>
 	</ChildItems>
@@ -566,11 +761,11 @@
 				</v8:StringQualifiers>
 			</Type>
 		</Attribute>
-		<Attribute name="Fies" id="6">
+		<Attribute name="Files" id="6">
 			<Title>
 				<v8:item>
 					<v8:lang>ru</v8:lang>
-					<v8:content>Fies</v8:content>
+					<v8:content>Files</v8:content>
 				</v8:item>
 			</Title>
 			<Type>
@@ -777,6 +972,168 @@
 			<Type>
 				<v8:Type>xs:boolean</v8:Type>
 			</Type>
+		</Attribute>
+		<Attribute name="Tree" id="12">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Tree</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>v8:ValueTable</v8:Type>
+			</Type>
+			<Columns>
+				<Column name="Name" id="1">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Name</v8:content>
+						</v8:item>
+					</Title>
+					<Type>
+						<v8:Type>xs:string</v8:Type>
+						<v8:StringQualifiers>
+							<v8:Length>0</v8:Length>
+							<v8:AllowedLength>Variable</v8:AllowedLength>
+						</v8:StringQualifiers>
+					</Type>
+				</Column>
+				<Column name="Type" id="2">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Type</v8:content>
+						</v8:item>
+					</Title>
+					<Type>
+						<v8:Type>xs:string</v8:Type>
+						<v8:StringQualifiers>
+							<v8:Length>0</v8:Length>
+							<v8:AllowedLength>Variable</v8:AllowedLength>
+						</v8:StringQualifiers>
+					</Type>
+				</Column>
+				<Column name="Root" id="3">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Root</v8:content>
+						</v8:item>
+					</Title>
+					<Type>
+						<v8:Type>xs:string</v8:Type>
+						<v8:StringQualifiers>
+							<v8:Length>0</v8:Length>
+							<v8:AllowedLength>Variable</v8:AllowedLength>
+						</v8:StringQualifiers>
+					</Type>
+				</Column>
+			</Columns>
+		</Attribute>
+		<Attribute name="Diff" id="13">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Diff</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>v8:ValueTable</v8:Type>
+			</Type>
+			<Columns>
+				<Column name="old_name" id="1">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Old name</v8:content>
+						</v8:item>
+					</Title>
+					<Type>
+						<v8:Type>xs:string</v8:Type>
+						<v8:StringQualifiers>
+							<v8:Length>0</v8:Length>
+							<v8:AllowedLength>Variable</v8:AllowedLength>
+						</v8:StringQualifiers>
+					</Type>
+				</Column>
+				<Column name="new_name" id="2">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>New name</v8:content>
+						</v8:item>
+					</Title>
+					<Type>
+						<v8:Type>xs:string</v8:Type>
+						<v8:StringQualifiers>
+							<v8:Length>0</v8:Length>
+							<v8:AllowedLength>Variable</v8:AllowedLength>
+						</v8:StringQualifiers>
+					</Type>
+				</Column>
+				<Column name="status" id="3">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Status</v8:content>
+						</v8:item>
+					</Title>
+					<Type>
+						<v8:Type>xs:string</v8:Type>
+						<v8:StringQualifiers>
+							<v8:Length>0</v8:Length>
+							<v8:AllowedLength>Variable</v8:AllowedLength>
+						</v8:StringQualifiers>
+					</Type>
+				</Column>
+				<Column name="similarity" id="4">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Similarity</v8:content>
+						</v8:item>
+					</Title>
+					<Type>
+						<v8:Type>xs:decimal</v8:Type>
+						<v8:NumberQualifiers>
+							<v8:Digits>10</v8:Digits>
+							<v8:FractionDigits>0</v8:FractionDigits>
+							<v8:AllowedSign>Any</v8:AllowedSign>
+						</v8:NumberQualifiers>
+					</Type>
+				</Column>
+				<Column name="old_id" id="5">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Old id</v8:content>
+						</v8:item>
+					</Title>
+					<Type>
+						<v8:Type>xs:string</v8:Type>
+						<v8:StringQualifiers>
+							<v8:Length>0</v8:Length>
+							<v8:AllowedLength>Variable</v8:AllowedLength>
+						</v8:StringQualifiers>
+					</Type>
+				</Column>
+				<Column name="new_id" id="6">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>New id</v8:content>
+						</v8:item>
+					</Title>
+					<Type>
+						<v8:Type>xs:string</v8:Type>
+						<v8:StringQualifiers>
+							<v8:Length>0</v8:Length>
+							<v8:AllowedLength>Variable</v8:AllowedLength>
+						</v8:StringQualifiers>
+					</Type>
+				</Column>
+			</Columns>
 		</Attribute>
 	</Attributes>
 	<Commands>
@@ -1018,6 +1375,51 @@
 				</v8:item>
 			</ToolTip>
 			<Action>RepoTree</Action>
+		</Command>
+		<Command name="RepoDiff1" id="17">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>INDEX – WORK</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Repo diff1</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>RepoDiff1</Action>
+		</Command>
+		<Command name="RepoDiff2" id="18">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>HEAD – INDEX</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Repo diff1</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>RepoDiff2</Action>
+		</Command>
+		<Command name="RepoDiff3" id="19">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>HEAD – WORK</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Repo diff1</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>RepoDiff3</Action>
 		</Command>
 	</Commands>
 </Form>

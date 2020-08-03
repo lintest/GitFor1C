@@ -10,8 +10,6 @@ Procedure OnCreateAtServer(Cancel, StandardProcessing)
 	LocalPath = "C:\Cpp\TestRepo\";
 	Message = "Init commit";
 	
-	AddInURL = "C:\Cpp\GitFor1C\bin64\libGitFor1CWin64.dll";
-	
 EndProcedure
 
 &AtClient
@@ -169,11 +167,11 @@ EndProcedure
 &AtClient
 Procedure SetFiles(TextJson) Export
 	
-	Fies.Clear();
+	Files.Clear();
 	FileArray = JsonLoad(TextJson).result;
 	If TypeOf(FileArray) = Type("Array") Then
 		For each Item in FileArray Do
-			line = Fies.Add();
+			line = Files.Add();
 			line.filepath = Item.filepath;
 			line.statuses = "";
 			For each Status in Item.statuses Do
@@ -265,7 +263,7 @@ EndProcedure
 Procedure IndexAdd(Command)
 	
 	For Each Id In Items.Files.SelectedRows Do
-		Row = Fies.FindByID(Id);
+		Row = Files.FindByID(Id);
 		git.add(Row.filepath);
 	EndDo;
 	git.BeginCallingStatus(GitStatusNotify());
@@ -276,7 +274,7 @@ EndProcedure
 Procedure IndexRemove(Command)
 
 	For Each Id In Items.Files.SelectedRows Do
-		Row = Fies.FindByID(Id);
+		Row = Files.FindByID(Id);
 		git.remove(Row.filepath);
 	EndDo;
 	git.BeginCallingStatus(GitStatusNotify());
@@ -308,8 +306,59 @@ EndProcedure
 
 &AtClient
 Procedure RepoTree(Command)
-	TextJSON = git.tree(0);
-	data = JsonLoad(TextJSON).result;
-	Message(TextJSON);
+	
+	Tree.Clear();
+	TextJSON = git.tree();
+	For Each Item In JsonLoad(TextJSON).result Do
+		Row = Tree.Add();
+		FillPropertyValues(Row, Item);
+	EndDo;
+	Items.FormPages.CurrentPage = Items.PageTree;
+	
+EndProcedure
+
+&AtClient
+Procedure RepoDiff1(Command)
+	RepoDiff("INDEX", "WORK")
+EndProcedure
+
+&AtClient
+Procedure RepoDiff2(Command)
+	RepoDiff("HEAD", "INDEX")
+EndProcedure
+
+&AtClient
+Procedure RepoDiff3(Command)
+	RepoDiff("HEAD", "WORK")
+EndProcedure
+
+&AtClient
+Procedure RepoDiff(s1, s2)
+	
+	Diff.Clear();
+	TextJSON = git.diff(s1, s2);
+	result = JsonLoad(TextJSON).result;
+	If TypeOf(result) = Type("Array") Then
+		For Each Item In result Do
+			Row = Diff.Add();
+			FillPropertyValues(Row, Item);
+		EndDo;
+	EndIf;
+	Items.FormPages.CurrentPage = Items.PageDiff;
+	
+EndProcedure
+
+&AtClient
+Procedure DiffSelection(Item, SelectedRow, Field, StandardProcessing)
+	
+	Row = Diff.FindByID(SelectedRow);
+	If Row = Undefined Then
+		Return;
+	EndIf;
+	BinaryData = git.blob(Row.new_id);
+	TextDocument = New TextDocument;
+	TextDocument.Read(BinaryData.OpenStreamForRead());
+	TextDocument.Show();
+		
 EndProcedure
 

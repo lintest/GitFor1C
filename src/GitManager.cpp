@@ -1,4 +1,5 @@
 #include "GitManager.h"
+#include "AddInBase.h"
 #include "json_ext.h"
 
 #include <stdexcept>
@@ -18,9 +19,9 @@
 
 #define S(wstr) WC2MB(wstr).c_str()
 
-#define CHECK_REPO() {if (m_repo == nullptr) return error("Repo is null");}
+#define CHECK_REPO() {if (m_repo == nullptr) return ::error("Repo is null");}
 
-#define ASSERT(t) {if (t < 0) return error();}
+#define ASSERT(t) {if (t < 0) return ::error();}
 
 #define AUTO_GIT(N, T, F)              \
 class N {                              \
@@ -33,6 +34,7 @@ public:                                \
 	operator T*() const { return h; }  \
 	T** operator &() { return &h; }    \
 	T* operator->() { return h; }      \
+	operator bool() { return h; }      \
 }                                      \
 ;
 
@@ -41,6 +43,8 @@ AUTO_GIT(GIT_revwalk, git_revwalk, git_revwalk_free)
 AUTO_GIT(GIT_commit, git_commit, git_commit_free)
 AUTO_GIT(GIT_object, git_object, git_object_free)
 AUTO_GIT(GIT_index, git_index, git_index_free)
+AUTO_GIT(GIT_blob, git_blob, git_blob_free)
+AUTO_GIT(GIT_diff, git_diff, git_diff_free)
 AUTO_GIT(GIT_tree, git_tree, git_tree_free)
 
 GitManager::GitManager(AddInNative* addin)
@@ -115,7 +119,7 @@ std::wstring GitManager::find(const std::wstring& path)
 	return success(j);
 }
 
-static std::string getStatusText(git_status_t status) {
+static std::string status2str(git_status_t status) {
 	switch (status) {
 	case GIT_STATUS_CURRENT: return "CURRENT";
 	case GIT_STATUS_INDEX_NEW: return "INDEX_NEW";
@@ -135,18 +139,23 @@ static std::string getStatusText(git_status_t status) {
 	}
 }
 
-int status_cb(const char* path, unsigned int status_flags, void* payload)
-{
-	nlohmann::json* json = (nlohmann::json*)payload;
-	nlohmann::json j, statuses;
+static nlohmann::json flags2json(unsigned int status_flags) {
+	nlohmann::json json;
 	for (unsigned int i = 0; i < 16; i++) {
 		git_status_t status = git_status_t(1u << i);
 		if (status & status_flags) {
-			statuses.push_back(getStatusText(status));
+			json.push_back(status2str(status));
 		}
 	}
+	return json;
+}
+
+int status_cb(const char* path, unsigned int status_flags, void* payload)
+{
+	nlohmann::json* json = (nlohmann::json*)payload;
+	nlohmann::json j;
 	j["filepath"] = path;
-	j["statuses"] = statuses;
+	j["statuses"] = flags2json(status_flags);
 	json->push_back(j);
 	return 0;
 }
@@ -314,6 +323,7 @@ int tree_walk_cb(const char* root, const git_tree_entry* entry, void* payload)
 	j["id"] = oid2str(git_tree_entry_id(entry));
 	j["name"] = git_tree_entry_name(entry);
 	j["type"] = type2str(type);
+	j["root"] = root;
 	json->push_back(j);
 	return 0;
 }
@@ -323,10 +333,97 @@ std::wstring GitManager::tree(const std::wstring& msg)
 	CHECK_REPO();
 
 	git_object* obj = NULL;
-	int error = git_revparse_single(&obj, m_repo, "HEAD^{tree}");
+	ASSERT(git_revparse_single(&obj, m_repo, "HEAD^{tree}"));
 	GIT_tree tree = (git_tree*)obj;
 
 	nlohmann::json json;
-	error = git_tree_walk(tree, GIT_TREEWALK_PRE, tree_walk_cb, &json);
+	ASSERT(git_tree_walk(tree, GIT_TREEWALK_PRE, tree_walk_cb, &json));
 	return success(json);
+}
+
+
+static std::string delta2str(git_delta_t status) {
+	switch (status) {
+	case GIT_DELTA_UNMODIFIED: return "UNMODIFIED";
+	case GIT_DELTA_ADDED: return "ADDED";
+	case GIT_DELTA_DELETED: return "DELETED";
+	case GIT_DELTA_MODIFIED: return "MODIFIED";
+	case GIT_DELTA_RENAMED: return "RENAMED";
+	case GIT_DELTA_COPIED: return "COPIED";
+	case GIT_DELTA_IGNORED: return "IGNORED";
+	case GIT_DELTA_UNTRACKED: return "UNTRACKED";
+	case GIT_DELTA_TYPECHANGE: return "TYPECHANGE";
+	case GIT_DELTA_UNREADABLE: return "UNREADABLE";
+	case GIT_DELTA_CONFLICTED: return "CONFLICTED";
+	default:  return "UNMODIFIED";
+	}
+}
+
+int diff_file_cb(const git_diff_delta* delta, float progress, void* payload)
+{
+	nlohmann::json* json = (nlohmann::json*)payload;
+	nlohmann::json j;
+	j["status"] = delta2str(delta->status);
+	j["flags"] = flags2json(delta->flags);
+	j["old_id"] = oid2str(&delta->old_file.id);
+	j["old_name"] = delta->old_file.path;
+	j["new_id"] = oid2str(&delta->new_file.id);
+	j["new_name"] = delta->new_file.path;
+	j["similarity"] = delta->similarity;
+	json->push_back(j);
+	return 0;
+}
+
+std::wstring GitManager::diff(const std::wstring& s1, const std::wstring& s2)
+{
+	GIT_diff diff = NULL;
+	if ((s1 == L"INDEX" && s2 == L"WORK") || (s2 == L"INDEX" && s1 == L"WORK")) {
+		ASSERT(git_diff_index_to_workdir(&diff, m_repo, NULL, NULL));
+	}
+	else if ((s1 == L"HEAD" && s2 == L"INDEX") || (s2 == L"HEAD" && s1 == L"INDEX")) {
+		GIT_object obj = NULL;
+		ASSERT(git_revparse_single(&obj, m_repo, "HEAD^{tree}"));
+		GIT_tree tree = NULL;
+		ASSERT(git_tree_lookup(&tree, m_repo, git_object_id(obj)));
+		ASSERT(git_diff_tree_to_index(&diff, m_repo, tree, NULL, NULL));
+	}
+	else if ((s1 == L"HEAD" && s2 == L"WORK") || (s2 == L"HEAD" && s1 == L"WORK")) {
+		GIT_object obj = NULL;
+		ASSERT(git_revparse_single(&obj, m_repo, "HEAD^{tree}"));
+		GIT_tree tree = NULL;
+		ASSERT(git_tree_lookup(&tree, m_repo, git_object_id(obj)));
+		ASSERT(git_diff_tree_to_workdir_with_index(&diff, m_repo, tree, NULL));
+	}
+	nlohmann::json json;
+	if (diff) {
+		git_diff_find_options opts = GIT_DIFF_FIND_OPTIONS_INIT;
+		opts.flags = GIT_DIFF_FIND_RENAMES | GIT_DIFF_FIND_COPIES | GIT_DIFF_FIND_FOR_UNTRACKED;
+		ASSERT(git_diff_find_similar(diff, &opts));
+		ASSERT(git_diff_foreach(diff, diff_file_cb, NULL, NULL, NULL, &json));
+	}
+	return success(json);
+}
+
+bool GitManager::error(tVariant* pvar)
+{
+	return ((AddInBase*)m_addin)->VA(pvar) << ::error();
+}
+
+bool GitManager::blob(const std::wstring& id, tVariant* pvarRetValue)
+{
+	git_oid oid;
+	int ok = git_oid_fromstr(&oid, S(id));
+	if (ok < 0) return error(pvarRetValue);
+	GIT_blob blob = NULL;
+	ok = git_blob_lookup(&blob, m_repo, &oid);
+	if (ok < 0) return error(pvarRetValue);
+	git_off_t rawsize = git_blob_rawsize(blob);
+	const void* rawcontent = git_blob_rawcontent(blob);
+	if (rawsize > 0) {
+		m_addin->AllocMemory((void**)&pvarRetValue->pstrVal, rawsize);
+		memcpy((void*)pvarRetValue->pstrVal, rawcontent, rawsize);
+		TV_VT(pvarRetValue) = VTYPE_BLOB;
+		pvarRetValue->strLen = rawsize;
+	}
+	return true;
 }

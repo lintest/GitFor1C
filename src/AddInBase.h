@@ -35,6 +35,16 @@ protected:
 		}
 	};
 
+	virtual const std::vector<Alias>& PropList() const = 0;
+	virtual const std::vector<Alias>& MethList() const = 0;
+	virtual const wchar_t* ExtensionName() const = 0;
+
+	long FindName(const std::vector<Alias>& names, const WCHAR_T* name);
+	const WCHAR_T* GetName(const std::vector<Alias>& names, long lPropNum, long lPropAlias);
+	long GetNParams(const std::vector<Alias>& names, const long lMethodNum);
+	bool HasRetVal(const std::vector<Alias>& names, const long lMethodNum);
+
+public:
 	class VarinantHelper {
 	private:
 		tVariant* pvar = NULL;
@@ -52,15 +62,6 @@ protected:
 	};
 
 	VarinantHelper VA(tVariant* pvar) { return VarinantHelper(pvar, this); }
-
-	virtual const std::vector<Alias>& PropList() const = 0;
-	virtual const std::vector<Alias>& MethList() const = 0;
-	virtual const wchar_t* ExtensionName() const = 0;
-
-	long FindName(const std::vector<Alias>& names, const WCHAR_T* name);
-	const WCHAR_T* GetName(const std::vector<Alias>& names, long lPropNum, long lPropAlias);
-	long GetNParams(const std::vector<Alias>& names, const long lMethodNum);
-	bool HasRetVal(const std::vector<Alias>& names, const long lMethodNum);
 
 public:
 	AddInBase(void) {}

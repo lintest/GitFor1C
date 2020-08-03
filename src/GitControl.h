@@ -29,6 +29,8 @@ private:
 		eStatus,
 		eHistory,
 		eTree,
+		eDiff,
+		eBlob,
 		eSetAuthor,
 		eSetCommitter,
 	};

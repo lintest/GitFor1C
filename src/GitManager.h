@@ -26,9 +26,12 @@ private:
 	git_repository* m_repo = nullptr;
 	Signature* m_author = nullptr;
 	Signature* m_committer = nullptr;
+	bool error(tVariant* pvar);
+
 public:
 	GitManager(AddInNative* addin);
 	virtual ~GitManager();
+	bool blob(const std::wstring& id, tVariant* pvarRetValue);
 	bool setAuthor(const std::wstring& name, const std::wstring& email);
 	bool setCommitter(const std::wstring& name, const std::wstring& email);
 	std::wstring init(const std::wstring& path, bool is_bare);
@@ -40,6 +43,7 @@ public:
 	std::wstring remove(const std::wstring& msg);
 	std::wstring commit(const std::wstring& msg);
 	std::wstring history(const std::wstring& msg);
+	std::wstring diff(const std::wstring& s1, const std::wstring& s2);
 	std::wstring tree(const std::wstring& msg);
 	std::wstring signature();
 	std::wstring status();

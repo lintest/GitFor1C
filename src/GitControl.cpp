@@ -32,6 +32,8 @@ const std::vector<AddInBase::Alias> GitControl::m_MethList{
 	Alias(eAdd     		 , 1, true  , L"Add"        	 , L"Add"),
 	Alias(eRemove  		 , 1, true  , L"Remove"     	 , L"Remove"),
 	Alias(eHistory 		 , 1, true  , L"History"    	 , L"History"),
+	Alias(eBlob 		 , 1, true  , L"Blob"    	     , L"Blob"),
+	Alias(eDiff 		 , 2, true  , L"Diff"    	     , L"Diff"),
 	Alias(eTree 		 , 1, true  , L"Tree"    	     , L"Tree"),
 	Alias(eSetAuthor     , 2, false , L"SetAuthor"  	 , L"SetAuthor"),
 	Alias(eSetCommitter  , 2, false , L"SetCommitter"    , L"SetCommitter"),
@@ -92,10 +94,14 @@ bool GitControl::CallAsFunc(const long lMethodNum, tVariant* pvarRetValue, tVari
 		return VA(pvarRetValue) << m_manager.remove(VarToStr(paParams));
 	case eHistory:
 		return VA(pvarRetValue) << m_manager.history(VarToStr(paParams));
+	case eDiff:
+		return VA(pvarRetValue) << m_manager.diff(VarToStr(paParams), VarToStr(paParams + 1));
 	case eTree:
 		return VA(pvarRetValue) << m_manager.tree(VarToStr(paParams));
 	case eStatus:
 		return VA(pvarRetValue) << m_manager.status();
+	case eBlob:
+		return m_manager.blob(VarToStr(paParams), pvarRetValue);
 	default:
 		return false;
 	}
@@ -104,7 +110,7 @@ bool GitControl::CallAsFunc(const long lMethodNum, tVariant* pvarRetValue, tVari
 static bool DefStr(tVariant* pvar)
 {
 	TV_VT(pvar) = VTYPE_PWSTR;
-	TV_BOOL(pvar) = nullptr;
+	TV_WSTR(pvar) = nullptr;
 	return true;
 }
 static bool DefInt(tVariant* pvar, int value = 0)
@@ -124,6 +130,7 @@ bool GitControl::GetParamDefValue(const long lMethodNum, const long lParamNum, t
 {
 	switch (lMethodNum) {
 	case eInit: if (lParamNum == 1) return DefBool(pvarParamDefValue);
+	case eTree: if (lParamNum == 0) return DefStr(pvarParamDefValue);
 	case eHistory: if (lParamNum == 0) return DefStr(pvarParamDefValue);
 	}
 	return false;
