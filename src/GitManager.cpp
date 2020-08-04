@@ -38,6 +38,8 @@ public:                                \
 }                                      \
 ;
 
+
+AUTO_GIT(GIT_status_list, git_status_list, git_status_list_free)
 AUTO_GIT(GIT_signature, git_signature, git_signature_free)
 AUTO_GIT(GIT_revwalk, git_revwalk, git_revwalk_free)
 AUTO_GIT(GIT_commit, git_commit, git_commit_free)
@@ -139,6 +141,23 @@ static std::string status2str(git_status_t status) {
 	}
 }
 
+static std::string delta2str(git_delta_t status) {
+	switch (status) {
+	case GIT_DELTA_UNMODIFIED: return "UNMODIFIED";
+	case GIT_DELTA_ADDED: return "ADDED";
+	case GIT_DELTA_DELETED: return "DELETED";
+	case GIT_DELTA_MODIFIED: return "MODIFIED";
+	case GIT_DELTA_RENAMED: return "RENAMED";
+	case GIT_DELTA_COPIED: return "COPIED";
+	case GIT_DELTA_IGNORED: return "IGNORED";
+	case GIT_DELTA_UNTRACKED: return "UNTRACKED";
+	case GIT_DELTA_TYPECHANGE: return "TYPECHANGE";
+	case GIT_DELTA_UNREADABLE: return "UNREADABLE";
+	case GIT_DELTA_CONFLICTED: return "CONFLICTED";
+	default:  return "UNMODIFIED";
+	}
+}
+
 static nlohmann::json flags2json(unsigned int status_flags) {
 	nlohmann::json json;
 	for (unsigned int i = 0; i < 16; i++) {
@@ -148,6 +167,15 @@ static nlohmann::json flags2json(unsigned int status_flags) {
 		}
 	}
 	return json;
+}
+
+static std::string oid2str(const git_oid* id)
+{
+	if (git_oid_is_zero(id)) return {};
+	const size_t size = GIT_OID_HEXSZ + 1;
+	char buf[size];
+	git_oid_tostr(buf, size, id);
+	return buf;
 }
 
 int status_cb(const char* path, unsigned int status_flags, void* payload)
@@ -160,13 +188,37 @@ int status_cb(const char* path, unsigned int status_flags, void* payload)
 	return 0;
 }
 
+nlohmann::json delta2json(git_diff_delta* delta)
+{
+	nlohmann::json j;
+	j["status"] = delta2str(delta->status);
+	j["old_id"] = oid2str(&delta->old_file.id);
+	j["old_name"] = delta->old_file.path;
+	j["old_size"] = delta->old_file.size;
+	j["new_id"] = oid2str(&delta->new_file.id);
+	j["new_name"] = delta->new_file.path;
+	j["new_size"] = delta->new_file.size;
+	return j;
+}
+
 std::wstring GitManager::status()
 {
 	CHECK_REPO();
-	nlohmann::json json, j;
-	ASSERT(git_status_foreach(m_repo, status_cb, &j));
-	json["result"] = j;
-	return MB2WC(json.dump());
+
+	nlohmann::json json, jIndex, jWork;
+	GIT_status_list statuses = NULL;
+	git_status_options opts = GIT_STATUS_OPTIONS_INIT;
+	opts.flags = GIT_STATUS_OPT_DEFAULTS;
+	ASSERT(git_status_list_new(&statuses, m_repo, &opts));
+	size_t count = git_status_list_entrycount(statuses);
+	for (size_t i = 0; i < count; ++i) {
+		const git_status_entry* entry = git_status_byindex(statuses, i);
+		if (entry->head_to_index) jIndex.push_back(delta2json(entry->head_to_index));
+		if (entry->index_to_workdir) jWork.push_back(delta2json(entry->index_to_workdir));
+	}
+	if (jIndex.is_array()) json["index"] = jIndex;
+	if (jWork.is_array()) json["work"] = jWork;
+	return success(json);
 }
 
 bool GitManager::setAuthor(const std::wstring& name, const std::wstring& email)
@@ -225,7 +277,8 @@ std::wstring GitManager::commit(const std::wstring& msg)
 		"HEAD",
 		author ? author : sig,
 		committer ? committer : sig,
-		NULL, S(msg),
+		NULL, 
+		S(msg),
 		tree,
 		head_count,
 		head_commit
@@ -251,14 +304,6 @@ std::wstring GitManager::remove(const std::wstring& filepath)
 	ASSERT(git_index_remove_bypath(index, S(filepath)));
 	ASSERT(git_index_write(index));
 	return {};
-}
-
-std::string oid2str(const git_oid* id)
-{
-	const size_t size = GIT_OID_HEXSZ + 1;
-	char buf[size];
-	git_oid_tostr(buf, size, id);
-	return buf;
 }
 
 std::wstring GitManager::info(const std::wstring& spec)
@@ -342,23 +387,6 @@ std::wstring GitManager::tree(const std::wstring& msg)
 }
 
 
-static std::string delta2str(git_delta_t status) {
-	switch (status) {
-	case GIT_DELTA_UNMODIFIED: return "UNMODIFIED";
-	case GIT_DELTA_ADDED: return "ADDED";
-	case GIT_DELTA_DELETED: return "DELETED";
-	case GIT_DELTA_MODIFIED: return "MODIFIED";
-	case GIT_DELTA_RENAMED: return "RENAMED";
-	case GIT_DELTA_COPIED: return "COPIED";
-	case GIT_DELTA_IGNORED: return "IGNORED";
-	case GIT_DELTA_UNTRACKED: return "UNTRACKED";
-	case GIT_DELTA_TYPECHANGE: return "TYPECHANGE";
-	case GIT_DELTA_UNREADABLE: return "UNREADABLE";
-	case GIT_DELTA_CONFLICTED: return "CONFLICTED";
-	default:  return "UNMODIFIED";
-	}
-}
-
 int diff_file_cb(const git_diff_delta* delta, float progress, void* payload)
 {
 	nlohmann::json* json = (nlohmann::json*)payload;
@@ -426,4 +454,12 @@ bool GitManager::blob(const std::wstring& id, tVariant* pvarRetValue)
 		pvarRetValue->strLen = rawsize;
 	}
 	return true;
+}
+
+#include <filesystem>
+
+std::wstring GitManager::fullpath(const std::wstring& path)
+{
+	std::filesystem::path root = MB2WC(git_repository_path(m_repo));
+	return root.parent_path().parent_path().append(path).make_preferred();
 }

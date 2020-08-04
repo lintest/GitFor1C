@@ -34,6 +34,7 @@ public:
 	bool blob(const std::wstring& id, tVariant* pvarRetValue);
 	bool setAuthor(const std::wstring& name, const std::wstring& email);
 	bool setCommitter(const std::wstring& name, const std::wstring& email);
+	std::wstring fullpath(const std::wstring& path);
 	std::wstring init(const std::wstring& path, bool is_bare);
 	std::wstring clone(const std::wstring& url, const std::wstring& path);
 	std::wstring info(const std::wstring& msg);

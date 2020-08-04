@@ -4,12 +4,32 @@ Var AddInId, git;
 &AtServer
 Procedure OnCreateAtServer(Cancel, StandardProcessing)
 	
+	LoadEditor();
 	AddInTemplate = FormAttributeToValue("Object").GetTemplate("GitFor1C");
 	AddInURL = PutToTempStorage(AddInTemplate, UUID);
 	RemoteURL = "https://github.com/lintest/GitFor1C";
 	LocalPath = "C:\Cpp\TestRepo\";
 	Message = "Init commit";
 	
+EndProcedure
+
+&AtServer
+Procedure LoadEditor()
+
+	TempFileName = GetTempFileName();
+	DeleteFiles(TempFileName);
+	CreateDirectory(TempFileName);
+
+	BinaryData = FormAttributeToValue("Object").GetTemplate("VAEditor");
+	ZipFileReader = New ZipFileReader(BinaryData.OpenStreamForRead());
+	For each ZipFileEntry In ZipFileReader.Items Do
+		ZipFileReader.Extract(ZipFileEntry, TempFileName, ZIPRestoreFilePathsMode.Restore);
+		BinaryData = New BinaryData(TempFileName + "/" + ZipFileEntry.FullName);
+		EditorURL = GetInfoBaseURL() + "/" + PutToTempStorage(BinaryData, UUID)
+			+ "&localeCode=" + Left(CurrentSystemLanguage(), 2);
+	EndDo;
+	DeleteFiles(TempFileName);
+
 EndProcedure
 
 &AtClient
@@ -160,36 +180,45 @@ EndProcedure
 Procedure RepoStatus(Command)
 	
 	git.BeginCallingStatus(GitStatusNotify());
-	Items.FormPages.CurrentPage = Items.PageFiles;
+	Items.FormPages.CurrentPage = Items.PageStatus;
 	
 EndProcedure
 
 &AtClient
-Procedure SetFiles(TextJson) Export
+Procedure AddStatusItems(JsonData, Key)
 	
-	Files.Clear();
-	FileArray = JsonLoad(TextJson).result;
-	If TypeOf(FileArray) = Type("Array") Then
-		For each Item in FileArray Do
-			line = Files.Add();
-			line.filepath = Item.filepath;
-			line.statuses = "";
-			For each Status in Item.statuses Do
-				If Not IsBlankString(line.statuses) Then 
-					line.statuses = line.statuses + ", ";
-				EndIf;
-				line.statuses = line.statuses + Status;
-			EndDo;
+	Var Array;
+
+	If JsonData.Property(Key, Array) Then
+		ParentRow = Status.GetItems().Add();
+		ParentRow.Name = Key;
+		For Each Item In Array Do
+			Row = ParentRow.GetItems().Add();
+			FillPropertyValues(Row, Item);
+			Row.name = Item.new_name;
+			Row.size = Item.new_size;
 		EndDo;
+		Items.Status.Expand(ParentRow.GetID());
+	EndIf
+	
+EndProcedure	
+
+&AtClient
+Procedure SetStatus(TextJson) Export
+	
+	Status.GetItems().Clear();
+	JsonData = JsonLoad(TextJson);
+	If JsonData.success Then
+		AddStatusItems(JsonData.result, "Index");
+		AddStatusItems(JsonData.result, "Work");
 	EndIf;
 	
-	
 EndProcedure
-
+	
 &AtClient
 Procedure EndCallingStatus(ResultCall, ParametersCall, AdditionalParameters) Export
 	
-	SetFiles(ResultCall);
+	SetStatus(ResultCall);
 	
 EndProcedure
 
@@ -254,17 +283,17 @@ Procedure AutoTest(Command)
 			WriteText(FilePath, "Second line");
 		EndIf;
 	EndDo;
-	status = git.status();
-	SetFiles(status);
+	JsonText = git.status();
+	SetStatus(JsonText);
 	
 EndProcedure
 
 &AtClient
 Procedure IndexAdd(Command)
 	
-	For Each Id In Items.Files.SelectedRows Do
-		Row = Files.FindByID(Id);
-		git.add(Row.filepath);
+	For Each Id In Items.Status.SelectedRows Do
+		Row = Status.FindByID(Id);
+		git.add(Row.name);
 	EndDo;
 	git.BeginCallingStatus(GitStatusNotify());
 		
@@ -273,9 +302,9 @@ EndProcedure
 &AtClient
 Procedure IndexRemove(Command)
 
-	For Each Id In Items.Files.SelectedRows Do
-		Row = Files.FindByID(Id);
-		git.remove(Row.filepath);
+	For Each Id In Items.Status.SelectedRows Do
+		Row = Status.FindByID(Id);
+		git.remove(Row.name);
 	EndDo;
 	git.BeginCallingStatus(GitStatusNotify());
 	
@@ -360,5 +389,44 @@ Procedure DiffSelection(Item, SelectedRow, Field, StandardProcessing)
 	TextDocument.Read(BinaryData.OpenStreamForRead());
 	TextDocument.Show();
 		
+EndProcedure
+
+&AtClient
+Procedure StatusOnActivateRow(Item)
+	
+	Row = Items.Status.CurrentData;
+	if Row = Undefined Then 
+		Return 
+	EndIf;
+
+	If IsBlankString(Row.old_id) Then
+		OldText = "";
+	Else
+		BinaryData = git.blob(Row.old_id);
+		TextReader = New TextReader;
+		TextReader.Open(BinaryData.OpenStreamForRead());
+		OldText = TextReader.Read();
+	EndIf;
+	
+	If IsBlankString(Row.new_id) Then
+		filepath = git.fullpath(Row.name);
+		BinaryData = new BinaryData(filepath);
+	Else
+		BinaryData = git.blob(Row.new_id);
+	EndIf;
+	
+	TextReader = New TextReader;
+	TextReader.Open(BinaryData.OpenStreamForRead());
+	NewText = TextReader.Read();
+	
+	old_name = String(New UUID) + "/" + Row.old_name;
+	new_name = String(New UUID) + "/" + Row.new_name;
+	Items.Editor.Document.defaultView.VanessaEditor.setValue(OldText, old_name, NewText, new_name);
+	
+EndProcedure
+
+&AtClient
+Procedure EditorDocumentComplete(Item)
+	Items.Editor.Document.defaultView.createVanessaDiffEditor("", "", "text");
 EndProcedure
 

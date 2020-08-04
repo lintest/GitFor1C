@@ -31,6 +31,7 @@ private:
 		eTree,
 		eDiff,
 		eBlob,
+		eFullpath,
 		eSetAuthor,
 		eSetCommitter,
 	};

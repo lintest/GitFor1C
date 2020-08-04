@@ -35,6 +35,7 @@ const std::vector<AddInBase::Alias> GitControl::m_MethList{
 	Alias(eBlob 		 , 1, true  , L"Blob"    	     , L"Blob"),
 	Alias(eDiff 		 , 2, true  , L"Diff"    	     , L"Diff"),
 	Alias(eTree 		 , 1, true  , L"Tree"    	     , L"Tree"),
+	Alias(eFullpath      , 1, true  , L"Fullpath"    	 , L"Fullpath"),
 	Alias(eSetAuthor     , 2, false , L"SetAuthor"  	 , L"SetAuthor"),
 	Alias(eSetCommitter  , 2, false , L"SetCommitter"    , L"SetCommitter"),
 };
@@ -98,6 +99,8 @@ bool GitControl::CallAsFunc(const long lMethodNum, tVariant* pvarRetValue, tVari
 		return VA(pvarRetValue) << m_manager.diff(VarToStr(paParams), VarToStr(paParams + 1));
 	case eTree:
 		return VA(pvarRetValue) << m_manager.tree(VarToStr(paParams));
+	case eFullpath:
+		return VA(pvarRetValue) << m_manager.fullpath(VarToStr(paParams));
 	case eStatus:
 		return VA(pvarRetValue) << m_manager.status();
 	case eBlob:
