@@ -185,14 +185,17 @@ Procedure RepoStatus(Command)
 EndProcedure
 
 &AtClient
-Procedure AddStatusItems(JsonData, Key)
+Procedure AddStatusItems(JsonData, Key, Name)
 	
 	Var Array;
 
 	If JsonData.Property(Key, Array) Then
 		ParentRow = Status.GetItems().Add();
-		ParentRow.Name = Key;
+		ParentRow.Name = Name;
 		For Each Item In Array Do
+			If Item.Status = "IGNORED" Then 
+				Continue;
+			EndIf;
 			Row = ParentRow.GetItems().Add();
 			FillPropertyValues(Row, Item);
 			Row.name = Item.new_name;
@@ -209,8 +212,8 @@ Procedure SetStatus(TextJson) Export
 	Status.GetItems().Clear();
 	JsonData = JsonLoad(TextJson);
 	If JsonData.success Then
-		AddStatusItems(JsonData.result, "Index");
-		AddStatusItems(JsonData.result, "Work");
+		AddStatusItems(JsonData.result, "Index", "Staged Changes");
+		AddStatusItems(JsonData.result, "Work", "Changes");
 	EndIf;
 	
 EndProcedure
@@ -392,41 +395,57 @@ Procedure DiffSelection(Item, SelectedRow, Field, StandardProcessing)
 EndProcedure
 
 &AtClient
-Procedure StatusOnActivateRow(Item)
-	
-	Row = Items.Status.CurrentData;
-	if Row = Undefined Then 
-		Return 
-	EndIf;
-
-	If IsBlankString(Row.old_id) Then
-		OldText = "";
-	Else
-		BinaryData = git.blob(Row.old_id);
-		TextReader = New TextReader;
-		TextReader.Open(BinaryData.OpenStreamForRead());
-		OldText = TextReader.Read();
-	EndIf;
-	
-	If IsBlankString(Row.new_id) Then
-		filepath = git.fullpath(Row.name);
-		BinaryData = new BinaryData(filepath);
-	Else
-		BinaryData = git.blob(Row.new_id);
-	EndIf;
+Function ReadText(BinaryData)
 	
 	TextReader = New TextReader;
-	TextReader.Open(BinaryData.OpenStreamForRead());
-	NewText = TextReader.Read();
+	TextReader.Open(BinaryData.OpenStreamForRead(), TextEncoding.UTF8);
+	Return TextReader.Read();
 	
-	old_name = String(New UUID) + "/" + Row.old_name;
-	new_name = String(New UUID) + "/" + Row.new_name;
-	Items.Editor.Document.defaultView.VanessaEditor.setValue(OldText, old_name, NewText, new_name);
-	
-EndProcedure
+EndFunction	
 
 &AtClient
 Procedure EditorDocumentComplete(Item)
 	Items.Editor.Document.defaultView.createVanessaDiffEditor("", "", "text");
 EndProcedure
 
+&AtClient
+Procedure StatusOnActivateRow(Item)
+	
+	Row = Items.Status.CurrentData;
+	if Row = Undefined Then 
+		Return;
+	EndIf;
+
+	If IsBlankString(Row.old_id) Then
+		OldText = "";
+	Else
+		BinaryData = git.blob(Row.old_id);
+		OldText = ReadText(BinaryData);
+	EndIf;
+	
+	If IsBlankString(Row.new_id) Then
+		filepath = git.fullpath(Row.name);
+		Try
+			BinaryData = New BinaryData(filepath);
+			NewText = ReadText(BinaryData);
+		Except
+			NewText = "";
+		EndTry;
+	Else
+		BinaryData = git.blob(Row.new_id);
+		If TypeOf(BinaryData) = Type("BinaryData") Then 
+			NewText = ReadText(BinaryData);
+		Else
+			filepath = git.fullpath(Row.name);
+			Try
+				BinaryData = New BinaryData(filepath);
+				NewText = ReadText(BinaryData);
+			Except
+				NewText = "";
+			EndTry;
+		EndIf;
+	EndIf;
+	
+	Items.Editor.Document.defaultView.VanessaEditor.setValue(OldText, NewText, Row.new_name);
+	
+EndProcedure

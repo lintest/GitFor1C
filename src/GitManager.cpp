@@ -158,12 +158,32 @@ static std::string delta2str(git_delta_t status) {
 	}
 }
 
+static std::string diff2str(git_diff_flag_t flag) {
+	switch (flag) {
+	case GIT_DIFF_FLAG_BINARY: return "BINARY";
+	case GIT_DIFF_FLAG_NOT_BINARY: return "TEXT";
+	case GIT_DIFF_FLAG_VALID_ID: return "VALID";
+	case GIT_DIFF_FLAG_EXISTS: return "EXISTS";
+	}
+}
+
 static nlohmann::json flags2json(unsigned int status_flags) {
 	nlohmann::json json;
 	for (unsigned int i = 0; i < 16; i++) {
 		git_status_t status = git_status_t(1u << i);
 		if (status & status_flags) {
 			json.push_back(status2str(status));
+		}
+	}
+	return json;
+}
+
+static nlohmann::json diff2json(unsigned int status_flags) {
+	nlohmann::json json;
+	for (unsigned int i = 0; i < 4; i++) {
+		git_diff_flag_t flag = git_diff_flag_t(1u << i);
+		if (flag & status_flags) {
+			json.push_back(diff2str(flag));
 		}
 	}
 	return json;
@@ -195,16 +215,17 @@ nlohmann::json delta2json(git_diff_delta* delta)
 	j["old_id"] = oid2str(&delta->old_file.id);
 	j["old_name"] = delta->old_file.path;
 	j["old_size"] = delta->old_file.size;
+	j["old_flags"] = delta->old_file.flags;
 	j["new_id"] = oid2str(&delta->new_file.id);
 	j["new_name"] = delta->new_file.path;
 	j["new_size"] = delta->new_file.size;
+	j["new_flags"] = delta->new_file.flags;
 	return j;
 }
 
 std::wstring GitManager::status()
 {
 	CHECK_REPO();
-
 	nlohmann::json json, jIndex, jWork;
 	GIT_status_list statuses = NULL;
 	git_status_options opts = GIT_STATUS_OPTIONS_INIT;
