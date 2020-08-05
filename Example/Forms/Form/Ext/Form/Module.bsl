@@ -5,8 +5,10 @@ Var AddInId, git;
 Procedure OnCreateAtServer(Cancel, StandardProcessing)
 	
 	LoadEditor();
-	AddInTemplate = FormAttributeToValue("Object").GetTemplate("GitFor1C");
-	AddInURL = PutToTempStorage(AddInTemplate, UUID);
+	If Not Parameters.Property("AddInURL", AddInURL) Then
+		AddInTemplate = FormAttributeToValue("Object").GetTemplate("GitFor1C");
+		AddInURL = PutToTempStorage(AddInTemplate, UUID);
+	EndIf;
 	RemoteURL = "https://github.com/lintest/GitFor1C";
 	LocalPath = "C:\Cpp\TestRepo\";
 	Message = "Init commit";
