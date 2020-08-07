@@ -211,6 +211,7 @@ int status_cb(const char* path, unsigned int status_flags, void* payload)
 nlohmann::json delta2json(git_diff_delta* delta)
 {
 	nlohmann::json j;
+	j["flag"] = delta->status;
 	j["status"] = delta2str(delta->status);
 	j["old_id"] = oid2str(&delta->old_file.id);
 	j["old_name"] = delta->old_file.path;

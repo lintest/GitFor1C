@@ -10,18 +10,17 @@ Procedure OnCreateAtServer(Cancel, StandardProcessing)
 		AddInURL = PutToTempStorage(AddInTemplate, UUID);
 	EndIf;
 	RemoteURL = "https://github.com/lintest/GitFor1C";
-	LocalPath = "C:\Cpp\TestRepo\";
 	Message = "Init commit";
 	
 EndProcedure
 
 &AtServer
 Procedure LoadEditor()
-
+	
 	TempFileName = GetTempFileName();
 	DeleteFiles(TempFileName);
 	CreateDirectory(TempFileName);
-
+	
 	BinaryData = FormAttributeToValue("Object").GetTemplate("VAEditor");
 	ZipFileReader = New ZipFileReader(BinaryData.OpenStreamForRead());
 	For each ZipFileEntry In ZipFileReader.Items Do
@@ -31,13 +30,13 @@ Procedure LoadEditor()
 			+ "&localeCode=" + Left(CurrentSystemLanguage(), 2);
 	EndDo;
 	DeleteFiles(TempFileName);
-
+	
 EndProcedure
 
 &AtClient
 Procedure OnOpen(Cancel)
-
-	AddInId = "_" + StrReplace(New  UUID, "-", "");
+	
+	AddInId = "_" + StrReplace(New UUID, "-", "");
 	DoAttachingAddIn(True);
 	
 EndProcedure
@@ -46,23 +45,23 @@ EndProcedure
 
 &AtClient
 Function JsonLoad(Json)
-
+	
 	JSONReader = New JSONReader;
 	JSONReader.SetString(Json);
 	Value = ReadJSON(JSONReader);
 	JSONReader.Close();
 	Return Value;
-
+	
 EndFunction
 
 &AtClient
 Function JsonDump(Value)
-
+	
 	JSONWriter = New JSONWriter;
 	JSONWriter.SetString();
 	WriteJSON(JSONWriter, Value);
 	Return JSONWriter.Close();
-
+	
 EndFunction
 
 #EndRegion
@@ -71,7 +70,7 @@ EndFunction
 Procedure DoAttachingAddIn(AdditionalParameters) Export
 	
 	NotifyDescription = New NotifyDescription("AfterAttachingAddIn", ThisForm, AdditionalParameters);
-	BeginAttachingAddIn(NotifyDescription, AddInURL, AddInId, AddInType.Native); 
+	BeginAttachingAddIn(NotifyDescription, AddInURL, AddInId, AddInType.Native);
 	
 EndProcedure
 
@@ -94,7 +93,7 @@ EndProcedure
 	
 	Заголовок = "GIT для 1C, версия " + Значение;
 	
-КонецПроцедуры	
+КонецПроцедуры
 
 &AtClient
 Функция ПрочитатьСтрокуJSON(ТекстJSON)
@@ -111,7 +110,7 @@ EndProcedure
 
 &AtClient
 Procedure PathStartChoice(Item, ChoiceData, StandardProcessing)
-
+	
 	NotifyDescription = New NotifyDescription("PathEndChoice", ThisForm);
 	FileDialog = New FileDialog(FileDialogMode.ChooseDirectory);
 	FileDialog.Show(NotifyDescription);
@@ -139,14 +138,14 @@ EndProcedure
 &AtClient
 Function GitMessageNotify()
 	
-	return New NotifyDescription("EndCallingMessage", ThisForm);
+	Return New NotifyDescription("EndCallingMessage", ThisForm);
 	
 EndFunction
 
 &AtClient
 Function GitStatusNotify()
 	
-	return New NotifyDescription("EndCallingStatus", ThisForm);
+	Return New NotifyDescription("EndCallingStatus", ThisForm);
 	
 EndFunction
 
@@ -166,14 +165,14 @@ EndProcedure
 
 &AtClient
 Procedure RepoFind(Command)
-
+	
 	git.BeginCallingFind(GitMessageNotify(), LocalPath);
 	
 EndProcedure
 
 &AtClient
 Procedure RepoOpen(Command)
-
+	
 	git.BeginCallingOpen(GitMessageNotify(), LocalPath);
 	
 EndProcedure
@@ -190,12 +189,12 @@ EndProcedure
 Procedure AddStatusItems(JsonData, Key, Name)
 	
 	Var Array;
-
+	
 	If JsonData.Property(Key, Array) Then
 		ParentRow = Status.GetItems().Add();
 		ParentRow.Name = Name;
 		For Each Item In Array Do
-			If Item.Status = "IGNORED" Then 
+			If Item.Status = "IGNORED" Then
 				Continue;
 			EndIf;
 			Row = ParentRow.GetItems().Add();
@@ -206,7 +205,7 @@ Procedure AddStatusItems(JsonData, Key, Name)
 		Items.Status.Expand(ParentRow.GetID());
 	EndIf
 	
-EndProcedure	
+EndProcedure
 
 &AtClient
 Procedure SetStatus(TextJson) Export
@@ -219,7 +218,7 @@ Procedure SetStatus(TextJson) Export
 	EndIf;
 	
 EndProcedure
-	
+
 &AtClient
 Procedure EndCallingStatus(ResultCall, ParametersCall, AdditionalParameters) Export
 	
@@ -256,40 +255,14 @@ Procedure RepoHistory(Command)
 EndProcedure
 
 &AtClient
-Procedure WriteText(FilePath, FileText)
-	TextWriter = New TextWriter;
-	TextWriter.Open(FilePath, TextEncoding.UTF8);
-	TextWriter.Write(FileText);
-	TextWriter.Close();
-EndProcedure
-
-&AtClient
 Procedure AutoTest(Command)
 	
-	LocalPath = "C:\Cpp\TestRepo";
-	DeleteFiles(LocalPath);
-	CreateDirectory(LocalPath);
-	git.init(LocalPath);
-	
-	FileText = 
-	"First line
-	|Second line
-	|Third line
-	|";
-	
-	For i = 1 To 9 Do
-		FileName = Format(i, "ND=2;NG=") + ".txt";
-		FilePath = LocalPath + "\" + FileName;
-		WriteText(FilePath, FileText);
-		If i <= 7 Then git.add(FileName); EndIf;
-		If i = 6 Then git.remove(FileName); EndIf;
-		If i = 7 Then DeleteFiles(FilePath); EndIf;
-		if i < 3 Then 
-			WriteText(FilePath, "Second line");
-		EndIf;
-	EndDo;
-	JsonText = git.status();
-	SetStatus(JsonText);
+	Names = StrSplit(FormName, ".");
+	Names[Names.Count() - 1] = "Test";
+	NewName = StrConcat(Names, ".");
+	NewParams = New Structure("AddInId", AddInId);
+	TestForm = GetForm(NewName, NewParams, ThisForm, New Uuid);
+	TestForm.Test(AddInId);
 	
 EndProcedure
 
@@ -301,12 +274,12 @@ Procedure IndexAdd(Command)
 		git.add(Row.name);
 	EndDo;
 	git.BeginCallingStatus(GitStatusNotify());
-		
+	
 EndProcedure
 
 &AtClient
 Procedure IndexRemove(Command)
-
+	
 	For Each Id In Items.Status.SelectedRows Do
 		Row = Status.FindByID(Id);
 		git.remove(Row.name);
@@ -326,14 +299,14 @@ EndProcedure
 
 &AtClient
 Procedure SetSignatureAuthor(Command)
-
+	
 	git.setAuthor(Name, Email);
 	
 EndProcedure
 
 &AtClient
 Procedure SetSignatureCommitter(Command)
-
+	
 	git.setCommitter(Name, Email);
 	
 EndProcedure
@@ -393,7 +366,7 @@ Procedure DiffSelection(Item, SelectedRow, Field, StandardProcessing)
 	TextDocument = New TextDocument;
 	TextDocument.Read(BinaryData.OpenStreamForRead());
 	TextDocument.Show();
-		
+	
 EndProcedure
 
 &AtClient
@@ -403,7 +376,14 @@ Function ReadText(BinaryData)
 	TextReader.Open(BinaryData.OpenStreamForRead(), TextEncoding.UTF8);
 	Return TextReader.Read();
 	
-EndFunction	
+EndFunction
+
+&AtClient
+Function VanessaEditor()
+	
+	Return Items.Editor.Document.defaultView.VanessaEditor;
+	
+EndFunction
 
 &AtClient
 Procedure EditorDocumentComplete(Item)
@@ -414,10 +394,17 @@ EndProcedure
 Procedure StatusOnActivateRow(Item)
 	
 	Row = Items.Status.CurrentData;
-	if Row = Undefined Then 
+	If Row = Undefined Then
 		Return;
 	EndIf;
-
+	
+	If IsBlankString(Row.status) Then
+		VanessaEditor().setVisible(False);
+		Return;
+	Else
+		VanessaEditor().setVisible(True);
+	EndIf;
+	
 	If IsBlankString(Row.old_id) Then
 		OldText = "";
 	Else
@@ -435,7 +422,7 @@ Procedure StatusOnActivateRow(Item)
 		EndTry;
 	Else
 		BinaryData = git.blob(Row.new_id);
-		If TypeOf(BinaryData) = Type("BinaryData") Then 
+		If TypeOf(BinaryData) = Type("BinaryData") Then
 			NewText = ReadText(BinaryData);
 		Else
 			filepath = git.fullpath(Row.name);
@@ -448,6 +435,6 @@ Procedure StatusOnActivateRow(Item)
 		EndIf;
 	EndIf;
 	
-	Items.Editor.Document.defaultView.VanessaEditor.setValue(OldText, NewText, Row.new_name);
+	VanessaEditor().setValue(OldText, NewText, Row.new_name);
 	
 EndProcedure
