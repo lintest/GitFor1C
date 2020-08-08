@@ -114,7 +114,7 @@ std::wstring GitManager::open(const std::wstring& path)
 
 std::wstring GitManager::find(const std::wstring& path)
 {
-	git_buf root = { 0 };
+	git_buf root ={ 0 };
 	ASSERT(git_repository_discover(&root, S(path), 0, nullptr));
 	nlohmann::json j;
 	j["path"] = root.ptr;
@@ -200,19 +200,20 @@ static std::string oid2str(const git_oid* id)
 
 int status_cb(const char* path, unsigned int status_flags, void* payload)
 {
-	nlohmann::json* json = (nlohmann::json*)payload;
 	nlohmann::json j;
 	j["filepath"] = path;
 	j["statuses"] = flags2json(status_flags);
-	json->push_back(j);
+	((nlohmann::json*)payload)->push_back(j);
 	return 0;
 }
 
-nlohmann::json delta2json(git_diff_delta* delta)
+nlohmann::json delta2json(const git_diff_delta* delta)
 {
 	nlohmann::json j;
 	j["flag"] = delta->status;
 	j["status"] = delta2str(delta->status);
+	j["similarity"] = delta->similarity;
+	j["nfiles"] = delta->nfiles;
 	j["old_id"] = oid2str(&delta->old_file.id);
 	j["old_name"] = delta->old_file.path;
 	j["old_size"] = delta->old_file.size;
@@ -221,6 +222,22 @@ nlohmann::json delta2json(git_diff_delta* delta)
 	j["new_name"] = delta->new_file.path;
 	j["new_size"] = delta->new_file.size;
 	j["new_flags"] = delta->new_file.flags;
+	return j;
+}
+
+nlohmann::json commit2json(const git_commit *commit)
+{
+	nlohmann::json j;
+	const git_oid* tree_id = git_commit_tree_id(commit);
+	const git_signature* author = git_commit_author(commit);
+	const git_signature* committer = git_commit_committer(commit);
+	j["id"] = oid2str(tree_id);
+	j["authorName"] = author->name;
+	j["authorEmail"] = author->email;
+	j["committerName"] = committer->name;
+	j["committerEmail"] = committer->email;
+	j["message"] = git_commit_message(commit);
+	j["time"] = git_commit_time(commit);
 	return j;
 }
 
@@ -322,8 +339,8 @@ std::wstring GitManager::reset(const std::wstring& filepath)
 {
 	CHECK_REPO();
 	std::string path = WC2MB(filepath);
-	const char* paths[] = { path.c_str() };
-	const git_strarray strarray = { (char**)paths, 1 };
+	const char* paths[] ={ path.c_str() };
+	const git_strarray strarray ={ (char**)paths, 1 };
 	GIT_object obj = NULL;
 	ASSERT(git_revparse_single(&obj, m_repo, "HEAD^{commit}"));
 	ASSERT(git_reset_default(m_repo, obj, &strarray));
@@ -343,17 +360,9 @@ std::wstring GitManager::remove(const std::wstring& filepath)
 std::wstring GitManager::info(const std::wstring& spec)
 {
 	CHECK_REPO();
-	git_object* head_commit;
+	GIT_object head_commit;
 	ASSERT(git_revparse_single(&head_commit, m_repo, S(spec)));
-	GIT_commit commit = (git_commit*)head_commit;
-	const git_oid* tree_id = git_commit_tree_id(commit);
-	const git_signature* author = git_commit_author(commit);
-	nlohmann::json j;
-	j["id"] = oid2str(tree_id);
-	j["author.name"] = author->name;
-	j["author.email"] = author->email;
-	j["message"] = git_commit_message(commit);
-	return success(j);
+	return success(commit2json((git_commit*)(git_object*)head_commit));
 }
 
 std::wstring GitManager::history(const std::wstring& spec)
@@ -370,18 +379,7 @@ std::wstring GitManager::history(const std::wstring& spec)
 	while (git_revwalk_next(&oid, walker) == 0) {
 		GIT_commit commit;
 		ASSERT(git_commit_lookup(&commit, m_repo, &oid));
-		const git_oid* tree_id = git_commit_tree_id(commit);
-		const git_signature* author = git_commit_author(commit);
-		const git_signature* committer = git_commit_committer(commit);
-		nlohmann::json j;
-		j["id"] = oid2str(tree_id);
-		j["authorName"] = author->name;
-		j["authorEmail"] = author->email;
-		j["committerName"] = committer->name;
-		j["committerEmail"] = committer->email;
-		j["time"] = git_commit_time(commit);
-		j["message"] = git_commit_message(commit);
-		json.push_back(j);
+		json.push_back(commit2json(commit));
 	}
 	return success(json);
 }
@@ -396,14 +394,13 @@ std::string type2str(git_object_t type) {
 
 int tree_walk_cb(const char* root, const git_tree_entry* entry, void* payload)
 {
-	nlohmann::json* json = (nlohmann::json*)payload;
 	nlohmann::json j;
 	git_object_t type = git_tree_entry_type(entry);
 	j["id"] = oid2str(git_tree_entry_id(entry));
 	j["name"] = git_tree_entry_name(entry);
 	j["type"] = type2str(type);
 	j["root"] = root;
-	json->push_back(j);
+	((nlohmann::json*)payload)->push_back(j);
 	return 0;
 }
 
@@ -423,18 +420,7 @@ std::wstring GitManager::tree(const std::wstring& msg)
 
 int diff_file_cb(const git_diff_delta* delta, float progress, void* payload)
 {
-	nlohmann::json* json = (nlohmann::json*)payload;
-	nlohmann::json j;
-	j["status"] = delta2str(delta->status);
-	j["flags"] = flags2json(delta->flags);
-	j["old_id"] = oid2str(&delta->old_file.id);
-	j["old_name"] = delta->old_file.path;
-	j["old_flags"] = delta->old_file.flags;
-	j["new_id"] = oid2str(&delta->new_file.id);
-	j["new_name"] = delta->new_file.path;
-	j["new_flags"] = delta->new_file.flags;
-	j["similarity"] = delta->similarity;
-	json->push_back(j);
+	((nlohmann::json*)payload)->push_back(delta2json(delta));
 	return 0;
 }
 
@@ -483,7 +469,7 @@ bool GitManager::isBinary(const std::wstring& id)
 	return git_blob_is_binary(blob);
 }
 
-std::wstring GitManager::file(const std::wstring& path) 
+std::wstring GitManager::file(const std::wstring& path)
 {
 	git_oid oid;
 	int ok = git_blob_create_fromworkdir(&oid, m_repo, S(path));
