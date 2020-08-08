@@ -203,6 +203,9 @@ Procedure AddStatusItems(JsonData, Key, Name)
 			Row.size = Item.new_size;
 		EndDo;
 		Items.Status.Expand(ParentRow.GetID());
+		If ParentRow.GetItems().Count() = 0 Then
+			Status.GetItems().Delete(ParentRow);
+		EndIf
 	EndIf
 	
 EndProcedure
@@ -369,11 +372,20 @@ Procedure DiffSelection(Item, SelectedRow, Field, StandardProcessing)
 EndProcedure
 
 &AtClient
-Function ReadText(BinaryData)
+Function ReadBlob(id)
 	
-	TextReader = New TextReader;
-	TextReader.Open(BinaryData.OpenStreamForRead(), TextEncoding.UTF8);
-	Return TextReader.Read();
+	If git.isBinary(id) Then
+		Return "binary";
+	Else
+		BinaryData = git.blob(id);
+		If TypeOf(BinaryData) = Type("BinaryData") Then
+			TextReader = New TextReader;
+			TextReader.Open(BinaryData.OpenStreamForRead(), TextEncoding.UTF8);
+			Return TextReader.Read();
+		Else
+			Return "";
+		EndIf;
+	EndIf;
 	
 EndFunction
 
@@ -403,26 +415,23 @@ EndProcedure
 Function NewFileText(Row)
 	
 	If IsBlankString(Row.new_id) Then
-		filepath = git.fullpath(Row.name);
-		Try
-			BinaryData = New BinaryData(filepath);
-			Return ReadText(BinaryData);
-		Except
-			Return "";
-		EndTry;
+		id = git.file(Row.new_name);
 	Else
-		BinaryData = git.blob(Row.new_id);
-		If TypeOf(BinaryData) = Type("BinaryData") Then
-			NewText = ReadText(BinaryData);
-		Else
-			filepath = git.fullpath(Row.name);
-			Try
-				BinaryData = New BinaryData(filepath);
-				Return ReadText(BinaryData);
-			Except
-				Return "";
-			EndTry;
-		EndIf;
+		id = Row.new_id;
+	EndIf;
+	
+	Return ReadBlob(id);
+	
+	
+EndFunction
+
+&AtClient
+Function OldFileText(Row)
+	
+	If IsBlankString(Row.old_id) Then
+		Return "";
+	Else
+		Return ReadBlob(Row.old_id);
 	EndIf;
 	
 EndFunction
@@ -445,15 +454,7 @@ Procedure StatusOnActivateRow(Item)
 		DiffEditor.setVisible(True);
 	EndIf;
 	
-	If IsBlankString(Row.old_id) Then
-		OldText = "";
-	Else
-		BinaryData = git.blob(Row.old_id);
-		OldText = ReadText(BinaryData);
-	EndIf;
-	
-	NewText = NewFileText(Row);
-	DiffEditor.setValue(OldText, Row.old_name, NewText, Row.new_name);
+	DiffEditor.setValue(OldFileText(Row), Row.old_name, NewFileText(Row), Row.new_name);
 	
 EndProcedure
 

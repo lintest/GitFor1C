@@ -429,8 +429,10 @@ int diff_file_cb(const git_diff_delta* delta, float progress, void* payload)
 	j["flags"] = flags2json(delta->flags);
 	j["old_id"] = oid2str(&delta->old_file.id);
 	j["old_name"] = delta->old_file.path;
+	j["old_flags"] = delta->old_file.flags;
 	j["new_id"] = oid2str(&delta->new_file.id);
 	j["new_name"] = delta->new_file.path;
+	j["new_flags"] = delta->new_file.flags;
 	j["similarity"] = delta->similarity;
 	json->push_back(j);
 	return 0;
@@ -469,6 +471,24 @@ std::wstring GitManager::diff(const std::wstring& s1, const std::wstring& s2)
 bool GitManager::error(tVariant* pvar)
 {
 	return ((AddInBase*)m_addin)->VA(pvar) << ::error();
+}
+
+bool GitManager::isBinary(const std::wstring& id)
+{
+	git_oid oid;
+	int ok = git_oid_fromstr(&oid, S(id));
+	if (ok < 0) return false;
+	GIT_blob blob = NULL;
+	ok = git_blob_lookup(&blob, m_repo, &oid);
+	return git_blob_is_binary(blob);
+}
+
+std::wstring GitManager::file(const std::wstring& path) 
+{
+	git_oid oid;
+	int ok = git_blob_create_fromworkdir(&oid, m_repo, S(path));
+	if (ok < 0) return {};
+	return MB2WC(oid2str(&oid));
 }
 
 bool GitManager::blob(const std::wstring& id, tVariant* pvarRetValue)

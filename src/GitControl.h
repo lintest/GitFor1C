@@ -32,7 +32,9 @@ private:
 		eTree,
 		eDiff,
 		eBlob,
+		eFile,
 		eFullpath,
+		eIsBinary,
 		eSetAuthor,
 		eSetCommitter,
 	};

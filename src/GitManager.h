@@ -32,6 +32,7 @@ public:
 	GitManager(AddInNative* addin);
 	virtual ~GitManager();
 	bool blob(const std::wstring& id, tVariant* pvarRetValue);
+	bool isBinary(const std::wstring& id);
 	bool setAuthor(const std::wstring& name, const std::wstring& email);
 	bool setCommitter(const std::wstring& name, const std::wstring& email);
 	std::wstring fullpath(const std::wstring& path);
@@ -47,6 +48,7 @@ public:
 	std::wstring history(const std::wstring& msg);
 	std::wstring diff(const std::wstring& s1, const std::wstring& s2);
 	std::wstring tree(const std::wstring& msg);
+	std::wstring file(const std::wstring& path);
 	std::wstring signature();
 	std::wstring status();
 };

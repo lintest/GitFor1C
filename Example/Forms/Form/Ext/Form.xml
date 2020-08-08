@@ -433,6 +433,30 @@
 											<ContextMenu name="StatusstatusContextMenu" id="240"/>
 											<ExtendedTooltip name="StatusstatusExtendedTooltip" id="241"/>
 										</InputField>
+										<InputField name="Statusnew_flags" id="257">
+											<DataPath>Status.new_flags</DataPath>
+											<EditMode>EnterOnInput</EditMode>
+											<ContextMenu name="Statusnew_flagsКонтекстноеМеню" id="258"/>
+											<ExtendedTooltip name="Statusnew_flagsРасширеннаяПодсказка" id="259"/>
+										</InputField>
+										<InputField name="Statusnew_id" id="263">
+											<DataPath>Status.new_id</DataPath>
+											<EditMode>EnterOnInput</EditMode>
+											<ContextMenu name="Statusnew_idКонтекстноеМеню" id="264"/>
+											<ExtendedTooltip name="Statusnew_idРасширеннаяПодсказка" id="265"/>
+										</InputField>
+										<InputField name="Statusold_flags" id="260">
+											<DataPath>Status.old_flags</DataPath>
+											<EditMode>EnterOnInput</EditMode>
+											<ContextMenu name="Statusold_flagsКонтекстноеМеню" id="261"/>
+											<ExtendedTooltip name="Statusold_flagsРасширеннаяПодсказка" id="262"/>
+										</InputField>
+										<InputField name="Statusold_id" id="266">
+											<DataPath>Status.old_id</DataPath>
+											<EditMode>EnterOnInput</EditMode>
+											<ContextMenu name="Statusold_idКонтекстноеМеню" id="267"/>
+											<ExtendedTooltip name="Statusold_idРасширеннаяПодсказка" id="268"/>
+										</InputField>
 									</ChildItems>
 								</Table>
 							</ChildItems>
@@ -1273,6 +1297,38 @@
 							<v8:Length>0</v8:Length>
 							<v8:AllowedLength>Variable</v8:AllowedLength>
 						</v8:StringQualifiers>
+					</Type>
+				</Column>
+				<Column name="new_flags" id="8">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>New flags</v8:content>
+						</v8:item>
+					</Title>
+					<Type>
+						<v8:Type>xs:decimal</v8:Type>
+						<v8:NumberQualifiers>
+							<v8:Digits>2</v8:Digits>
+							<v8:FractionDigits>0</v8:FractionDigits>
+							<v8:AllowedSign>Any</v8:AllowedSign>
+						</v8:NumberQualifiers>
+					</Type>
+				</Column>
+				<Column name="old_flags" id="9">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Old flags</v8:content>
+						</v8:item>
+					</Title>
+					<Type>
+						<v8:Type>xs:decimal</v8:Type>
+						<v8:NumberQualifiers>
+							<v8:Digits>2</v8:Digits>
+							<v8:FractionDigits>0</v8:FractionDigits>
+							<v8:AllowedSign>Any</v8:AllowedSign>
+						</v8:NumberQualifiers>
 					</Type>
 				</Column>
 			</Columns>
