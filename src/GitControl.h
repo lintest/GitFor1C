@@ -23,6 +23,7 @@ private:
 		eFind,
 		eInfo,
 		eAdd,
+		eReset,
 		eRemove,
 		eClone,
 		eCommit,

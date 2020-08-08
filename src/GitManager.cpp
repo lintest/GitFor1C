@@ -95,21 +95,21 @@ std::wstring GitManager::init(const std::wstring& path, bool is_bare)
 {
 	if (m_repo) git_repository_free(m_repo);
 	ASSERT(git_repository_init(&m_repo, S(path), is_bare));
-	return {};
+	return success(true);
 }
 
 std::wstring GitManager::clone(const std::wstring& url, const std::wstring& path)
 {
 	if (m_repo) git_repository_free(m_repo);
 	ASSERT(git_clone(&m_repo, S(url), S(path), nullptr));
-	return {};
+	return success(true);
 }
 
 std::wstring GitManager::open(const std::wstring& path)
 {
 	if (m_repo) git_repository_free(m_repo);
 	ASSERT(git_repository_open(&m_repo, S(path)));
-	return {};
+	return success(true);
 }
 
 std::wstring GitManager::find(const std::wstring& path)
@@ -299,13 +299,13 @@ std::wstring GitManager::commit(const std::wstring& msg)
 		"HEAD",
 		author ? author : sig,
 		committer ? committer : sig,
-		NULL, 
+		NULL,
 		S(msg),
 		tree,
 		head_count,
 		head_commit
 	));
-	return {};
+	return success(true);
 }
 
 std::wstring GitManager::add(const std::wstring& filepath)
@@ -315,7 +315,19 @@ std::wstring GitManager::add(const std::wstring& filepath)
 	ASSERT(git_repository_index(&index, m_repo));
 	ASSERT(git_index_add_bypath(index, S(filepath)));
 	ASSERT(git_index_write(index));
-	return {};
+	return success(true);
+}
+
+std::wstring GitManager::reset(const std::wstring& filepath)
+{
+	CHECK_REPO();
+	std::string path = WC2MB(filepath);
+	const char* paths[] = { path.c_str() };
+	const git_strarray strarray = { (char**)paths, 1 };
+	GIT_object obj = NULL;
+	ASSERT(git_revparse_single(&obj, m_repo, "HEAD^{commit}"));
+	ASSERT(git_reset_default(m_repo, obj, &strarray));
+	return success(true);
 }
 
 std::wstring GitManager::remove(const std::wstring& filepath)
@@ -325,7 +337,7 @@ std::wstring GitManager::remove(const std::wstring& filepath)
 	ASSERT(git_repository_index(&index, m_repo));
 	ASSERT(git_index_remove_bypath(index, S(filepath)));
 	ASSERT(git_index_write(index));
-	return {};
+	return success(true);
 }
 
 std::wstring GitManager::info(const std::wstring& spec)

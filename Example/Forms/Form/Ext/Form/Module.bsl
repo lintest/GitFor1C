@@ -265,6 +265,17 @@ Procedure IndexAdd(Command)
 	
 EndProcedure
 
+&НаКлиенте
+Процедура IndexReset(Команда)
+	
+	For Each Id In Items.Status.SelectedRows Do
+		Row = Status.FindByID(Id);
+		git.reset(Row.name);
+	EndDo;
+	git.BeginCallingStatus(GitStatusNotify());
+	
+КонецПроцедуры
+
 &AtClient
 Procedure IndexRemove(Command)
 	
@@ -369,44 +380,35 @@ EndFunction
 &AtClient
 Function VanessaEditor()
 	
+	Return Items.Editor.Document.defaultView.VanessaEditor;
+	
+EndFunction
+
+&AtClient
+Function VADiffEditor()
+	
 	Return Items.Editor.Document.defaultView.VADiffEditor;
 	
 EndFunction
 
 &AtClient
 Procedure EditorDocumentComplete(Item)
+	
 	Items.Editor.Document.defaultView.createVanessaDiffEditor("", "", "text");
+	Items.Editor.Document.defaultView.createVanessaEditor("", "text").setVisible(False);
+	
 EndProcedure
 
 &AtClient
-Procedure StatusOnActivateRow(Item)
-	
-	Row = Items.Status.CurrentData;
-	If Row = Undefined Then
-		Return;
-	EndIf;
-	
-	If IsBlankString(Row.status) Then
-		VanessaEditor().setVisible(False);
-		Return;
-	Else
-		VanessaEditor().setVisible(True);
-	EndIf;
-	
-	If IsBlankString(Row.old_id) Then
-		OldText = "";
-	Else
-		BinaryData = git.blob(Row.old_id);
-		OldText = ReadText(BinaryData);
-	EndIf;
+Function NewFileText(Row)
 	
 	If IsBlankString(Row.new_id) Then
 		filepath = git.fullpath(Row.name);
 		Try
 			BinaryData = New BinaryData(filepath);
-			NewText = ReadText(BinaryData);
+			Return ReadText(BinaryData);
 		Except
-			NewText = "";
+			Return "";
 		EndTry;
 	Else
 		BinaryData = git.blob(Row.new_id);
@@ -416,14 +418,57 @@ Procedure StatusOnActivateRow(Item)
 			filepath = git.fullpath(Row.name);
 			Try
 				BinaryData = New BinaryData(filepath);
-				NewText = ReadText(BinaryData);
+				Return ReadText(BinaryData);
 			Except
-				NewText = "";
+				Return "";
 			EndTry;
 		EndIf;
 	EndIf;
 	
-	VanessaEditor().setValue(OldText, NewText, Row.new_name);
+EndFunction
+
+&AtClient
+Procedure StatusOnActivateRow(Item)
+	
+	Row = Items.Status.CurrentData;
+	If Row = Undefined Then
+		Return;
+	EndIf;
+	
+	DiffEditor = VADiffEditor();
+	DiffEditor.setVisible(True);
+	
+	If IsBlankString(Row.status) Then
+		DiffEditor.setVisible(False);
+		Return;
+	Else
+		DiffEditor.setVisible(True);
+	EndIf;
+	
+	If IsBlankString(Row.old_id) Then
+		OldText = "";
+	Else
+		BinaryData = git.blob(Row.old_id);
+		OldText = ReadText(BinaryData);
+	EndIf;
+	
+	NewText = NewFileText(Row);
+	DiffEditor.setValue(OldText, Row.old_name, NewText, Row.new_name);
+	
+EndProcedure
+
+&AtClient
+Procedure OpenBlob(Команда)
+	
+	Row = Items.Status.CurrentData;
+	If Row = Undefined Then
+		Return;
+	EndIf;
+	
+	NewText = NewFileText(Row);
+	VanessaEditor = VanessaEditor();
+	VanessaEditor.setVisible(True);
+	VanessaEditor.setValue(NewText, Row.new_name);
 	
 EndProcedure
 
@@ -441,4 +486,3 @@ Procedure AutoTest(Command)
 	Items.FormPages.CurrentPage = Items.PageStatus;
 	
 EndProcedure
-

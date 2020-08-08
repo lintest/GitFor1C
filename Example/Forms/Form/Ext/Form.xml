@@ -346,15 +346,43 @@
 									<AutoCommandBar name="StatusCommandBar" id="222">
 										<Autofill>false</Autofill>
 										<ChildItems>
-											<Button name="StatusIndexAdd" id="242">
+											<ButtonGroup name="StatusIndexGroup" id="253">
+												<Title>
+													<v8:item>
+														<v8:lang>ru</v8:lang>
+														<v8:content>Status index group</v8:content>
+													</v8:item>
+												</Title>
+												<ToolTip>
+													<v8:item>
+														<v8:lang>ru</v8:lang>
+														<v8:content>Status index group</v8:content>
+													</v8:item>
+												</ToolTip>
+												<Representation>Compact</Representation>
+												<ExtendedTooltip name="StatusIndexGroupРасширеннаяПодсказка" id="254"/>
+												<ChildItems>
+													<Button name="StatusIndexAdd" id="242">
+														<Type>CommandBarButton</Type>
+														<CommandName>Form.Command.IndexAdd</CommandName>
+														<ExtendedTooltip name="StatusIndexAddExtendedTooltip" id="243"/>
+													</Button>
+													<Button name="StatusIndexReset" id="251">
+														<Type>CommandBarButton</Type>
+														<CommandName>Form.Command.IndexReset</CommandName>
+														<ExtendedTooltip name="StatusIndexResetРасширеннаяПодсказка" id="252"/>
+													</Button>
+													<Button name="StatusIndexRemove" id="244">
+														<Type>CommandBarButton</Type>
+														<CommandName>Form.Command.IndexRemove</CommandName>
+														<ExtendedTooltip name="StatusIndexRemoveExtendedTooltip" id="245"/>
+													</Button>
+												</ChildItems>
+											</ButtonGroup>
+											<Button name="StatusOpenBlob" id="255">
 												<Type>CommandBarButton</Type>
-												<CommandName>Form.Command.IndexAdd</CommandName>
-												<ExtendedTooltip name="StatusIndexAddExtendedTooltip" id="243"/>
-											</Button>
-											<Button name="StatusIndexRemove" id="244">
-												<Type>CommandBarButton</Type>
-												<CommandName>Form.Command.IndexRemove</CommandName>
-												<ExtendedTooltip name="StatusIndexRemoveExtendedTooltip" id="245"/>
+												<CommandName>Form.Command.OpenBlob</CommandName>
+												<ExtendedTooltip name="StatusOpenBlobРасширеннаяПодсказка" id="256"/>
 											</Button>
 										</ChildItems>
 									</AutoCommandBar>
@@ -1405,7 +1433,7 @@
 			<Title>
 				<v8:item>
 					<v8:lang>ru</v8:lang>
-					<v8:content>remove</v8:content>
+					<v8:content>delete</v8:content>
 				</v8:item>
 			</Title>
 			<ToolTip>
@@ -1549,6 +1577,36 @@
 				</v8:item>
 			</ToolTip>
 			<Action>RepoDiff3</Action>
+		</Command>
+		<Command name="IndexReset" id="20">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>reset</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Index reset</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>IndexReset</Action>
+		</Command>
+		<Command name="OpenBlob" id="21">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>open</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Open blob</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>OpenBlob</Action>
 		</Command>
 	</Commands>
 </Form>

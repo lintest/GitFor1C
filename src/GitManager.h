@@ -41,6 +41,7 @@ public:
 	std::wstring open(const std::wstring& path);
 	std::wstring find(const std::wstring& path);
 	std::wstring add(const std::wstring& msg);
+	std::wstring reset(const std::wstring& msg);
 	std::wstring remove(const std::wstring& msg);
 	std::wstring commit(const std::wstring& msg);
 	std::wstring history(const std::wstring& msg);
