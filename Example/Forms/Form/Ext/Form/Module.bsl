@@ -255,18 +255,6 @@ Procedure RepoHistory(Command)
 EndProcedure
 
 &AtClient
-Procedure AutoTest(Command)
-	
-	Names = StrSplit(FormName, ".");
-	Names[Names.Count() - 1] = "Test";
-	NewName = StrConcat(Names, ".");
-	NewParams = New Structure("AddInId", AddInId);
-	TestForm = GetForm(NewName, NewParams, ThisForm, New Uuid);
-	TestForm.Test(AddInId);
-	
-EndProcedure
-
-&AtClient
 Procedure IndexAdd(Command)
 	
 	For Each Id In Items.Status.SelectedRows Do
@@ -381,7 +369,7 @@ EndFunction
 &AtClient
 Function VanessaEditor()
 	
-	Return Items.Editor.Document.defaultView.VanessaEditor;
+	Return Items.Editor.Document.defaultView.VADiffEditor;
 	
 EndFunction
 
@@ -438,3 +426,19 @@ Procedure StatusOnActivateRow(Item)
 	VanessaEditor().setValue(OldText, NewText, Row.new_name);
 	
 EndProcedure
+
+&AtClient
+Procedure AutoTest(Command)
+	
+	Names = StrSplit(FormName, ".");
+	Names[Names.Count() - 1] = "Test";
+	NewName = StrConcat(Names, ".");
+	NewParams = New Structure("AddInId", AddInId);
+	TestForm = GetForm(NewName, NewParams, ThisForm, New Uuid);
+	TestForm.Test(AddInId);
+	git.open(LocalPath);
+	SetStatus(git.status());
+	Items.FormPages.CurrentPage = Items.PageStatus;
+	
+EndProcedure
+
