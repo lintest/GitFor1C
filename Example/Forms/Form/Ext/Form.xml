@@ -495,7 +495,35 @@
 											<EnableStartDrag>true</EnableStartDrag>
 											<EnableDrag>true</EnableDrag>
 											<DataPath>Status</DataPath>
-											<ContextMenu name="StatusContextMenu" id="221"/>
+											<ContextMenu name="StatusContextMenu" id="221">
+												<ChildItems>
+													<Button name="StatusContextMenuOpenBlob" id="345">
+														<Type>CommandBarButton</Type>
+														<CommandName>Form.Command.OpenBlob</CommandName>
+														<ExtendedTooltip name="StatusContextMenuOpenBlobExtendedTooltip" id="346"/>
+													</Button>
+													<ButtonGroup name="StatusContextMenuGroup1" id="347">
+														<ExtendedTooltip name="StatusContextMenuGroup1ExtendedTooltip" id="348"/>
+														<ChildItems>
+															<Button name="StatusContextMenuIndexAdd" id="339">
+																<Type>CommandBarButton</Type>
+																<CommandName>Form.Command.IndexAdd</CommandName>
+																<ExtendedTooltip name="StatusContextMenuIndexAddExtendedTooltip" id="340"/>
+															</Button>
+															<Button name="StatusContextMenuIndexReset" id="341">
+																<Type>CommandBarButton</Type>
+																<CommandName>Form.Command.IndexReset</CommandName>
+																<ExtendedTooltip name="StatusContextMenuIndexResetExtendedTooltip" id="342"/>
+															</Button>
+															<Button name="StatusContextMenuIndexRemove" id="343">
+																<Type>CommandBarButton</Type>
+																<CommandName>Form.Command.IndexRemove</CommandName>
+																<ExtendedTooltip name="StatusContextMenuIndexRemoveExtendedTooltip" id="344"/>
+															</Button>
+														</ChildItems>
+													</ButtonGroup>
+												</ChildItems>
+											</ContextMenu>
 											<AutoCommandBar name="StatusCommandBar" id="222">
 												<Autofill>false</Autofill>
 											</AutoCommandBar>
@@ -1644,6 +1672,21 @@
 				</Column>
 			</Columns>
 		</Attribute>
+		<Attribute name="Directory" id="4">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Directory</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>xs:string</v8:Type>
+				<v8:StringQualifiers>
+					<v8:Length>0</v8:Length>
+					<v8:AllowedLength>Variable</v8:AllowedLength>
+				</v8:StringQualifiers>
+			</Type>
+		</Attribute>
 	</Attributes>
 	<Commands>
 		<Command name="RepoFind" id="3">
@@ -1958,6 +2001,7 @@
 					<v8:content>Initialize repo</v8:content>
 				</v8:item>
 			</ToolTip>
+			<Action>InitializeRepo</Action>
 		</Command>
 		<Command name="RefreshExplorer" id="26">
 			<Title>

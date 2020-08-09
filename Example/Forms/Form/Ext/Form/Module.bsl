@@ -459,7 +459,7 @@ Function GetFormName(Name)
 	Names = StrSplit(FormName, ".");
 	Names[Names.Count() - 1] = Name;
 	Return StrConcat(Names, ".");
-
+	
 EndFunction
 
 
@@ -486,9 +486,10 @@ EndProcedure
 Procedure OpenFolderEnd(SelectedFiles, AdditionalParameters) Export
 	
 	If SelectedFiles <> Undefined Then
+		VanessaEditor().setVisible(False);
 		File = New File(SelectedFiles[0]);
 		Title = File.Name;
-		VanessaEditor().setVisible(False);
+		Directory = File.FullName;
 		NotifyDescription = New NotifyDescription("FindFolderEnd", ThisForm, File.FullName);
 		git.BeginCallingFind(NotifyDescription, SelectedFiles[0]);
 	EndIf;
@@ -521,10 +522,12 @@ EndProcedure
 
 &AtClient
 Procedure CloseFolder(Command)
-
+	
 	Items.MainPages.CurrentPage = Items.FolderPage;
 	git.BeginCallingClose(New NotifyDescription);
 	VanessaEditor().setVisible(False);
+	Directory = Undefined;
+	Title = Undefined;
 	
 EndProcedure
 
@@ -537,9 +540,16 @@ EndProcedure
 
 &AtClient
 Procedure CloneRepository(Command)
-
+	
 	NewName = GetFormName("Clone");
 	OpenForm(NewName, , ThisForm, New Uuid);
 	
 EndProcedure
 
+&AtClient
+Procedure InitializeRepo(Command)
+	
+	NotifyDescription = New NotifyDescription("OpenRepositoryEnd", ThisForm);
+	git.BeginCallingInit(NotifyDescription, Directory);
+	
+EndProcedure

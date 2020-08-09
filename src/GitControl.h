@@ -38,6 +38,7 @@ private:
 		eIsBinary,
 		eSetAuthor,
 		eSetCommitter,
+		eFindFiles,
 	};
 
 private:

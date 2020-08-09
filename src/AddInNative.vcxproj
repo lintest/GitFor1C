@@ -222,6 +222,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="AddInBase.h" />
+    <ClInclude Include="FileFinder.h" />
     <ClInclude Include="GitControl.h" />
     <ClInclude Include="GitManager.h" />
     <ClInclude Include="resource.h" />
@@ -231,6 +232,7 @@
   <ItemGroup>
     <ClCompile Include="AddInBase.cpp" />
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="FileFinder.cpp" />
     <ClCompile Include="GitControl.cpp" />
     <ClCompile Include="GitManager.cpp" />
     <ClCompile Include="stdafx.cpp" />

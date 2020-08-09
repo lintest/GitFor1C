@@ -12,6 +12,7 @@
 #endif //_WINDOWS
 
 #include "GitControl.h"
+#include "FileFinder.h"
 #include "version.h"
 
 const wchar_t* GitControl::m_ExtensionName = L"GitFor1C";
@@ -42,7 +43,7 @@ const std::vector<AddInBase::Alias> GitControl::m_MethList{
 	Alias(eIsBinary      , 1, true  , L"IsBinary"    	 , L"IsBinary"),
 	Alias(eSetAuthor     , 2, false , L"SetAuthor"  	 , L"SetAuthor"),
 	Alias(eSetCommitter  , 2, false , L"SetCommitter"    , L"SetCommitter"),
-	
+	Alias(eFindFiles     , 4, true  , L"FindFiles"       , L"НайтиФайлы"),
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -118,6 +119,8 @@ bool GitControl::CallAsFunc(const long lMethodNum, tVariant* pvarRetValue, tVari
 		return VA(pvarRetValue) << m_manager.isBinary(VarToStr(paParams));
 	case eBlob:
 		return m_manager.blob(VarToStr(paParams), pvarRetValue);
+	case eFindFiles:
+		return VA(pvarRetValue) << FileFinder(VarToStr(paParams + 2), VarToBool(paParams + 3)).find(VarToStr(paParams), VarToStr(paParams + 1));
 	default:
 		return false;
 	}
