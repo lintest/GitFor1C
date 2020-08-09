@@ -1,5 +1,5 @@
 ﻿&AtClient
-Var AddInId, git;
+Var AddInId, git Export;
 
 &AtServer
 Procedure OnCreateAtServer(Cancel, StandardProcessing)
@@ -9,7 +9,6 @@ Procedure OnCreateAtServer(Cancel, StandardProcessing)
 		AddInTemplate = FormAttributeToValue("Object").GetTemplate("GitFor1C");
 		AddInURL = PutToTempStorage(AddInTemplate, UUID);
 	EndIf;
-	RemoteURL = "https://github.com/lintest/GitFor1C";
 	Message = "Init commit";
 	
 EndProcedure
@@ -42,10 +41,17 @@ Procedure OnOpen(Cancel)
 	
 EndProcedure
 
+&AtClient
+Function git()
+	
+	Return git;
+	
+EndFunction
+
 #Region Json
 
 &AtClient
-Function JsonLoad(Json)
+Function JsonLoad(Json) Export
 	
 	JSONReader = New JSONReader;
 	JSONReader.SetString(Json);
@@ -56,7 +62,7 @@ Function JsonLoad(Json)
 EndFunction
 
 &AtClient
-Function JsonDump(Value)
+Function JsonDump(Value) Export
 	
 	JSONWriter = New JSONWriter;
 	JSONWriter.SetString();
@@ -151,13 +157,6 @@ Function GitStatusNotify()
 EndFunction
 
 &AtClient
-Procedure RepoClone(Команда)
-	
-	git.BeginCallingClone(GitMessageNotify(), RemoteURL, LocalPath);
-	
-EndProcedure
-
-&AtClient
 Procedure RepoFind(Command)
 	
 	git.BeginCallingFind(GitMessageNotify(), LocalPath);
@@ -195,8 +194,10 @@ Procedure SetStatus(TextJson) Export
 	Status.GetItems().Clear();
 	JsonData = JsonLoad(TextJson);
 	If JsonData.success Then
-		AddStatusItems(JsonData.result, "Index", "Staged Changes");
-		AddStatusItems(JsonData.result, "Work", "Changes");
+		If TypeOf(JsonData.result) = Type("Structure") Then
+			AddStatusItems(JsonData.result, "Index", "Staged Changes");
+			AddStatusItems(JsonData.result, "Work", "Changes");
+		EndIf;
 	EndIf;
 	
 EndProcedure
@@ -453,11 +454,19 @@ Procedure OpenBlob(Команда)
 EndProcedure
 
 &AtClient
-Procedure AutoTest(Command)
+Function GetFormName(Name)
 	
 	Names = StrSplit(FormName, ".");
-	Names[Names.Count() - 1] = "Test";
-	NewName = StrConcat(Names, ".");
+	Names[Names.Count() - 1] = Name;
+	Return StrConcat(Names, ".");
+
+EndFunction
+
+
+&AtClient
+Procedure AutoTest(Command)
+	
+	NewName = GetFormName("Test");
 	NewParams = New Structure("AddInId", AddInId);
 	TestForm = GetForm(NewName, NewParams, ThisForm, New Uuid);
 	TestForm.Test(AddInId);
@@ -523,6 +532,14 @@ EndProcedure
 Procedure RefreshStatus(Command)
 	
 	git.BeginCallingStatus(GitStatusNotify());
+	
+EndProcedure
+
+&AtClient
+Procedure CloneRepository(Command)
+
+	NewName = GetFormName("Clone");
+	OpenForm(NewName, , ThisForm, New Uuid);
 	
 EndProcedure
 

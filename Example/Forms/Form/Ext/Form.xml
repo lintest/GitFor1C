@@ -637,18 +637,6 @@
 									<Representation>None</Representation>
 									<ShowTitle>false</ShowTitle>
 									<ExtendedTooltip name="GroupRemoteExtendedTooltip" id="66"/>
-									<ChildItems>
-										<InputField name="URL" id="10">
-											<DataPath>RemoteURL</DataPath>
-											<ContextMenu name="URLКонтекстноеМеню" id="11"/>
-											<ExtendedTooltip name="URLРасширеннаяПодсказка" id="12"/>
-										</InputField>
-										<Button name="FormRepoClone" id="19">
-											<Type>UsualButton</Type>
-											<CommandName>Form.Command.RepoClone</CommandName>
-											<ExtendedTooltip name="FormRepoCloneExtendedTooltip" id="20"/>
-										</Button>
-									</ChildItems>
 								</UsualGroup>
 								<InputField name="Message" id="29">
 									<DataPath>Message</DataPath>
@@ -1107,21 +1095,6 @@
 				<v8:item>
 					<v8:lang>ru</v8:lang>
 					<v8:content>Local path</v8:content>
-				</v8:item>
-			</Title>
-			<Type>
-				<v8:Type>xs:string</v8:Type>
-				<v8:StringQualifiers>
-					<v8:Length>0</v8:Length>
-					<v8:AllowedLength>Variable</v8:AllowedLength>
-				</v8:StringQualifiers>
-			</Type>
-		</Attribute>
-		<Attribute name="RemoteURL" id="4">
-			<Title>
-				<v8:item>
-					<v8:lang>ru</v8:lang>
-					<v8:content>Remote URL</v8:content>
 				</v8:item>
 			</Title>
 			<Type>
@@ -1673,21 +1646,6 @@
 		</Attribute>
 	</Attributes>
 	<Commands>
-		<Command name="RepoClone" id="2">
-			<Title>
-				<v8:item>
-					<v8:lang>ru</v8:lang>
-					<v8:content>clone</v8:content>
-				</v8:item>
-			</Title>
-			<ToolTip>
-				<v8:item>
-					<v8:lang>ru</v8:lang>
-					<v8:content>Repo clone</v8:content>
-				</v8:item>
-			</ToolTip>
-			<Action>RepoClone</Action>
-		</Command>
 		<Command name="RepoFind" id="3">
 			<Title>
 				<v8:item>
@@ -1970,6 +1928,7 @@
 					<v8:content>Clone repository</v8:content>
 				</v8:item>
 			</ToolTip>
+			<Action>CloneRepository</Action>
 		</Command>
 		<Command name="CloseFolder" id="24">
 			<Title>
