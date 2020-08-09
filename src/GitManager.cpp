@@ -476,6 +476,7 @@ bool GitManager::isBinary(const std::wstring& id)
 	if (ok < 0) return false;
 	GIT_blob blob = NULL;
 	ok = git_blob_lookup(&blob, m_repo, &oid);
+	if (ok < 0) return true;
 	return git_blob_is_binary(blob);
 }
 

@@ -36,6 +36,7 @@ EndProcedure
 &AtClient
 Procedure OnOpen(Cancel)
 	
+	Items.MainPages.CurrentPage = Items.FolderPage;
 	AddInId = "_" + StrReplace(New UUID, "-", "");
 	DoAttachingAddIn(True);
 	
@@ -150,13 +151,6 @@ Function GitStatusNotify()
 EndFunction
 
 &AtClient
-Procedure RepoInit(Command)
-	
-	git.BeginCallingInit(GitMessageNotify(), LocalPath);
-	
-EndProcedure
-
-&AtClient
 Procedure RepoClone(Команда)
 	
 	git.BeginCallingClone(GitMessageNotify(), RemoteURL, LocalPath);
@@ -167,21 +161,6 @@ EndProcedure
 Procedure RepoFind(Command)
 	
 	git.BeginCallingFind(GitMessageNotify(), LocalPath);
-	
-EndProcedure
-
-&AtClient
-Procedure RepoOpen(Command)
-	
-	git.BeginCallingOpen(GitMessageNotify(), LocalPath);
-	
-EndProcedure
-
-&AtClient
-Procedure RepoStatus(Command)
-	
-	git.BeginCallingStatus(GitStatusNotify());
-	Items.MainPages.CurrentPage = Items.StatusPage;
 	
 EndProcedure
 
@@ -482,9 +461,6 @@ Procedure AutoTest(Command)
 	NewParams = New Structure("AddInId", AddInId);
 	TestForm = GetForm(NewName, NewParams, ThisForm, New Uuid);
 	TestForm.Test(AddInId);
-	git.open(LocalPath);
-	SetStatus(git.status());
-	Items.FormPages.CurrentPage = Items.StatusPage;
 	
 EndProcedure
 
@@ -534,12 +510,19 @@ Procedure OpenRepositoryEnd(ResultCall, ParametersCall, AdditionalParameters) Ex
 	
 EndProcedure
 
-
 &AtClient
 Procedure CloseFolder(Command)
-	
+
 	Items.MainPages.CurrentPage = Items.FolderPage;
 	git.BeginCallingClose(New NotifyDescription);
 	VanessaEditor().setVisible(False);
 	
 EndProcedure
+
+&AtClient
+Procedure RefreshStatus(Command)
+	
+	git.BeginCallingStatus(GitStatusNotify());
+	
+EndProcedure
+
