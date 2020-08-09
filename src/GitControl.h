@@ -20,6 +20,7 @@ private:
 	{
 		eInit = 0,
 		eOpen,
+		eClose,
 		eFind,
 		eInfo,
 		eAdd,

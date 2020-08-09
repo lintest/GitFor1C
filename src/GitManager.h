@@ -31,6 +31,7 @@ private:
 public:
 	GitManager(AddInNative* addin);
 	virtual ~GitManager();
+	bool close();
 	bool blob(const std::wstring& id, tVariant* pvarRetValue);
 	bool isBinary(const std::wstring& id);
 	bool setAuthor(const std::wstring& name, const std::wstring& email);

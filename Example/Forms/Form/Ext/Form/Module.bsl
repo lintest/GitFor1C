@@ -181,7 +181,7 @@ EndProcedure
 Procedure RepoStatus(Command)
 	
 	git.BeginCallingStatus(GitStatusNotify());
-	Items.FormPages.CurrentPage = Items.PageStatus;
+	Items.MainPages.CurrentPage = Items.StatusPage;
 	
 EndProcedure
 
@@ -484,6 +484,62 @@ Procedure AutoTest(Command)
 	TestForm.Test(AddInId);
 	git.open(LocalPath);
 	SetStatus(git.status());
-	Items.FormPages.CurrentPage = Items.PageStatus;
+	Items.FormPages.CurrentPage = Items.StatusPage;
+	
+EndProcedure
+
+&AtClient
+Procedure OpenFolder(Command)
+	
+	NotifyDescription = New NotifyDescription("OpenFolderEnd", ThisForm);
+	FileDialog = New FileDialog(FileDialogMode.ChooseDirectory);
+	FileDialog.Show(NotifyDescription);
+	
+EndProcedure
+
+&AtClient
+Procedure OpenFolderEnd(SelectedFiles, AdditionalParameters) Export
+	
+	If SelectedFiles <> Undefined Then
+		File = New File(SelectedFiles[0]);
+		Title = File.Name;
+		VanessaEditor().setVisible(False);
+		NotifyDescription = New NotifyDescription("FindFolderEnd", ThisForm, File.FullName);
+		git.BeginCallingFind(NotifyDescription, SelectedFiles[0]);
+	EndIf;
+	
+EndProcedure
+
+&AtClient
+Procedure FindFolderEnd(ResultCall, ParametersCall, AdditionalParameters) Export
+	
+	JsonData = JsonLoad(ResultCall);
+	If JsonData.Success Then
+		NotifyDescription = New NotifyDescription("OpenRepositoryEnd", ThisForm);
+		git.BeginCallingOpen(NotifyDescription, JsonData.Result);
+	Else
+		Items.MainPages.CurrentPage = Items.InitializePage;
+	EndiF;
+	
+EndProcedure
+
+&AtClient
+Procedure OpenRepositoryEnd(ResultCall, ParametersCall, AdditionalParameters) Export
+	
+	JsonData = JsonLoad(ResultCall);
+	If JsonData.Success Then
+		git.BeginCallingStatus(GitStatusNotify());
+		Items.MainPages.CurrentPage = Items.StatusPage;
+	EndiF;
+	
+EndProcedure
+
+
+&AtClient
+Procedure CloseFolder(Command)
+	
+	Items.MainPages.CurrentPage = Items.FolderPage;
+	git.BeginCallingClose(New NotifyDescription);
+	VanessaEditor().setVisible(False);
 	
 EndProcedure

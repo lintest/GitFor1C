@@ -94,6 +94,7 @@ static std::wstring error(const std::string& message)
 std::wstring GitManager::init(const std::wstring& path, bool is_bare)
 {
 	if (m_repo) git_repository_free(m_repo);
+	m_repo = nullptr;
 	ASSERT(git_repository_init(&m_repo, S(path), is_bare));
 	return success(true);
 }
@@ -101,6 +102,7 @@ std::wstring GitManager::init(const std::wstring& path, bool is_bare)
 std::wstring GitManager::clone(const std::wstring& url, const std::wstring& path)
 {
 	if (m_repo) git_repository_free(m_repo);
+	m_repo = nullptr;
 	ASSERT(git_clone(&m_repo, S(url), S(path), nullptr));
 	return success(true);
 }
@@ -108,17 +110,25 @@ std::wstring GitManager::clone(const std::wstring& url, const std::wstring& path
 std::wstring GitManager::open(const std::wstring& path)
 {
 	if (m_repo) git_repository_free(m_repo);
+	m_repo = nullptr;
 	ASSERT(git_repository_open(&m_repo, S(path)));
 	return success(true);
 }
 
+bool GitManager::close() 
+{
+	if (m_repo) git_repository_free(m_repo);
+	m_repo = nullptr;
+	return true;
+}
+
 std::wstring GitManager::find(const std::wstring& path)
 {
-	git_buf root ={ 0 };
-	ASSERT(git_repository_discover(&root, S(path), 0, nullptr));
-	nlohmann::json j;
-	j["path"] = root.ptr;
-	return success(j);
+	git_buf buffer ={ 0 };
+	ASSERT(git_repository_discover(&buffer, S(path), 0, nullptr));
+	std::string res = buffer.ptr;
+	git_buf_free(&buffer);
+	return success(res);
 }
 
 static std::string status2str(git_status_t status) {

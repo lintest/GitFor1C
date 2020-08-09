@@ -26,6 +26,7 @@ const std::vector<AddInBase::Alias> GitControl::m_MethList{
 	Alias(eClone   		 , 2, true  , L"Clone"      	 , L"Clone"),
 	Alias(eFind    		 , 1, true  , L"Find"       	 , L"Find"),
 	Alias(eOpen    		 , 1, true  , L"Open"       	 , L"Open"),
+	Alias(eClose   		 , 0, false , L"Close"       	 , L"Close"),
 	Alias(eInfo    		 , 1, true  , L"Info"       	 , L"Info"),
 	Alias(eCommit  		 , 1, true  , L"Commit"     	 , L"Commit"),
 	Alias(eStatus  		 , 0, true  , L"Status"     	 , L"Status"),
@@ -74,6 +75,8 @@ bool GitControl::CallAsProc(const long lMethodNum, tVariant* paParams, const lon
 		return m_manager.setAuthor(VarToStr(paParams), VarToStr(paParams + 1));
 	case eSetCommitter:
 		return m_manager.setCommitter(VarToStr(paParams), VarToStr(paParams + 1));
+	case eClose:
+		return m_manager.close();
 	}
 	return false;
 }

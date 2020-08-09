@@ -1,8 +1,40 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <Form xmlns="http://v8.1c.ru/8.3/xcf/logform" xmlns:app="http://v8.1c.ru/8.2/managed-application/core" xmlns:cfg="http://v8.1c.ru/8.1/data/enterprise/current-config" xmlns:dcscor="http://v8.1c.ru/8.1/data-composition-system/core" xmlns:dcsset="http://v8.1c.ru/8.1/data-composition-system/settings" xmlns:ent="http://v8.1c.ru/8.1/data/enterprise" xmlns:lf="http://v8.1c.ru/8.2/managed-application/logform" xmlns:style="http://v8.1c.ru/8.1/data/ui/style" xmlns:sys="http://v8.1c.ru/8.1/data/ui/fonts/system" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:v8ui="http://v8.1c.ru/8.1/data/ui" xmlns:web="http://v8.1c.ru/8.1/data/ui/colors/web" xmlns:win="http://v8.1c.ru/8.1/data/ui/colors/windows" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.4">
-	<AutoTitle>false</AutoTitle>
 	<AutoCommandBar name="ФормаКоманднаяПанель" id="-1">
 		<ChildItems>
+			<Popup name="FormGroupFile" id="281">
+				<Title>
+					<v8:item>
+						<v8:lang>ru</v8:lang>
+						<v8:content>File</v8:content>
+					</v8:item>
+				</Title>
+				<ToolTip>
+					<v8:item>
+						<v8:lang>ru</v8:lang>
+						<v8:content>Form group file</v8:content>
+					</v8:item>
+				</ToolTip>
+				<ExtendedTooltip name="FormGroupFileExtendedTooltip" id="282"/>
+				<ChildItems>
+					<Button name="FormOpenFolder" id="283">
+						<Type>CommandBarButton</Type>
+						<CommandName>Form.Command.OpenFolder</CommandName>
+						<Title>
+							<v8:item>
+								<v8:lang>ru</v8:lang>
+								<v8:content>Open Folder…</v8:content>
+							</v8:item>
+						</Title>
+						<ExtendedTooltip name="FormOpenFolderExtendedTooltip" id="284"/>
+					</Button>
+					<Button name="FormCloseFolder" id="289">
+						<Type>CommandBarButton</Type>
+						<CommandName>Form.Command.CloseFolder</CommandName>
+						<ExtendedTooltip name="FormCloseFolderExtendedTooltip" id="290"/>
+					</Button>
+				</ChildItems>
+			</Popup>
 			<Button name="FormAutoTest" id="32">
 				<Type>CommandBarButton</Type>
 				<CommandName>Form.Command.AutoTest</CommandName>
@@ -119,7 +151,279 @@
 			<ShowTitle>false</ShowTitle>
 			<ExtendedTooltip name="MainGroupРасширеннаяПодсказка" id="250"/>
 			<ChildItems>
+				<Pages name="MainPages" id="285">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Main pages</v8:content>
+						</v8:item>
+					</Title>
+					<ToolTip>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Main pages</v8:content>
+						</v8:item>
+					</ToolTip>
+					<PagesRepresentation>None</PagesRepresentation>
+					<ExtendedTooltip name="MainPagesExtendedTooltip" id="286"/>
+					<ChildItems>
+						<Page name="FolderPage" id="287">
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Folder page</v8:content>
+								</v8:item>
+							</Title>
+							<ToolTip>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Folder page</v8:content>
+								</v8:item>
+							</ToolTip>
+							<Width>30</Width>
+							<ExtendedTooltip name="FolderPageExtendedTooltip" id="288"/>
+							<ChildItems>
+								<UsualGroup name="GroupOpenFolder" id="269">
+									<Title>
+										<v8:item>
+											<v8:lang>ru</v8:lang>
+											<v8:content>Group open folder</v8:content>
+										</v8:item>
+									</Title>
+									<ToolTip>
+										<v8:item>
+											<v8:lang>ru</v8:lang>
+											<v8:content>Group open folder</v8:content>
+										</v8:item>
+									</ToolTip>
+									<Width>16</Width>
+									<HorizontalStretch>true</HorizontalStretch>
+									<VerticalStretch>true</VerticalStretch>
+									<Group>Vertical</Group>
+									<HorizontalAlign>Center</HorizontalAlign>
+									<Representation>None</Representation>
+									<ShowTitle>false</ShowTitle>
+									<ExtendedTooltip name="GroupOpenFolderExtendedTooltip" id="270"/>
+									<ChildItems>
+										<LabelDecoration name="DecorationOpenFolder" id="275">
+											<Title formatted="false">
+												<v8:item>
+													<v8:lang>ru</v8:lang>
+													<v8:content>You have not yet opened a folder.</v8:content>
+												</v8:item>
+											</Title>
+											<ContextMenu name="DecorationOpenFolderContextMenu" id="276"/>
+											<ExtendedTooltip name="DecorationOpenFolderExtendedTooltip" id="277"/>
+										</LabelDecoration>
+										<Button name="OpenFolder" id="271">
+											<Type>UsualButton</Type>
+											<GroupHorizontalAlign>Center</GroupHorizontalAlign>
+											<CommandName>Form.Command.OpenFolder</CommandName>
+											<ExtendedTooltip name="OpenFolderExtendedTooltip" id="272"/>
+										</Button>
+										<LabelDecoration name="DecorationCloneRepo" id="278">
+											<Title formatted="false">
+												<v8:item>
+													<v8:lang>ru</v8:lang>
+													<v8:content>You can also clone a repository from a URL. </v8:content>
+												</v8:item>
+											</Title>
+											<ContextMenu name="DecorationCloneRepoContextMenu" id="279"/>
+											<ExtendedTooltip name="DecorationCloneRepoExtendedTooltip" id="280"/>
+										</LabelDecoration>
+										<Button name="CloneRepository" id="273">
+											<Type>UsualButton</Type>
+											<GroupHorizontalAlign>Center</GroupHorizontalAlign>
+											<CommandName>Form.Command.CloneRepository</CommandName>
+											<ExtendedTooltip name="CloneRepositoryExtendedTooltip" id="274"/>
+										</Button>
+									</ChildItems>
+								</UsualGroup>
+							</ChildItems>
+						</Page>
+						<Page name="StatusPage" id="218">
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Status</v8:content>
+								</v8:item>
+							</Title>
+							<ToolTip>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Status page</v8:content>
+								</v8:item>
+							</ToolTip>
+							<Group>Horizontal</Group>
+							<ExtendedTooltip name="StatusPageExtendedTooltip" id="219"/>
+							<ChildItems>
+								<Table name="Status" id="220">
+									<Representation>Tree</Representation>
+									<ReadOnly>true</ReadOnly>
+									<ChangeRowSet>false</ChangeRowSet>
+									<ChangeRowOrder>false</ChangeRowOrder>
+									<AutoInsertNewRow>true</AutoInsertNewRow>
+									<EnableStartDrag>true</EnableStartDrag>
+									<EnableDrag>true</EnableDrag>
+									<DataPath>Status</DataPath>
+									<ContextMenu name="StatusContextMenu" id="221"/>
+									<AutoCommandBar name="StatusCommandBar" id="222">
+										<Autofill>false</Autofill>
+										<ChildItems>
+											<ButtonGroup name="StatusIndexGroup" id="253">
+												<Title>
+													<v8:item>
+														<v8:lang>ru</v8:lang>
+														<v8:content>Status index group</v8:content>
+													</v8:item>
+												</Title>
+												<ToolTip>
+													<v8:item>
+														<v8:lang>ru</v8:lang>
+														<v8:content>Status index group</v8:content>
+													</v8:item>
+												</ToolTip>
+												<Representation>Compact</Representation>
+												<ExtendedTooltip name="StatusIndexGroupРасширеннаяПодсказка" id="254"/>
+												<ChildItems>
+													<Button name="StatusIndexAdd" id="242">
+														<Type>CommandBarButton</Type>
+														<CommandName>Form.Command.IndexAdd</CommandName>
+														<ExtendedTooltip name="StatusIndexAddExtendedTooltip" id="243"/>
+													</Button>
+													<Button name="StatusIndexReset" id="251">
+														<Type>CommandBarButton</Type>
+														<CommandName>Form.Command.IndexReset</CommandName>
+														<ExtendedTooltip name="StatusIndexResetРасширеннаяПодсказка" id="252"/>
+													</Button>
+													<Button name="StatusIndexRemove" id="244">
+														<Type>CommandBarButton</Type>
+														<CommandName>Form.Command.IndexRemove</CommandName>
+														<ExtendedTooltip name="StatusIndexRemoveExtendedTooltip" id="245"/>
+													</Button>
+												</ChildItems>
+											</ButtonGroup>
+											<Button name="StatusOpenBlob" id="255">
+												<Type>CommandBarButton</Type>
+												<CommandName>Form.Command.OpenBlob</CommandName>
+												<ExtendedTooltip name="StatusOpenBlobРасширеннаяПодсказка" id="256"/>
+											</Button>
+										</ChildItems>
+									</AutoCommandBar>
+									<ExtendedTooltip name="StatusExtendedTooltip" id="223"/>
+									<SearchStringAddition name="StatusSearchString" id="224">
+										<AdditionSource>
+											<Item>Status</Item>
+											<Type>SearchStringRepresentation</Type>
+										</AdditionSource>
+										<ContextMenu name="StatusSearchStringContextMenu" id="225"/>
+										<ExtendedTooltip name="StatusSearchStringExtendedTooltip" id="226"/>
+									</SearchStringAddition>
+									<ViewStatusAddition name="StatusViewStatus" id="227">
+										<AdditionSource>
+											<Item>Status</Item>
+											<Type>ViewStatusRepresentation</Type>
+										</AdditionSource>
+										<ContextMenu name="StatusViewStatusContextMenu" id="228"/>
+										<ExtendedTooltip name="StatusViewStatusExtendedTooltip" id="229"/>
+									</ViewStatusAddition>
+									<SearchControlAddition name="StatusSearchControl" id="230">
+										<AdditionSource>
+											<Item>Status</Item>
+											<Type>SearchControl</Type>
+										</AdditionSource>
+										<ContextMenu name="StatusSearchControlContextMenu" id="231"/>
+										<ExtendedTooltip name="StatusSearchControlExtendedTooltip" id="232"/>
+									</SearchControlAddition>
+									<Events>
+										<Event name="OnActivateRow">StatusOnActivateRow</Event>
+									</Events>
+									<ChildItems>
+										<InputField name="Statusname" id="233">
+											<DataPath>Status.name</DataPath>
+											<EditMode>EnterOnInput</EditMode>
+											<ContextMenu name="StatusnameContextMenu" id="234"/>
+											<ExtendedTooltip name="StatusnameExtendedTooltip" id="235"/>
+										</InputField>
+										<InputField name="Statussize" id="236">
+											<DataPath>Status.size</DataPath>
+											<UserVisible>
+												<xr:Common>false</xr:Common>
+											</UserVisible>
+											<EditMode>EnterOnInput</EditMode>
+											<ContextMenu name="StatussizeContextMenu" id="237"/>
+											<ExtendedTooltip name="StatussizeExtendedTooltip" id="238"/>
+										</InputField>
+										<InputField name="Statusstatus" id="239">
+											<DataPath>Status.status</DataPath>
+											<EditMode>EnterOnInput</EditMode>
+											<ContextMenu name="StatusstatusContextMenu" id="240"/>
+											<ExtendedTooltip name="StatusstatusExtendedTooltip" id="241"/>
+										</InputField>
+									</ChildItems>
+								</Table>
+							</ChildItems>
+						</Page>
+						<Page name="InitializePage" id="291">
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Initialize page</v8:content>
+								</v8:item>
+							</Title>
+							<ToolTip>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Initialize page</v8:content>
+								</v8:item>
+							</ToolTip>
+							<Width>30</Width>
+							<ExtendedTooltip name="InitializePageExtendedTooltip" id="292"/>
+							<ChildItems>
+								<UsualGroup name="GroupInitRepo" id="295">
+									<Title>
+										<v8:item>
+											<v8:lang>ru</v8:lang>
+											<v8:content>Group init repo</v8:content>
+										</v8:item>
+									</Title>
+									<ToolTip>
+										<v8:item>
+											<v8:lang>ru</v8:lang>
+											<v8:content>Group init repo</v8:content>
+										</v8:item>
+									</ToolTip>
+									<HorizontalStretch>true</HorizontalStretch>
+									<VerticalStretch>true</VerticalStretch>
+									<Group>Vertical</Group>
+									<HorizontalAlign>Center</HorizontalAlign>
+									<Representation>None</Representation>
+									<ShowTitle>false</ShowTitle>
+									<ExtendedTooltip name="GroupInitRepoExtendedTooltip" id="296"/>
+									<ChildItems>
+										<LabelDecoration name="DecorationInitRepo" id="297">
+											<Title formatted="false">
+												<v8:item>
+													<v8:lang>ru</v8:lang>
+													<v8:content>The folder currently open doesn't have a git repository.</v8:content>
+												</v8:item>
+											</Title>
+											<ContextMenu name="DecorationInitRepoContextMenu" id="298"/>
+											<ExtendedTooltip name="DecorationInitRepoExtendedTooltip" id="299"/>
+										</LabelDecoration>
+										<Button name="InitializeRepo" id="293">
+											<Type>UsualButton</Type>
+											<CommandName>Form.Command.InitializeRepo</CommandName>
+											<ExtendedTooltip name="InitializeRepoExtendedTooltip" id="294"/>
+										</Button>
+									</ChildItems>
+								</UsualGroup>
+							</ChildItems>
+						</Page>
+					</ChildItems>
+				</Pages>
 				<Pages name="FormPages" id="59">
+					<Visible>false</Visible>
 					<Title>
 						<v8:item>
 							<v8:lang>ru</v8:lang>
@@ -315,150 +619,6 @@
 										</UsualGroup>
 									</ChildItems>
 								</UsualGroup>
-							</ChildItems>
-						</Page>
-						<Page name="PageStatus" id="218">
-							<Title>
-								<v8:item>
-									<v8:lang>ru</v8:lang>
-									<v8:content>Status</v8:content>
-								</v8:item>
-							</Title>
-							<ToolTip>
-								<v8:item>
-									<v8:lang>ru</v8:lang>
-									<v8:content>Page status</v8:content>
-								</v8:item>
-							</ToolTip>
-							<Group>Horizontal</Group>
-							<ExtendedTooltip name="PageStatusExtendedTooltip" id="219"/>
-							<ChildItems>
-								<Table name="Status" id="220">
-									<Representation>Tree</Representation>
-									<ReadOnly>true</ReadOnly>
-									<ChangeRowSet>false</ChangeRowSet>
-									<ChangeRowOrder>false</ChangeRowOrder>
-									<AutoInsertNewRow>true</AutoInsertNewRow>
-									<EnableStartDrag>true</EnableStartDrag>
-									<EnableDrag>true</EnableDrag>
-									<DataPath>Status</DataPath>
-									<ContextMenu name="StatusContextMenu" id="221"/>
-									<AutoCommandBar name="StatusCommandBar" id="222">
-										<Autofill>false</Autofill>
-										<ChildItems>
-											<ButtonGroup name="StatusIndexGroup" id="253">
-												<Title>
-													<v8:item>
-														<v8:lang>ru</v8:lang>
-														<v8:content>Status index group</v8:content>
-													</v8:item>
-												</Title>
-												<ToolTip>
-													<v8:item>
-														<v8:lang>ru</v8:lang>
-														<v8:content>Status index group</v8:content>
-													</v8:item>
-												</ToolTip>
-												<Representation>Compact</Representation>
-												<ExtendedTooltip name="StatusIndexGroupРасширеннаяПодсказка" id="254"/>
-												<ChildItems>
-													<Button name="StatusIndexAdd" id="242">
-														<Type>CommandBarButton</Type>
-														<CommandName>Form.Command.IndexAdd</CommandName>
-														<ExtendedTooltip name="StatusIndexAddExtendedTooltip" id="243"/>
-													</Button>
-													<Button name="StatusIndexReset" id="251">
-														<Type>CommandBarButton</Type>
-														<CommandName>Form.Command.IndexReset</CommandName>
-														<ExtendedTooltip name="StatusIndexResetРасширеннаяПодсказка" id="252"/>
-													</Button>
-													<Button name="StatusIndexRemove" id="244">
-														<Type>CommandBarButton</Type>
-														<CommandName>Form.Command.IndexRemove</CommandName>
-														<ExtendedTooltip name="StatusIndexRemoveExtendedTooltip" id="245"/>
-													</Button>
-												</ChildItems>
-											</ButtonGroup>
-											<Button name="StatusOpenBlob" id="255">
-												<Type>CommandBarButton</Type>
-												<CommandName>Form.Command.OpenBlob</CommandName>
-												<ExtendedTooltip name="StatusOpenBlobРасширеннаяПодсказка" id="256"/>
-											</Button>
-										</ChildItems>
-									</AutoCommandBar>
-									<ExtendedTooltip name="StatusExtendedTooltip" id="223"/>
-									<SearchStringAddition name="StatusSearchString" id="224">
-										<AdditionSource>
-											<Item>Status</Item>
-											<Type>SearchStringRepresentation</Type>
-										</AdditionSource>
-										<ContextMenu name="StatusSearchStringContextMenu" id="225"/>
-										<ExtendedTooltip name="StatusSearchStringExtendedTooltip" id="226"/>
-									</SearchStringAddition>
-									<ViewStatusAddition name="StatusViewStatus" id="227">
-										<AdditionSource>
-											<Item>Status</Item>
-											<Type>ViewStatusRepresentation</Type>
-										</AdditionSource>
-										<ContextMenu name="StatusViewStatusContextMenu" id="228"/>
-										<ExtendedTooltip name="StatusViewStatusExtendedTooltip" id="229"/>
-									</ViewStatusAddition>
-									<SearchControlAddition name="StatusSearchControl" id="230">
-										<AdditionSource>
-											<Item>Status</Item>
-											<Type>SearchControl</Type>
-										</AdditionSource>
-										<ContextMenu name="StatusSearchControlContextMenu" id="231"/>
-										<ExtendedTooltip name="StatusSearchControlExtendedTooltip" id="232"/>
-									</SearchControlAddition>
-									<Events>
-										<Event name="OnActivateRow">StatusOnActivateRow</Event>
-									</Events>
-									<ChildItems>
-										<InputField name="Statusname" id="233">
-											<DataPath>Status.name</DataPath>
-											<EditMode>EnterOnInput</EditMode>
-											<ContextMenu name="StatusnameContextMenu" id="234"/>
-											<ExtendedTooltip name="StatusnameExtendedTooltip" id="235"/>
-										</InputField>
-										<InputField name="Statussize" id="236">
-											<DataPath>Status.size</DataPath>
-											<EditMode>EnterOnInput</EditMode>
-											<ContextMenu name="StatussizeContextMenu" id="237"/>
-											<ExtendedTooltip name="StatussizeExtendedTooltip" id="238"/>
-										</InputField>
-										<InputField name="Statusstatus" id="239">
-											<DataPath>Status.status</DataPath>
-											<EditMode>EnterOnInput</EditMode>
-											<ContextMenu name="StatusstatusContextMenu" id="240"/>
-											<ExtendedTooltip name="StatusstatusExtendedTooltip" id="241"/>
-										</InputField>
-										<InputField name="Statusnew_flags" id="257">
-											<DataPath>Status.new_flags</DataPath>
-											<EditMode>EnterOnInput</EditMode>
-											<ContextMenu name="Statusnew_flagsКонтекстноеМеню" id="258"/>
-											<ExtendedTooltip name="Statusnew_flagsРасширеннаяПодсказка" id="259"/>
-										</InputField>
-										<InputField name="Statusnew_id" id="263">
-											<DataPath>Status.new_id</DataPath>
-											<EditMode>EnterOnInput</EditMode>
-											<ContextMenu name="Statusnew_idКонтекстноеМеню" id="264"/>
-											<ExtendedTooltip name="Statusnew_idРасширеннаяПодсказка" id="265"/>
-										</InputField>
-										<InputField name="Statusold_flags" id="260">
-											<DataPath>Status.old_flags</DataPath>
-											<EditMode>EnterOnInput</EditMode>
-											<ContextMenu name="Statusold_flagsКонтекстноеМеню" id="261"/>
-											<ExtendedTooltip name="Statusold_flagsРасширеннаяПодсказка" id="262"/>
-										</InputField>
-										<InputField name="Statusold_id" id="266">
-											<DataPath>Status.old_id</DataPath>
-											<EditMode>EnterOnInput</EditMode>
-											<ContextMenu name="Statusold_idКонтекстноеМеню" id="267"/>
-											<ExtendedTooltip name="Statusold_idРасширеннаяПодсказка" id="268"/>
-										</InputField>
-									</ChildItems>
-								</Table>
 							</ChildItems>
 						</Page>
 						<Page name="PageHistory" id="71">
@@ -1663,6 +1823,64 @@
 				</v8:item>
 			</ToolTip>
 			<Action>OpenBlob</Action>
+		</Command>
+		<Command name="OpenFolder" id="22">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Open Folder</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Open folder</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>OpenFolder</Action>
+		</Command>
+		<Command name="CloneRepository" id="23">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Clone Repository</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Clone repository</v8:content>
+				</v8:item>
+			</ToolTip>
+		</Command>
+		<Command name="CloseFolder" id="24">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Close Folder</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Close folder</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>CloseFolder</Action>
+		</Command>
+		<Command name="InitializeRepo" id="25">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Initialize Repository</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Initialize repo</v8:content>
+				</v8:item>
+			</ToolTip>
 		</Command>
 	</Commands>
 </Form>
