@@ -84,11 +84,6 @@
 				<Representation>Compact</Representation>
 				<ExtendedTooltip name="FormGroupRepoExtendedTooltip" id="16"/>
 				<ChildItems>
-					<Button name="FormRepoCommit" id="27">
-						<Type>CommandBarButton</Type>
-						<CommandName>Form.Command.RepoCommit</CommandName>
-						<ExtendedTooltip name="FormRepoCommitExtendedTooltip" id="28"/>
-					</Button>
 					<Button name="FormRepoInfo" id="34">
 						<Type>CommandBarButton</Type>
 						<CommandName>Form.Command.RepoInfo</CommandName>
@@ -433,11 +428,6 @@
 											</ToolTip>
 											<ExtendedTooltip name="StatusPanelExtendedTooltip" id="336"/>
 											<ChildItems>
-												<Button name="RepoCommit" id="337">
-													<Type>CommandBarButton</Type>
-													<CommandName>Form.Command.RepoCommit</CommandName>
-													<ExtendedTooltip name="RepoCommitExtendedTooltip" id="338"/>
-												</Button>
 												<Button name="StatusRefreshStatus" id="320">
 													<Type>CommandBarButton</Type>
 													<CommandName>Form.Command.RefreshStatus</CommandName>
@@ -469,11 +459,6 @@
 															<CommandName>Form.Command.IndexReset</CommandName>
 															<ExtendedTooltip name="StatusIndexResetРасширеннаяПодсказка" id="252"/>
 														</Button>
-														<Button name="StatusIndexRemove" id="244">
-															<Type>CommandBarButton</Type>
-															<CommandName>Form.Command.IndexRemove</CommandName>
-															<ExtendedTooltip name="StatusIndexRemoveExtendedTooltip" id="245"/>
-														</Button>
 														<Button name="IndexDiscard" id="369">
 															<Type>CommandBarButton</Type>
 															<CommandName>Form.Command.IndexDiscard</CommandName>
@@ -488,11 +473,36 @@
 												</Button>
 											</ChildItems>
 										</CommandBar>
-										<InputField name="MessageText" id="330">
-											<DataPath>Message</DataPath>
-											<ContextMenu name="MessageTextContextMenu" id="331"/>
-											<ExtendedTooltip name="MessageTextExtendedTooltip" id="332"/>
-										</InputField>
+										<UsualGroup name="GroupCommitMessage" id="371">
+											<Title>
+												<v8:item>
+													<v8:lang>ru</v8:lang>
+													<v8:content>Group commit message</v8:content>
+												</v8:item>
+											</Title>
+											<ToolTip>
+												<v8:item>
+													<v8:lang>ru</v8:lang>
+													<v8:content>Group commit message</v8:content>
+												</v8:item>
+											</ToolTip>
+											<Group>Horizontal</Group>
+											<Representation>None</Representation>
+											<ShowTitle>false</ShowTitle>
+											<ExtendedTooltip name="GroupCommitMessageExtendedTooltip" id="372"/>
+											<ChildItems>
+												<InputField name="MessageText" id="330">
+													<DataPath>Message</DataPath>
+													<ContextMenu name="MessageTextContextMenu" id="331"/>
+													<ExtendedTooltip name="MessageTextExtendedTooltip" id="332"/>
+												</InputField>
+												<Button name="RepoCommit" id="337">
+													<Type>UsualButton</Type>
+													<CommandName>Form.Command.RepoCommit</CommandName>
+													<ExtendedTooltip name="RepoCommitExtendedTooltip" id="338"/>
+												</Button>
+											</ChildItems>
+										</UsualGroup>
 										<Table name="Status" id="220">
 											<Representation>Tree</Representation>
 											<ReadOnly>true</ReadOnly>
@@ -522,11 +532,6 @@
 																<Type>CommandBarButton</Type>
 																<CommandName>Form.Command.IndexReset</CommandName>
 																<ExtendedTooltip name="StatusContextMenuIndexResetExtendedTooltip" id="342"/>
-															</Button>
-															<Button name="StatusContextMenuIndexRemove" id="343">
-																<Type>CommandBarButton</Type>
-																<CommandName>Form.Command.IndexRemove</CommandName>
-																<ExtendedTooltip name="StatusContextMenuIndexRemoveExtendedTooltip" id="344"/>
 															</Button>
 														</ChildItems>
 													</ButtonGroup>
@@ -1910,21 +1915,6 @@
 				</v8:item>
 			</ToolTip>
 			<Action>IndexAdd</Action>
-		</Command>
-		<Command name="IndexRemove" id="10">
-			<Title>
-				<v8:item>
-					<v8:lang>ru</v8:lang>
-					<v8:content>delete</v8:content>
-				</v8:item>
-			</Title>
-			<ToolTip>
-				<v8:item>
-					<v8:lang>ru</v8:lang>
-					<v8:content>Index remove</v8:content>
-				</v8:item>
-			</ToolTip>
-			<Action>IndexRemove</Action>
 		</Command>
 		<Command name="RepoHistory" id="11">
 			<Title>

@@ -42,10 +42,10 @@ public:
 	std::wstring info(const std::wstring& msg);
 	std::wstring open(const std::wstring& path);
 	std::wstring find(const std::wstring& path);
-	std::wstring add(const std::wstring& path);
-	std::wstring reset(const std::wstring& path);
-	std::wstring remove(const std::wstring& path);
-	std::wstring discard(const std::wstring& path);
+	std::wstring add(const std::wstring& filelist);
+	std::wstring reset(const std::wstring& filelist);
+	std::wstring remove(const std::wstring& filelist);
+	std::wstring discard(const std::wstring& filelist);
 	std::wstring commit(const std::wstring& msg);
 	std::wstring history(const std::wstring& msg);
 	std::wstring diff(const std::wstring& s1, const std::wstring& s2);

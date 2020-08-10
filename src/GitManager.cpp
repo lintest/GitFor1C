@@ -92,6 +92,16 @@ static std::wstring error(int code)
 	return MB2WC(json.dump());
 }
 
+static std::wstring error(const std::string &msg)
+{
+	nlohmann::json json, j;
+	j["code"] = -1;
+	j["message"] = msg;
+	json["error"] = j;
+	json["success"] = false;
+	return MB2WC(json.dump());
+}
+
 std::wstring GitManager::init(const std::wstring& path, bool is_bare)
 {
 	if (m_repo) git_repository_free(m_repo);
@@ -336,48 +346,94 @@ std::wstring GitManager::commit(const std::wstring& msg)
 	return success(true);
 }
 
-std::wstring GitManager::add(const std::wstring& filepath)
+std::wstring GitManager::add(const std::wstring& filelist)
 {
 	CHECK_REPO();
+	nlohmann::json json;
+	try {
+		json = nlohmann::json::parse(WC2MB(filelist));
+	}
+	catch (nlohmann::json::parse_error e) {
+		return ::error("JSON parse error");
+	}
 	GIT_index index;
 	ASSERT(git_repository_index(&index, m_repo));
-	ASSERT(git_index_add_bypath(index, S(filepath)));
+	if (json.is_array()) {
+		for (auto element : json) {
+			std::string path = element;
+			ASSERT(git_index_add_bypath(index, path.c_str()));
+		}
+	}
 	ASSERT(git_index_write(index));
 	return success(true);
 }
 
-std::wstring GitManager::reset(const std::wstring& filepath)
+std::wstring GitManager::reset(const std::wstring& filelist)
 {
 	CHECK_REPO();
-	std::string path = WC2MB(filepath);
-	const char* paths[] ={ path.c_str() };
-	const git_strarray strarray ={ (char**)paths, 1 };
+	nlohmann::json json;
+	try {
+		json = nlohmann::json::parse(WC2MB(filelist));
+	}
+	catch (nlohmann::json::parse_error e) {
+		return ::error("JSON parse error");
+	}
 	GIT_object obj = NULL;
 	ASSERT(git_revparse_single(&obj, m_repo, "HEAD^{commit}"));
-	ASSERT(git_reset_default(m_repo, obj, &strarray));
+	if (json.is_array()) {
+		for (auto element : json) {
+			std::string path = element;
+			const char* paths[] = { path.c_str() };
+			const git_strarray strarray = { (char**)paths, 1 };
+			ASSERT(git_reset_default(m_repo, obj, &strarray));
+		}
+	}
 	return success(true);
 }
 
-std::wstring GitManager::discard(const std::wstring& filepath)
+std::wstring GitManager::discard(const std::wstring& filelist)
 {
 	CHECK_REPO();
-	std::string path = WC2MB(filepath);
-	const char* paths[] = { path.c_str() };
+	nlohmann::json json;
+	try {
+		json = nlohmann::json::parse(WC2MB(filelist));
+	}
+	catch (nlohmann::json::parse_error e) {
+		return ::error("JSON parse error");
+	}
 	git_checkout_options options;
 	ASSERT(git_checkout_options_init(&options, GIT_CHECKOUT_OPTIONS_VERSION));
 	options.checkout_strategy = GIT_CHECKOUT_FORCE;
 	options.paths.count = 1;
-	options.paths.strings = (char**)paths;
-	ASSERT(git_checkout_head(m_repo, &options));
+	if (json.is_array()) {
+		for (auto element : json) {
+			std::string path = element;
+			const char* paths[] = { path.c_str() };
+			options.paths.strings = (char**)paths;
+			ASSERT(git_checkout_head(m_repo, &options));
+		}
+	}
 	return success(true);
 }
 
-std::wstring GitManager::remove(const std::wstring& filepath)
+std::wstring GitManager::remove(const std::wstring& filelist)
 {
 	CHECK_REPO();
+	nlohmann::json json;
+	try {
+		json = nlohmann::json::parse(WC2MB(filelist));
+	}
+	catch (nlohmann::json::parse_error e) {
+		return ::error("JSON parse error");
+	}
 	GIT_index index;
 	ASSERT(git_repository_index(&index, m_repo));
-	ASSERT(git_index_remove_bypath(index, S(filepath)));
+	if (json.is_array()) {
+		for (auto element : json) {
+			std::string path = element;
+			ASSERT(git_index_remove_bypath(index, path.c_str()));
+		}
+	}
 	ASSERT(git_index_write(index));
 	return success(true);
 }

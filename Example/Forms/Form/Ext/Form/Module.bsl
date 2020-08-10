@@ -9,7 +9,6 @@ Procedure OnCreateAtServer(Cancel, StandardProcessing)
 		AddInTemplate = FormAttributeToValue("Object").GetTemplate("GitFor1C");
 		AddInURL = PutToTempStorage(AddInTemplate, UUID);
 	EndIf;
-	Message = "Init commit";
 	
 EndProcedure
 
@@ -184,7 +183,33 @@ EndProcedure
 &AtClient
 Procedure RepoCommit(Command)
 	
-	git.BeginCallingCommit(GitMessageNotify(), Message);
+	If IsBlankString(Message) Then
+		UserMessage = New UserMessage;
+		UserMessage.Text = "Fill the field ""Message""";
+		UserMessage.DataPath = "Message";
+		UserMessage.Message();
+	Else
+		NotifyDescription = New NotifyDescription("EndCallingCommit", ThisForm);
+		git.BeginCallingCommit(NotifyDescription, Message);
+	EndIf;
+	
+EndProcedure
+
+&AtClient
+Procedure EndCallingCommit(ResultCall, ParametersCall, AdditionalParameters) Export
+	
+	JsonData = JsonLoad(ResultCall);
+	If JsonData.success Then
+		ClearAllItems();
+		Message = Undefined;
+		git.BeginCallingStatus(GitStatusNotify());
+	ElsIf JsonData.error.code = 0 Then
+		Items.MainPages.CurrentPage = Items.InitializePage;
+	Else
+		UserMessage = New UserMessage;
+		UserMessage.Text = JsonData.error.Message;
+		UserMessage.Message();
+	EndIf;
 	
 EndProcedure
 
@@ -210,45 +235,50 @@ Procedure RepoHistory(Command)
 EndProcedure
 
 &AtClient
-Procedure IndexAdd(Command)
+Function SelectedStatusJson()
 	
+	FileArray = New Array;
 	For Each Id In Items.Status.SelectedRows Do
 		Row = Status.FindByID(Id);
-		git.add(Row.name);
+		If Not IsBlankString(Row.new_name) Then
+			FileArray.Add(Row.new_name);
+		EndIf;
 	EndDo;
-	git.BeginCallingStatus(GitStatusNotify());
+	Return JsonDump(FileArray);
+	
+EndFunction	
+
+&AtClient
+Function GetIndexNotify()
+	
+	Return New NotifyDescription("EndCallingIndex", ThisForm);
+
+EndFunction	
+
+&AtClient
+Procedure IndexAdd(Command)
+	
+	git.BeginCallingAdd(GetIndexNotify(), SelectedStatusJson());
 	
 EndProcedure
 
-&НаКлиенте
-Процедура IndexReset(Команда)
-	
-	For Each Id In Items.Status.SelectedRows Do
-		Row = Status.FindByID(Id);
-		git.reset(Row.name);
-	EndDo;
-	git.BeginCallingStatus(GitStatusNotify());
-	
-КонецПроцедуры
-
 &AtClient
-Procedure IndexRemove(Command)
+Procedure IndexReset(Команда)
 	
-	For Each Id In Items.Status.SelectedRows Do
-		Row = Status.FindByID(Id);
-		git.remove(Row.name);
-	EndDo;
-	git.BeginCallingStatus(GitStatusNotify());
+	git.BeginCallingReset(GetIndexNotify(), SelectedStatusJson());
 	
 EndProcedure
 
 &AtClient
 Procedure IndexDiscard(Command)
 
-	For Each Id In Items.Status.SelectedRows Do
-		Row = Status.FindByID(Id);
-		git.discard(Row.name);
-	EndDo;
+	git.BeginCallingDiscard(GetIndexNotify(), SelectedStatusJson());
+	
+EndProcedure
+
+&AtClient
+Procedure EndCallingIndex(ResultCall, ParametersCall, AdditionalParameters) Export
+	
 	git.BeginCallingStatus(GitStatusNotify());
 	
 EndProcedure
@@ -498,6 +528,7 @@ Procedure OpenRepositoryEnd(ResultCall, ParametersCall, AdditionalParameters) Ex
 	If JsonData.Success Then
 		git.BeginCallingStatus(GitStatusNotify());
 		Items.MainPages.CurrentPage = Items.StatusPage;
+		Items.FormShowControl.Check = True;
 	EndiF;
 	
 EndProcedure
@@ -551,6 +582,9 @@ Procedure ShowExplorer(Command)
 	
 	If Not IsBlankString(Directory) Then
 		ClearAllItems();
+		Items.FormShowExplorer.Check = True;
+		Items.FormShowSearch.Check = False;
+		Items.FormShowControl.Check = False;
 		Items.MainPages.CurrentPage = Items.ExplorerPage;
 		FillExplorerItems(Explorer.GetItems(), Directory);
 		CurrentItem = Items.Explorer;
@@ -563,6 +597,9 @@ Procedure ShowSearch(Command)
 
 	If Not IsBlankString(Directory) Then
 		ClearAllItems();
+		Items.FormShowExplorer.Check = False;
+		Items.FormShowSearch.Check = True;
+		Items.FormShowControl.Check = False;
 		Items.MainPages.CurrentPage = Items.SearchPage;
 		CurrentItem = Items.SearchText;
 	EndIf;
@@ -574,6 +611,9 @@ Procedure ShowControl(Command)
 
 	If Not IsBlankString(Directory) Then
 		ClearAllItems();
+		Items.FormShowExplorer.Check = False;
+		Items.FormShowSearch.Check = False;
+		Items.FormShowControl.Check = True;
 		Items.MainPages.CurrentPage = Items.StatusPage;
 		git.BeginCallingStatus(GitStatusNotify());
 		CurrentItem = Items.Status;
