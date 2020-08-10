@@ -346,18 +346,24 @@ std::wstring GitManager::commit(const std::wstring& msg)
 	return success(true);
 }
 
-std::wstring GitManager::add(const std::wstring& filelist)
+static nlohmann::json parse_file_list(const std::wstring& filelist)
 {
-	CHECK_REPO();
 	nlohmann::json json;
 	try {
 		json = nlohmann::json::parse(WC2MB(filelist));
 	}
 	catch (nlohmann::json::parse_error e) {
-		return ::error("JSON parse error");
+		json.push_back(WC2MB(filelist));
 	}
+	return json;
+}
+
+std::wstring GitManager::add(const std::wstring& filelist)
+{
+	CHECK_REPO();
 	GIT_index index;
 	ASSERT(git_repository_index(&index, m_repo));
+	nlohmann::json json = parse_file_list(filelist);
 	if (json.is_array()) {
 		for (auto element : json) {
 			std::string path = element;
@@ -371,15 +377,9 @@ std::wstring GitManager::add(const std::wstring& filelist)
 std::wstring GitManager::reset(const std::wstring& filelist)
 {
 	CHECK_REPO();
-	nlohmann::json json;
-	try {
-		json = nlohmann::json::parse(WC2MB(filelist));
-	}
-	catch (nlohmann::json::parse_error e) {
-		return ::error("JSON parse error");
-	}
 	GIT_object obj = NULL;
 	ASSERT(git_revparse_single(&obj, m_repo, "HEAD^{commit}"));
+	nlohmann::json json = parse_file_list(filelist);
 	if (json.is_array()) {
 		for (auto element : json) {
 			std::string path = element;
@@ -394,17 +394,11 @@ std::wstring GitManager::reset(const std::wstring& filelist)
 std::wstring GitManager::discard(const std::wstring& filelist)
 {
 	CHECK_REPO();
-	nlohmann::json json;
-	try {
-		json = nlohmann::json::parse(WC2MB(filelist));
-	}
-	catch (nlohmann::json::parse_error e) {
-		return ::error("JSON parse error");
-	}
 	git_checkout_options options;
 	ASSERT(git_checkout_options_init(&options, GIT_CHECKOUT_OPTIONS_VERSION));
 	options.checkout_strategy = GIT_CHECKOUT_FORCE;
 	options.paths.count = 1;
+	nlohmann::json json = parse_file_list(filelist);
 	if (json.is_array()) {
 		for (auto element : json) {
 			std::string path = element;
@@ -419,15 +413,9 @@ std::wstring GitManager::discard(const std::wstring& filelist)
 std::wstring GitManager::remove(const std::wstring& filelist)
 {
 	CHECK_REPO();
-	nlohmann::json json;
-	try {
-		json = nlohmann::json::parse(WC2MB(filelist));
-	}
-	catch (nlohmann::json::parse_error e) {
-		return ::error("JSON parse error");
-	}
 	GIT_index index;
 	ASSERT(git_repository_index(&index, m_repo));
+	nlohmann::json json = parse_file_list(filelist);
 	if (json.is_array()) {
 		for (auto element : json) {
 			std::string path = element;
