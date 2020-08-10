@@ -358,6 +358,20 @@ std::wstring GitManager::reset(const std::wstring& filepath)
 	return success(true);
 }
 
+std::wstring GitManager::discard(const std::wstring& filepath)
+{
+	CHECK_REPO();
+	std::string path = WC2MB(filepath);
+	const char* paths[] = { path.c_str() };
+	git_checkout_options options;
+	ASSERT(git_checkout_options_init(&options, GIT_CHECKOUT_OPTIONS_VERSION));
+	options.checkout_strategy = GIT_CHECKOUT_FORCE;
+	options.paths.count = 1;
+	options.paths.strings = (char**)paths;
+	ASSERT(git_checkout_head(m_repo, &options));
+	return success(true);
+}
+
 std::wstring GitManager::remove(const std::wstring& filepath)
 {
 	CHECK_REPO();

@@ -26,6 +26,7 @@ private:
 		eAdd,
 		eReset,
 		eRemove,
+		eDiscard,
 		eClone,
 		eCommit,
 		eStatus,

@@ -474,6 +474,11 @@
 															<CommandName>Form.Command.IndexRemove</CommandName>
 															<ExtendedTooltip name="StatusIndexRemoveExtendedTooltip" id="245"/>
 														</Button>
+														<Button name="IndexDiscard" id="369">
+															<Type>CommandBarButton</Type>
+															<CommandName>Form.Command.IndexDiscard</CommandName>
+															<ExtendedTooltip name="IndexDiscardExtendedTooltip" id="370"/>
+														</Button>
 													</ChildItems>
 												</ButtonGroup>
 												<Button name="StatusOpenBlob" id="255">
@@ -2245,6 +2250,21 @@
 				<xr:LoadTransparent>true</xr:LoadTransparent>
 			</Picture>
 			<Representation>Picture</Representation>
+		</Command>
+		<Command name="IndexDiscard" id="2">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>discard</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Index discard</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>IndexDiscard</Action>
 		</Command>
 	</Commands>
 </Form>

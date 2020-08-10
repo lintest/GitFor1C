@@ -160,6 +160,7 @@ EndProcedure
 Procedure SetStatus(TextJson) Export
 	
 	Status.GetItems().Clear();
+	VanessaEditor().setVisible(False);
 	JsonData = JsonLoad(TextJson);
 	If JsonData.success Then
 		Items.MainPages.CurrentPage = Items.StatusPage;
@@ -236,6 +237,17 @@ Procedure IndexRemove(Command)
 	For Each Id In Items.Status.SelectedRows Do
 		Row = Status.FindByID(Id);
 		git.remove(Row.name);
+	EndDo;
+	git.BeginCallingStatus(GitStatusNotify());
+	
+EndProcedure
+
+&AtClient
+Procedure IndexDiscard(Command)
+
+	For Each Id In Items.Status.SelectedRows Do
+		Row = Status.FindByID(Id);
+		git.discard(Row.name);
 	EndDo;
 	git.BeginCallingStatus(GitStatusNotify());
 	
