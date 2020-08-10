@@ -41,13 +41,6 @@ Procedure OnOpen(Cancel)
 	
 EndProcedure
 
-&AtClient
-Function git()
-	
-	Return git;
-	
-EndFunction
-
 #Region Json
 
 &AtClient
@@ -116,24 +109,6 @@ EndProcedure
 КонецФункции
 
 &AtClient
-Procedure PathStartChoice(Item, ChoiceData, StandardProcessing)
-	
-	NotifyDescription = New NotifyDescription("PathEndChoice", ThisForm);
-	FileDialog = New FileDialog(FileDialogMode.ChooseDirectory);
-	FileDialog.Show(NotifyDescription);
-	
-EndProcedure
-
-&AtClient
-Procedure PathEndChoice(SelectedFiles, AdditionalParameters) Export
-	
-	If SelectedFiles <> Undefined Then
-		LocalPath = SelectedFiles[0];
-	EndIf
-	
-EndProcedure
-
-&AtClient
 Procedure EndCallingMessage(ResultCall, ParametersCall, AdditionalParameters) Export
 	
 	If Not IsBlankString(ResultCall) Then
@@ -155,13 +130,6 @@ Function GitStatusNotify()
 	Return New NotifyDescription("EndCallingStatus", ThisForm);
 	
 EndFunction
-
-&AtClient
-Procedure RepoFind(Command)
-	
-	git.BeginCallingFind(GitMessageNotify(), LocalPath);
-	
-EndProcedure
 
 &AtClient
 Procedure AddStatusItems(JsonData, Key, Name)
@@ -194,10 +162,13 @@ Procedure SetStatus(TextJson) Export
 	Status.GetItems().Clear();
 	JsonData = JsonLoad(TextJson);
 	If JsonData.success Then
+		Items.MainPages.CurrentPage = Items.StatusPage;
 		If TypeOf(JsonData.result) = Type("Structure") Then
 			AddStatusItems(JsonData.result, "Index", "Staged Changes");
 			AddStatusItems(JsonData.result, "Work", "Changes");
 		EndIf;
+	ElsIf JsonData.error.code = 0 Then
+		Items.MainPages.CurrentPage = Items.InitializePage;
 	EndIf;
 	
 EndProcedure
@@ -462,7 +433,6 @@ Function GetFormName(Name)
 	
 EndFunction
 
-
 &AtClient
 Procedure AutoTest(Command)
 	
@@ -553,3 +523,168 @@ Procedure InitializeRepo(Command)
 	git.BeginCallingInit(NotifyDescription, Directory);
 	
 EndProcedure
+
+&AtClient
+Procedure ClearAllItems()
+	
+	Files.GetItems().Clear();
+	Status.GetItems().Clear();
+	Explorer.GetItems().Clear();
+	VanessaEditor().setVisible(False);
+	
+EndProcedure	
+
+&AtClient
+Procedure ShowExplorer(Command)
+	
+	If Not IsBlankString(Directory) Then
+		ClearAllItems();
+		Items.MainPages.CurrentPage = Items.ExplorerPage;
+		FillExplorerItems(Explorer.GetItems(), Directory);
+		CurrentItem = Items.Explorer;
+	EndIf;
+	
+EndProcedure
+
+&AtClient
+Procedure ShowSearch(Command)
+
+	If Not IsBlankString(Directory) Then
+		ClearAllItems();
+		Items.MainPages.CurrentPage = Items.SearchPage;
+		CurrentItem = Items.SearchText;
+	EndIf;
+	
+EndProcedure
+
+&AtClient
+Procedure ShowControl(Command)
+
+	If Not IsBlankString(Directory) Then
+		ClearAllItems();
+		Items.MainPages.CurrentPage = Items.StatusPage;
+		git.BeginCallingStatus(GitStatusNotify());
+		CurrentItem = Items.Status;
+	EndIf;
+	
+EndProcedure
+
+&AtClient
+Procedure FillExplorerItems(Items, Directory, Parent = Undefined)
+	
+	AdditionalParameters = New Structure("Items, Parent", Items, Parent);
+	NotifyDescription = New NotifyDescription("EndFindingFiles", ThisForm, AdditionalParameters);
+	BeginFindingFiles(NotifyDescription, Directory, "*.*", False);
+	
+EndProcedure
+
+&AtClient
+Procedure EndFindingFiles(FilesFound, AdditionalParameters) Export
+	
+	ParentNode = AdditionalParameters.Parent;
+	ParentItems = AdditionalParameters.Items;
+	
+	ParentItems.Clear();
+	OnlyFiles = New Array;
+	For Each File In FilesFound Do
+		If (File.IsDirectory()) Then
+			If File.Name = ".git" Then
+				Continue;
+			EndIf;
+			Row = ParentItems.Add();
+			Row.IsDirectory = True;
+			FillPropertyValues(Row, File);
+			Row.GetItems().Add();
+		Else 
+			OnlyFiles.Add(File);
+		EndIf;
+	EndDo;
+	
+	For Each File In OnlyFiles Do
+		FillPropertyValues(ParentItems.Add(), File);
+	EndDo;
+	
+	If ParentNode <> Undefined Then
+		If ParentItems.Count() = 0 Then
+			Items.Explorer.Collapse(ParentNode.GetId());
+			ParentItems.Add();
+		EndIf;
+	EndIf;
+	
+EndProcedure
+
+&AtClient
+Procedure ExplorerBeforeExpand(Item, Row, Cancel)
+	
+	ParentRow = Explorer.FindByID(Row);
+	If ParentRow <> Undefined Then 
+		FillExplorerItems(ParentRow.GetItems(), ParentRow.Fullname, ParentRow);
+	EndIf;
+	
+EndProcedure
+
+&AtClient
+Procedure ExplorerOnActivateRow(Item)
+	
+	AttachIdleHandler("ExplorerReadFile", 0.1, True);
+	
+EndProcedure
+
+&AtClient
+Procedure ExplorerReadFile() Export
+	
+	Data = Items.Explorer.CurrentData;
+	If Data <> Undefined Then
+		id = git.file(Data.fullname, True);
+		Text = ReadBlob(id);
+		VanessaEditor().setVisible(True);
+		VanessaEditor().setValue(Text, Data.name);
+	EndIf;
+	
+EndProcedure
+
+&AtClient
+Procedure SearchTextOnChange(Item)
+	
+	Files.GetItems().Clear();
+	If Not IsBlankString(SearchText) Then
+		NotifyDescription = New NotifyDescription("EndSearchText", ThisForm);
+		git.BeginCallingFindFiles(NotifyDescription, Directory, "*.*", SearchText, True);
+	EndIf;
+	
+EndProcedure
+
+&AtClient
+Procedure EndSearchText(ResultCall, ParametersCall, AdditionalParameters) Export
+	
+	Files.GetItems().Clear();
+	JsonData = JsonLoad(ResultCall);
+	If TypeOf(JsonData) = Type("Array") Then
+		For Each Item In JsonData Do
+			Row = Files.GetItems().Add();
+			FillPropertyValues(Row, Item);
+		EndDo;
+	EndIf;
+	
+EndProcedure	
+
+&AtClient
+Procedure FilesOnActivateRow(Item)
+
+	AttachIdleHandler("SearchReadFile", 0.1, True);
+	
+EndProcedure
+
+&AtClient
+Procedure SearchReadFile() Export
+	
+	Data = Items.Files.CurrentData;
+	If Data <> Undefined Then
+		id = git.file(Data.path, True);
+		Text = ReadBlob(id);
+		VanessaEditor().setVisible(True);
+		VanessaEditor().setValue(Text, Data.name);
+	EndIf;
+	
+EndProcedure
+

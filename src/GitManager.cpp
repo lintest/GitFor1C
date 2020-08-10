@@ -19,7 +19,7 @@
 
 #define S(wstr) WC2MB(wstr).c_str()
 
-#define CHECK_REPO() {if (m_repo == nullptr) return ::error("Repo is null");}
+#define CHECK_REPO() {if (m_repo == nullptr) return ::error(0);}
 
 #define ASSERT(t) {if (t < 0) return ::error();}
 
@@ -82,10 +82,11 @@ static std::wstring error()
 	return MB2WC(json.dump());
 }
 
-static std::wstring error(const std::string& message)
+static std::wstring error(int code)
 {
 	nlohmann::json json, j;
-	j["message"] = message;
+	j["code"] = code;
+	j["message"] = "Repo is null";
 	json["error"] = j;
 	json["success"] = false;
 	return MB2WC(json.dump());
@@ -436,6 +437,7 @@ int diff_file_cb(const git_diff_delta* delta, float progress, void* payload)
 
 std::wstring GitManager::diff(const std::wstring& s1, const std::wstring& s2)
 {
+	CHECK_REPO();
 	GIT_diff diff = NULL;
 	if ((s1 == L"INDEX" && s2 == L"WORK") || (s2 == L"INDEX" && s1 == L"WORK")) {
 		ASSERT(git_diff_index_to_workdir(&diff, m_repo, NULL, NULL));
@@ -471,6 +473,7 @@ bool GitManager::error(tVariant* pvar)
 
 bool GitManager::isBinary(const std::wstring& id)
 {
+	if (m_repo == nullptr) return false;
 	git_oid oid;
 	int ok = git_oid_fromstr(&oid, S(id));
 	if (ok < 0) return false;
@@ -480,16 +483,20 @@ bool GitManager::isBinary(const std::wstring& id)
 	return git_blob_is_binary(blob);
 }
 
-std::wstring GitManager::file(const std::wstring& path)
+std::wstring GitManager::file(const std::wstring& path, bool full)
 {
+	if (m_repo == nullptr) return {};
 	git_oid oid;
-	int ok = git_blob_create_fromworkdir(&oid, m_repo, S(path));
+	int ok = full 
+		? git_blob_create_fromdisk(&oid, m_repo, S(path))
+		: git_blob_create_from_workdir(&oid, m_repo, S(path));
 	if (ok < 0) return {};
 	return MB2WC(oid2str(&oid));
 }
 
 bool GitManager::blob(const std::wstring& id, tVariant* pvarRetValue)
 {
+	if (m_repo == nullptr) return true;
 	git_oid oid;
 	int ok = git_oid_fromstr(&oid, S(id));
 	if (ok < 0) return error(pvarRetValue);
@@ -511,6 +518,7 @@ bool GitManager::blob(const std::wstring& id, tVariant* pvarRetValue)
 
 std::wstring GitManager::fullpath(const std::wstring& path)
 {
+	if (m_repo == nullptr) return {};
 	std::filesystem::path root = MB2WC(git_repository_path(m_repo));
 	return root.parent_path().parent_path().append(path).make_preferred();
 }

@@ -37,7 +37,7 @@ const std::vector<AddInBase::Alias> GitControl::m_MethList{
 	Alias(eHistory 		 , 1, true  , L"History"    	 , L"History"),
 	Alias(eBlob 		 , 1, true  , L"Blob"    	     , L"Blob"),
 	Alias(eDiff 		 , 2, true  , L"Diff"    	     , L"Diff"),
-	Alias(eFile 		 , 1, true  , L"File"    	     , L"File"),
+	Alias(eFile 		 , 2, true  , L"File"    	     , L"File"),
 	Alias(eTree 		 , 1, true  , L"Tree"    	     , L"Tree"),
 	Alias(eFullpath      , 1, true  , L"Fullpath"    	 , L"Fullpath"),
 	Alias(eIsBinary      , 1, true  , L"IsBinary"    	 , L"IsBinary"),
@@ -110,7 +110,7 @@ bool GitControl::CallAsFunc(const long lMethodNum, tVariant* pvarRetValue, tVari
 	case eTree:
 		return VA(pvarRetValue) << m_manager.tree(VarToStr(paParams));
 	case eFile:
-		return VA(pvarRetValue) << m_manager.file(VarToStr(paParams));
+		return VA(pvarRetValue) << m_manager.file(VarToStr(paParams), VarToBool(paParams + 1));
 	case eFullpath:
 		return VA(pvarRetValue) << m_manager.fullpath(VarToStr(paParams));
 	case eStatus:
@@ -148,9 +148,10 @@ static bool DefBool(tVariant* pvar, bool value = false)
 bool GitControl::GetParamDefValue(const long lMethodNum, const long lParamNum, tVariant* pvarParamDefValue)
 {
 	switch (lMethodNum) {
-	case eInit: if (lParamNum == 1) return DefBool(pvarParamDefValue);
-	case eTree: if (lParamNum == 0) return DefStr(pvarParamDefValue);
-	case eHistory: if (lParamNum == 0) return DefStr(pvarParamDefValue);
+	case eInit: if (lParamNum == 1) return DefBool(pvarParamDefValue); else return false;
+	case eFile: if (lParamNum == 1) return DefBool(pvarParamDefValue); else return false;
+	case eTree: if (lParamNum == 0) return DefStr(pvarParamDefValue); else return false;
+	case eHistory: if (lParamNum == 0) return DefStr(pvarParamDefValue); else return false;
+	default: return false;
 	}
-	return false;
 }

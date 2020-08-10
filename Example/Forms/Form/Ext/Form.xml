@@ -202,6 +202,11 @@
 							<ChildItems>
 								<Table name="Explorer" id="302">
 									<Representation>Tree</Representation>
+									<ReadOnly>true</ReadOnly>
+									<ChangeRowSet>false</ChangeRowSet>
+									<ChangeRowOrder>false</ChangeRowOrder>
+									<RowSelectionMode>Row</RowSelectionMode>
+									<Header>false</Header>
 									<AutoInsertNewRow>true</AutoInsertNewRow>
 									<EnableStartDrag>true</EnableStartDrag>
 									<EnableDrag>true</EnableDrag>
@@ -209,13 +214,6 @@
 									<ContextMenu name="ExplorerContextMenu" id="303"/>
 									<AutoCommandBar name="ExplorerCommandBar" id="304">
 										<Autofill>false</Autofill>
-										<ChildItems>
-											<Button name="ExplorerRefreshExplorer" id="318">
-												<Type>CommandBarButton</Type>
-												<CommandName>Form.Command.RefreshExplorer</CommandName>
-												<ExtendedTooltip name="ExplorerRefreshExplorerExtendedTooltip" id="319"/>
-											</Button>
-										</ChildItems>
 									</AutoCommandBar>
 									<ExtendedTooltip name="ExplorerExtendedTooltip" id="305"/>
 									<SearchStringAddition name="ExplorerSearchString" id="306">
@@ -242,9 +240,13 @@
 										<ContextMenu name="ExplorerSearchControlContextMenu" id="313"/>
 										<ExtendedTooltip name="ExplorerSearchControlExtendedTooltip" id="314"/>
 									</SearchControlAddition>
+									<Events>
+										<Event name="OnActivateRow">ExplorerOnActivateRow</Event>
+										<Event name="BeforeExpand">ExplorerBeforeExpand</Event>
+									</Events>
 									<ChildItems>
 										<InputField name="Explorername" id="315">
-											<DataPath>Explorer.name</DataPath>
+											<DataPath>Explorer.Name</DataPath>
 											<EditMode>EnterOnInput</EditMode>
 											<ContextMenu name="ExplorernameContextMenu" id="316"/>
 											<ExtendedTooltip name="ExplorernameExtendedTooltip" id="317"/>
@@ -491,6 +493,7 @@
 											<ReadOnly>true</ReadOnly>
 											<ChangeRowSet>false</ChangeRowSet>
 											<ChangeRowOrder>false</ChangeRowOrder>
+											<RowSelectionMode>Row</RowSelectionMode>
 											<AutoInsertNewRow>true</AutoInsertNewRow>
 											<EnableStartDrag>true</EnableStartDrag>
 											<EnableDrag>true</EnableDrag>
@@ -583,6 +586,109 @@
 								</UsualGroup>
 							</ChildItems>
 						</Page>
+						<Page name="SearchPage" id="67">
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Search page</v8:content>
+								</v8:item>
+							</Title>
+							<ToolTip>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Search page</v8:content>
+								</v8:item>
+							</ToolTip>
+							<ExtendedTooltip name="SearchPageExtendedTooltip" id="68"/>
+							<ChildItems>
+								<UsualGroup name="GroupFindText" id="351">
+									<Title>
+										<v8:item>
+											<v8:lang>ru</v8:lang>
+											<v8:content>Group find text</v8:content>
+										</v8:item>
+									</Title>
+									<ToolTip>
+										<v8:item>
+											<v8:lang>ru</v8:lang>
+											<v8:content>Group find text</v8:content>
+										</v8:item>
+									</ToolTip>
+									<Representation>None</Representation>
+									<ShowTitle>false</ShowTitle>
+									<ExtendedTooltip name="GroupFindTextExtendedTooltip" id="352"/>
+									<ChildItems>
+										<InputField name="SearchText" id="5">
+											<DataPath>SearchText</DataPath>
+											<Title>
+												<v8:item>
+													<v8:lang>ru</v8:lang>
+													<v8:content>Text</v8:content>
+												</v8:item>
+											</Title>
+											<ChoiceButton>false</ChoiceButton>
+											<ContextMenu name="SearchTextContextMenu" id="6"/>
+											<ExtendedTooltip name="SearchTextExtendedTooltip" id="7"/>
+											<Events>
+												<Event name="OnChange">SearchTextOnChange</Event>
+											</Events>
+										</InputField>
+									</ChildItems>
+								</UsualGroup>
+								<Table name="Files" id="353">
+									<Representation>Tree</Representation>
+									<ChangeRowSet>false</ChangeRowSet>
+									<ChangeRowOrder>false</ChangeRowOrder>
+									<RowSelectionMode>Row</RowSelectionMode>
+									<Header>false</Header>
+									<AutoInsertNewRow>true</AutoInsertNewRow>
+									<EnableStartDrag>true</EnableStartDrag>
+									<EnableDrag>true</EnableDrag>
+									<DataPath>Files</DataPath>
+									<ContextMenu name="FilesContextMenu" id="354"/>
+									<AutoCommandBar name="FilesCommandBar" id="355">
+										<Autofill>false</Autofill>
+									</AutoCommandBar>
+									<ExtendedTooltip name="FilesExtendedTooltip" id="356"/>
+									<SearchStringAddition name="FilesSearchString" id="357">
+										<AdditionSource>
+											<Item>Files</Item>
+											<Type>SearchStringRepresentation</Type>
+										</AdditionSource>
+										<ContextMenu name="FilesSearchStringContextMenu" id="358"/>
+										<ExtendedTooltip name="FilesSearchStringExtendedTooltip" id="359"/>
+									</SearchStringAddition>
+									<ViewStatusAddition name="FilesViewStatus" id="360">
+										<AdditionSource>
+											<Item>Files</Item>
+											<Type>ViewStatusRepresentation</Type>
+										</AdditionSource>
+										<ContextMenu name="FilesViewStatusContextMenu" id="361"/>
+										<ExtendedTooltip name="FilesViewStatusExtendedTooltip" id="362"/>
+									</ViewStatusAddition>
+									<SearchControlAddition name="FilesSearchControl" id="363">
+										<AdditionSource>
+											<Item>Files</Item>
+											<Type>SearchControl</Type>
+										</AdditionSource>
+										<ContextMenu name="FilesSearchControlContextMenu" id="364"/>
+										<ExtendedTooltip name="FilesSearchControlExtendedTooltip" id="365"/>
+									</SearchControlAddition>
+									<Events>
+										<Event name="OnActivateRow">FilesOnActivateRow</Event>
+									</Events>
+									<ChildItems>
+										<InputField name="FilesName" id="366">
+											<DataPath>Files.Name</DataPath>
+											<ReadOnly>true</ReadOnly>
+											<EditMode>EnterOnInput</EditMode>
+											<ContextMenu name="FilesNameContextMenu" id="367"/>
+											<ExtendedTooltip name="FilesNameExtendedTooltip" id="368"/>
+										</InputField>
+									</ChildItems>
+								</Table>
+							</ChildItems>
+						</Page>
 					</ChildItems>
 				</Pages>
 				<Pages name="FormPages" id="59">
@@ -616,39 +722,6 @@
 							</ToolTip>
 							<ExtendedTooltip name="PageCommonExtendedTooltip" id="62"/>
 							<ChildItems>
-								<UsualGroup name="GroupFInd" id="67">
-									<Title>
-										<v8:item>
-											<v8:lang>ru</v8:lang>
-											<v8:content>Group f ind</v8:content>
-										</v8:item>
-									</Title>
-									<ToolTip>
-										<v8:item>
-											<v8:lang>ru</v8:lang>
-											<v8:content>Group f ind</v8:content>
-										</v8:item>
-									</ToolTip>
-									<Representation>None</Representation>
-									<ShowTitle>false</ShowTitle>
-									<ExtendedTooltip name="GroupFIndExtendedTooltip" id="68"/>
-									<ChildItems>
-										<InputField name="Path" id="5">
-											<DataPath>LocalPath</DataPath>
-											<ChoiceButton>true</ChoiceButton>
-											<ContextMenu name="PathКонтекстноеМеню" id="6"/>
-											<ExtendedTooltip name="PathРасширеннаяПодсказка" id="7"/>
-											<Events>
-												<Event name="StartChoice">PathStartChoice</Event>
-											</Events>
-										</InputField>
-										<Button name="FormRepoFind" id="17">
-											<Type>UsualButton</Type>
-											<CommandName>Form.Command.RepoFind</CommandName>
-											<ExtendedTooltip name="FormRepoFindExtendedTooltip" id="18"/>
-										</Button>
-									</ChildItems>
-								</UsualGroup>
 								<UsualGroup name="GroupRemote" id="65">
 									<Title>
 										<v8:item>
@@ -1118,11 +1191,11 @@
 				</v8:StringQualifiers>
 			</Type>
 		</Attribute>
-		<Attribute name="LocalPath" id="3">
+		<Attribute name="SearchText" id="3">
 			<Title>
 				<v8:item>
 					<v8:lang>ru</v8:lang>
-					<v8:content>Local path</v8:content>
+					<v8:content>Search text</v8:content>
 				</v8:item>
 			</Title>
 			<Type>
@@ -1655,7 +1728,7 @@
 				<v8:Type>v8:ValueTree</v8:Type>
 			</Type>
 			<Columns>
-				<Column name="name" id="1">
+				<Column name="Name" id="1">
 					<Title>
 						<v8:item>
 							<v8:lang>ru</v8:lang>
@@ -1668,6 +1741,32 @@
 							<v8:Length>0</v8:Length>
 							<v8:AllowedLength>Variable</v8:AllowedLength>
 						</v8:StringQualifiers>
+					</Type>
+				</Column>
+				<Column name="Fullname" id="2">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Fullname</v8:content>
+						</v8:item>
+					</Title>
+					<Type>
+						<v8:Type>xs:string</v8:Type>
+						<v8:StringQualifiers>
+							<v8:Length>0</v8:Length>
+							<v8:AllowedLength>Variable</v8:AllowedLength>
+						</v8:StringQualifiers>
+					</Type>
+				</Column>
+				<Column name="IsDirectory" id="3">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Is directory</v8:content>
+						</v8:item>
+					</Title>
+					<Type>
+						<v8:Type>xs:boolean</v8:Type>
 					</Type>
 				</Column>
 			</Columns>
@@ -1686,6 +1785,49 @@
 					<v8:AllowedLength>Variable</v8:AllowedLength>
 				</v8:StringQualifiers>
 			</Type>
+		</Attribute>
+		<Attribute name="Files" id="16">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Files</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>v8:ValueTree</v8:Type>
+			</Type>
+			<Columns>
+				<Column name="Name" id="1">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Name</v8:content>
+						</v8:item>
+					</Title>
+					<Type>
+						<v8:Type>xs:string</v8:Type>
+						<v8:StringQualifiers>
+							<v8:Length>0</v8:Length>
+							<v8:AllowedLength>Variable</v8:AllowedLength>
+						</v8:StringQualifiers>
+					</Type>
+				</Column>
+				<Column name="Path" id="2">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Path</v8:content>
+						</v8:item>
+					</Title>
+					<Type>
+						<v8:Type>xs:string</v8:Type>
+						<v8:StringQualifiers>
+							<v8:Length>0</v8:Length>
+							<v8:AllowedLength>Variable</v8:AllowedLength>
+						</v8:StringQualifiers>
+					</Type>
+				</Column>
+			</Columns>
 		</Attribute>
 	</Attributes>
 	<Commands>
@@ -2053,6 +2195,7 @@
 					<v8:content>Show explorer</v8:content>
 				</v8:item>
 			</ToolTip>
+			<Action>ShowExplorer</Action>
 		</Command>
 		<Command name="ShowSearch" id="29">
 			<Title>
@@ -2067,6 +2210,7 @@
 					<v8:content>Show search</v8:content>
 				</v8:item>
 			</ToolTip>
+			<Action>ShowSearch</Action>
 		</Command>
 		<Command name="ShowControl" id="30">
 			<Title>
@@ -2081,6 +2225,26 @@
 					<v8:content>Show search</v8:content>
 				</v8:item>
 			</ToolTip>
+			<Action>ShowControl</Action>
+		</Command>
+		<Command name="FindFiles" id="1">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Find files</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Find files</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Picture>
+				<xr:Ref>StdPicture.Find</xr:Ref>
+				<xr:LoadTransparent>true</xr:LoadTransparent>
+			</Picture>
+			<Representation>Picture</Representation>
 		</Command>
 	</Commands>
 </Form>
