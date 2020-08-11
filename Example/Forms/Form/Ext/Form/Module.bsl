@@ -45,6 +45,7 @@ Procedure SetCurrentPage(Page)
 	
 	ClearAllItems();
 	VanessaEditor().setVisible(False);
+	EditableFilename = Undefined;
 	Items.FormShowControl.Check = (Page = Items.StatusPage OR Page = Items.InitPage);
 	Items.FormShowExplorer.Check = (Page = Items.ExplorerPage);
 	Items.FormShowSearch.Check = (Page = Items.SearchPage);
@@ -291,22 +292,22 @@ EndProcedure
 Procedure GetDefaultSignature(Command)
 	
 	signature = JsonLoad(git.signature);
-	Name = signature.result.name;
-	Email = signature.result.email;
+	SignatureName = signature.result.name;
+	SignatureEmail = signature.result.email;
 	
 EndProcedure
 
 &AtClient
 Procedure SetSignatureAuthor(Command)
 	
-	git.setAuthor(Name, Email);
+	git.setAuthor(SignatureName, SignatureEmail);
 	
 EndProcedure
 
 &AtClient
 Procedure SetSignatureCommitter(Command)
 	
-	git.setCommitter(Name, Email);
+	git.setCommitter(SignatureName, SignatureEmail);
 	
 EndProcedure
 
@@ -399,6 +400,8 @@ Procedure EndOpenFile(ResultCall, ParametersCall, AdditionalParameters) Export
 		TextReader.Open(BinaryData.OpenStreamForRead(), TextEncoding.UTF8);
 		VanessaEditor().setValue(TextReader.Read(), FileName);
 		VanessaEditor().setReadOnly(False);
+		EditableFilename = FileName;
+		EditableEncoding = Encoding;
 	EndIf;
 	VanessaEditor().setVisible(True);
 	
@@ -461,6 +464,7 @@ Procedure StatusOnActivateRow(Item)
 	
 	If IsBlankString(Row.status) Then
 		VanessaEditor().setVisible(False);
+		EditableFilename = Undefined;
 		Return;
 	EndIf;
 	
@@ -509,7 +513,7 @@ Procedure EndOpenBlob(ResultCall, ParametersCall, AdditionalParameters) Export
 	Else
 		TextReader = New TextReader;
 		TextReader.Open(BinaryData.OpenStreamForRead(), TextEncoding.UTF8);
-		VanessaEditor().setValue(TextReader.Read(), AdditionalParameters);
+		VanessaEditor().setValue(TextReader.Read(), FileName);
 	EndIf;
 	VanessaEditor().setReadOnly(True);
 	VanessaEditor().setVisible(True);
@@ -549,6 +553,7 @@ Procedure OpenFolderEnd(SelectedFiles, AdditionalParameters) Export
 	
 	If SelectedFiles <> Undefined Then
 		VanessaEditor().setVisible(False);
+		EditableFilename = Undefined;
 		File = New File(SelectedFiles[0]);
 		Title = File.Name;
 		AutoTitle = True;
@@ -625,6 +630,7 @@ Procedure ClearAllItems()
 	Status.GetItems().Clear();
 	Explorer.GetItems().Clear();
 	VanessaEditor().setVisible(False);
+	EditableFilename = Undefined;
 	
 EndProcedure
 
@@ -728,6 +734,7 @@ Procedure ExplorerReadFile() Export
 	If Data <> Undefined Then
 		If Data.IsDirectory Then
 			VanessaEditor().setVisible(False);
+			EditableFilename = Undefined;
 		Else
 			OpenFile(Data.fullname);
 		EndIf;
