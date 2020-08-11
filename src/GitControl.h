@@ -37,6 +37,7 @@ private:
 		eFile,
 		eFullpath,
 		eIsBinary,
+		eGetEncoding,
 		eSetAuthor,
 		eSetCommitter,
 		eFindFiles,

@@ -32,8 +32,9 @@ public:
 	GitManager(AddInNative* addin);
 	virtual ~GitManager();
 	bool close();
-	bool blob(const std::wstring& id, tVariant* pvarRetValue);
-	bool isBinary(const std::wstring& id);
+	int getEncoding(tVariant* pvar);
+	bool isBinary(tVariant* pvarData, tVariant* pvarEncoding);
+	bool blob(const std::wstring& id, tVariant* pvarEncoding, tVariant* pvarRetValue);
 	bool setAuthor(const std::wstring& name, const std::wstring& email);
 	bool setCommitter(const std::wstring& name, const std::wstring& email);
 	std::wstring fullpath(const std::wstring& path);
@@ -42,7 +43,7 @@ public:
 	std::wstring info(const std::wstring& msg);
 	std::wstring open(const std::wstring& path);
 	std::wstring find(const std::wstring& path);
-	std::wstring add(const std::wstring& filelist);
+	std::wstring add(const std::wstring& append, const std::wstring& remove);
 	std::wstring reset(const std::wstring& filelist);
 	std::wstring remove(const std::wstring& filelist);
 	std::wstring discard(const std::wstring& filelist);

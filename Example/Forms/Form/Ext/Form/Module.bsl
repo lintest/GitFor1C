@@ -40,6 +40,18 @@ Procedure OnOpen(Cancel)
 	
 EndProcedure
 
+&AtClient
+Procedure SetCurrentPage(Page)
+	
+	ClearAllItems();
+	VanessaEditor().setVisible(False);
+	Items.FormShowControl.Check = (Page = Items.StatusPage OR Page = Items.InitPage);
+	Items.FormShowExplorer.Check = (Page = Items.ExplorerPage);
+	Items.FormShowSearch.Check = (Page = Items.SearchPage);
+	Items.MainPages.CurrentPage = Page;
+	
+EndProcedure	
+
 #Region Json
 
 &AtClient
@@ -88,24 +100,12 @@ Procedure AfterAttachingAddIn(Подключение, Дополнительны
 EndProcedure
 
 &AtClient
-Процедура AfterGettingVersion(Значение, ДополнительныеПараметры) Экспорт
+Procedure AfterGettingVersion(Value, AdditionalParameters) Экспорт
 	
-	Заголовок = "GIT для 1C, версия " + Значение;
+	Title = "GIT for 1C, version " + Value;
+	AutoTitle = False;
 	
-КонецПроцедуры
-
-&AtClient
-Функция ПрочитатьСтрокуJSON(ТекстJSON)
-	
-	Если ПустаяСтрока(ТекстJSON) Тогда
-		Возврат Неопределено;
-	КонецЕсли;
-	
-	ЧтениеJSON = Новый ЧтениеJSON();
-	ЧтениеJSON.УстановитьСтроку(ТекстJSON);
-	Возврат ПрочитатьJSON(ЧтениеJSON);
-	
-КонецФункции
+EndProcedure
 
 &AtClient
 Procedure EndCallingMessage(ResultCall, ParametersCall, AdditionalParameters) Export
@@ -156,27 +156,18 @@ Procedure AddStatusItems(JsonData, Key, Name)
 EndProcedure
 
 &AtClient
-Procedure SetStatus(TextJson) Export
+Procedure EndCallingStatus(ResultCall, ParametersCall, AdditionalParameters) Export
 	
-	Status.GetItems().Clear();
-	VanessaEditor().setVisible(False);
-	JsonData = JsonLoad(TextJson);
+	JsonData = JsonLoad(ResultCall);
 	If JsonData.success Then
-		Items.MainPages.CurrentPage = Items.StatusPage;
+		SetCurrentPage(Items.StatusPage);
 		If TypeOf(JsonData.result) = Type("Structure") Then
 			AddStatusItems(JsonData.result, "Index", "Staged Changes");
 			AddStatusItems(JsonData.result, "Work", "Changes");
 		EndIf;
 	ElsIf JsonData.error.code = 0 Then
-		Items.MainPages.CurrentPage = Items.InitializePage;
+		SetCurrentPage(Items.InitPage);
 	EndIf;
-	
-EndProcedure
-
-&AtClient
-Procedure EndCallingStatus(ResultCall, ParametersCall, AdditionalParameters) Export
-	
-	SetStatus(ResultCall);
 	
 EndProcedure
 
@@ -204,7 +195,7 @@ Procedure EndCallingCommit(ResultCall, ParametersCall, AdditionalParameters) Exp
 		Message = Undefined;
 		git.BeginCallingStatus(GitStatusNotify());
 	ElsIf JsonData.error.code = 0 Then
-		Items.MainPages.CurrentPage = Items.InitializePage;
+		SetCurrentPage(Items.InitPage);
 	Else
 		UserMessage = New UserMessage;
 		UserMessage.Text = JsonData.error.Message;
@@ -230,7 +221,6 @@ Procedure RepoHistory(Command)
 		FillPropertyValues(Row, Item);
 		Row.Date = ToLocalTime('19700101' + Item.time);
 	EndDo;
-	Items.FormPages.CurrentPage = Items.PageHistory;
 	
 EndProcedure
 
@@ -258,7 +248,20 @@ EndFunction
 &AtClient
 Procedure IndexAdd(Command)
 	
-	git.BeginCallingAdd(GetIndexNotify(), SelectedStatusJson());
+	AppendArray = New Array;
+	RemoveArray = New Array;
+	For Each Id In Items.Status.SelectedRows Do
+		Row = Status.FindByID(Id);
+		If Not IsBlankString(Row.new_name) Then
+			If Row.status = "DELETED" Then
+				RemoveArray.Add(Row.new_name);
+			Else
+				AppendArray.Add(Row.new_name);
+			EndIf;
+		EndIf;
+	EndDo;
+	
+	git.BeginCallingAdd(GetIndexNotify(), JsonDump(AppendArray), JsonDump(RemoveArray));
 	
 EndProcedure
 
@@ -315,7 +318,6 @@ Procedure RepoTree(Command)
 		Row = Tree.Add();
 		FillPropertyValues(Row, Item);
 	EndDo;
-	Items.FormPages.CurrentPage = Items.PageTree;
 	
 EndProcedure
 
@@ -346,41 +348,60 @@ Procedure RepoDiff(s1, s2)
 			FillPropertyValues(Row, Item);
 		EndDo;
 	EndIf;
-	Items.FormPages.CurrentPage = Items.PageDiff;
-	
-EndProcedure
-
-&AtClient
-Procedure DiffSelection(Item, SelectedRow, Field, StandardProcessing)
-	
-	Row = Diff.FindByID(SelectedRow);
-	If Row = Undefined Then
-		Return;
-	EndIf;
-	BinaryData = git.blob(Row.new_id);
-	TextDocument = New TextDocument;
-	TextDocument.Read(BinaryData.OpenStreamForRead());
-	TextDocument.Show();
 	
 EndProcedure
 
 &AtClient
 Function ReadBlob(id)
 	
-	If git.isBinary(id) Then
-		Return "binary";
+	If IsBlankString(id) Then
+		Return "";
 	Else
-		BinaryData = git.blob(id);
-		If TypeOf(BinaryData) = Type("BinaryData") Then
-			TextReader = New TextReader;
-			TextReader.Open(BinaryData.OpenStreamForRead(), TextEncoding.UTF8);
-			Return TextReader.Read();
+		Encoding = Undefined;
+		BinaryData = git.blob(id, Encoding);
+		If Encoding < 0 Then
+			Return "binary";
 		Else
-			Return "";
+			If TypeOf(BinaryData) = Type("BinaryData") Then
+				TextReader = New TextReader;
+				TextReader.Open(BinaryData.OpenStreamForRead(), TextEncoding.UTF8);
+				Return TextReader.Read();
+			Else
+				Return "";
+			EndIf;
 		EndIf;
 	EndIf;
 	
 EndFunction
+
+&AtClient
+Function OpenFile(FileName)
+	
+	BinaryData = New BinaryData(FileName);
+	NotifyDescription = New NotifyDescription("EndOpenFile", ThisForm, FileName);
+	git.BeginCallingIsBinary(NotifyDescription, BinaryData);
+	
+EndFunction
+
+&AtClient
+Procedure EndOpenFile(ResultCall, ParametersCall, AdditionalParameters) Export
+	
+	BinaryData = ParametersCall[0];
+	Encoding = ParametersCall[1];
+	FileName = AdditionalParameters;
+	
+	If ResultCall = True Then
+		VanessaEditor().setValue("binary", "");
+		VanessaEditor().setReadOnly(True);
+	Else
+		TextReader = New TextReader;
+		TextReader.Open(BinaryData.OpenStreamForRead(), TextEncoding.UTF8);
+		VanessaEditor().setValue(TextReader.Read(), FileName);
+		VanessaEditor().setReadOnly(False);
+	EndIf;
+	VanessaEditor().setVisible(True);
+	
+EndProcedure
 
 &AtClient
 Function VanessaEditor()
@@ -437,17 +458,23 @@ Procedure StatusOnActivateRow(Item)
 		Return;
 	EndIf;
 	
-	DiffEditor = VADiffEditor();
-	DiffEditor.setVisible(True);
-	
 	If IsBlankString(Row.status) Then
-		DiffEditor.setVisible(False);
+		VanessaEditor().setVisible(False);
 		Return;
-	Else
-		DiffEditor.setVisible(True);
 	EndIf;
 	
-	DiffEditor.setValue(OldFileText(Row), Row.old_name, NewFileText(Row), Row.new_name);
+	IF Row.Status = "DELETED" Then
+		VanessaEditor = VanessaEditor();
+		VanessaEditor.setValue(OldFileText(Row), Row.old_name);
+		VanessaEditor.setVisible(True);
+		VanessaEditor.setReadOnly(True);
+	Else
+		NewText = NewFileText(Row);
+		DiffEditor = VADiffEditor();
+		DiffEditor.setValue(OldFileText(Row), Row.old_name, NewText, Row.new_name);
+		DiffEditor.setReadOnly(Not IsBlankString(Row.new_id) OR NewText = "binary");
+		DiffEditor.setVisible(True);
+	EndIf;
 	
 EndProcedure
 
@@ -461,8 +488,9 @@ Procedure OpenBlob(Команда)
 	
 	NewText = NewFileText(Row);
 	VanessaEditor = VanessaEditor();
-	VanessaEditor.setVisible(True);
 	VanessaEditor.setValue(NewText, Row.new_name);
+	VanessaEditor.setReadOnly(Not IsBlankString(Row.new_id) OR NewText = "binary");
+	VanessaEditor.setVisible(True);
 	
 EndProcedure
 
@@ -501,6 +529,7 @@ Procedure OpenFolderEnd(SelectedFiles, AdditionalParameters) Export
 		VanessaEditor().setVisible(False);
 		File = New File(SelectedFiles[0]);
 		Title = File.Name;
+		AutoTitle = True;
 		Directory = File.FullName;
 		NotifyDescription = New NotifyDescription("FindFolderEnd", ThisForm, File.FullName);
 		git.BeginCallingFind(NotifyDescription, SelectedFiles[0]);
@@ -516,7 +545,7 @@ Procedure FindFolderEnd(ResultCall, ParametersCall, AdditionalParameters) Export
 		NotifyDescription = New NotifyDescription("OpenRepositoryEnd", ThisForm);
 		git.BeginCallingOpen(NotifyDescription, JsonData.Result);
 	Else
-		Items.MainPages.CurrentPage = Items.InitializePage;
+		SetCurrentPage(Items.InitPage);
 	EndiF;
 	
 EndProcedure
@@ -527,8 +556,6 @@ Procedure OpenRepositoryEnd(ResultCall, ParametersCall, AdditionalParameters) Ex
 	JsonData = JsonLoad(ResultCall);
 	If JsonData.Success Then
 		git.BeginCallingStatus(GitStatusNotify());
-		Items.MainPages.CurrentPage = Items.StatusPage;
-		Items.FormShowControl.Check = True;
 	EndiF;
 	
 EndProcedure
@@ -536,9 +563,8 @@ EndProcedure
 &AtClient
 Procedure CloseFolder(Command)
 	
-	Items.MainPages.CurrentPage = Items.FolderPage;
 	git.BeginCallingClose(New NotifyDescription);
-	VanessaEditor().setVisible(False);
+	SetCurrentPage(Items.FolderPage);
 	Directory = Undefined;
 	Title = Undefined;
 	
@@ -581,11 +607,7 @@ EndProcedure
 Procedure ShowExplorer(Command)
 	
 	If Not IsBlankString(Directory) Then
-		ClearAllItems();
-		Items.FormShowExplorer.Check = True;
-		Items.FormShowSearch.Check = False;
-		Items.FormShowControl.Check = False;
-		Items.MainPages.CurrentPage = Items.ExplorerPage;
+		SetCurrentPage(Items.ExplorerPage);
 		FillExplorerItems(Explorer.GetItems(), Directory);
 		CurrentItem = Items.Explorer;
 	EndIf;
@@ -596,11 +618,7 @@ EndProcedure
 Procedure ShowSearch(Command)
 
 	If Not IsBlankString(Directory) Then
-		ClearAllItems();
-		Items.FormShowExplorer.Check = False;
-		Items.FormShowSearch.Check = True;
-		Items.FormShowControl.Check = False;
-		Items.MainPages.CurrentPage = Items.SearchPage;
+		SetCurrentPage(Items.SearchPage);
 		CurrentItem = Items.SearchText;
 	EndIf;
 	
@@ -610,11 +628,7 @@ EndProcedure
 Procedure ShowControl(Command)
 
 	If Not IsBlankString(Directory) Then
-		ClearAllItems();
-		Items.FormShowExplorer.Check = False;
-		Items.FormShowSearch.Check = False;
-		Items.FormShowControl.Check = True;
-		Items.MainPages.CurrentPage = Items.StatusPage;
+		SetCurrentPage(Items.StatusPage);
 		git.BeginCallingStatus(GitStatusNotify());
 		CurrentItem = Items.Status;
 	EndIf;
@@ -687,10 +701,11 @@ Procedure ExplorerReadFile() Export
 	
 	Data = Items.Explorer.CurrentData;
 	If Data <> Undefined Then
-		id = git.file(Data.fullname, True);
-		Text = ReadBlob(id);
-		VanessaEditor().setVisible(True);
-		VanessaEditor().setValue(Text, Data.name);
+		If Data.IsDirectory Then
+			VanessaEditor().setVisible(False);
+		Else
+			OpenFile(Data.fullname);
+		EndIf;
 	EndIf;
 	
 EndProcedure
@@ -732,11 +747,7 @@ Procedure SearchReadFile() Export
 	
 	Data = Items.Files.CurrentData;
 	If Data <> Undefined Then
-		id = git.file(Data.path, True);
-		Text = ReadBlob(id);
-		VanessaEditor().setVisible(True);
-		VanessaEditor().setValue(Text, Data.name);
+		OpenFile(Data.path);
 	EndIf;
 	
 EndProcedure
-

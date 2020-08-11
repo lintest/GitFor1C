@@ -31,17 +31,18 @@ const std::vector<AddInBase::Alias> GitControl::m_MethList{
 	Alias(eInfo    		 , 1, true  , L"Info"       	 , L"Info"),
 	Alias(eCommit  		 , 1, true  , L"Commit"     	 , L"Commit"),
 	Alias(eStatus  		 , 0, true  , L"Status"     	 , L"Status"),
-	Alias(eAdd     		 , 1, true  , L"Add"        	 , L"Add"),
+	Alias(eAdd     		 , 2, true  , L"Add"        	 , L"Add"),
 	Alias(eReset   		 , 1, true  , L"Reset"        	 , L"Reset"),
 	Alias(eRemove  		 , 1, true  , L"Remove"     	 , L"Remove"),
 	Alias(eDiscard  	 , 1, true  , L"Discard"     	 , L"Discard"),
 	Alias(eHistory 		 , 1, true  , L"History"    	 , L"History"),
-	Alias(eBlob 		 , 1, true  , L"Blob"    	     , L"Blob"),
+	Alias(eBlob 		 , 2, true  , L"Blob"    	     , L"Blob"),
 	Alias(eDiff 		 , 2, true  , L"Diff"    	     , L"Diff"),
 	Alias(eFile 		 , 2, true  , L"File"    	     , L"File"),
 	Alias(eTree 		 , 1, true  , L"Tree"    	     , L"Tree"),
 	Alias(eFullpath      , 1, true  , L"Fullpath"    	 , L"Fullpath"),
-	Alias(eIsBinary      , 1, true  , L"IsBinary"    	 , L"IsBinary"),
+	Alias(eIsBinary      , 2, true  , L"IsBinary"    	 , L"IsBinary"),
+	Alias(eGetEncoding   , 1, true  , L"GetEncoding"  	 , L"GetEncoding"),
 	Alias(eSetAuthor     , 2, false , L"SetAuthor"  	 , L"SetAuthor"),
 	Alias(eSetCommitter  , 2, false , L"SetCommitter"    , L"SetCommitter"),
 	Alias(eFindFiles     , 4, true  , L"FindFiles"       , L"НайтиФайлы"),
@@ -99,7 +100,7 @@ bool GitControl::CallAsFunc(const long lMethodNum, tVariant* pvarRetValue, tVari
 	case eCommit:
 		return VA(pvarRetValue) << m_manager.commit(VarToStr(paParams));
 	case eAdd:
-		return VA(pvarRetValue) << m_manager.add(VarToStr(paParams));
+		return VA(pvarRetValue) << m_manager.add(VarToStr(paParams), VarToStr(paParams + 1));
 	case eReset:
 		return VA(pvarRetValue) << m_manager.reset(VarToStr(paParams));
 	case eRemove:
@@ -118,10 +119,12 @@ bool GitControl::CallAsFunc(const long lMethodNum, tVariant* pvarRetValue, tVari
 		return VA(pvarRetValue) << m_manager.fullpath(VarToStr(paParams));
 	case eStatus:
 		return VA(pvarRetValue) << m_manager.status();
+	case eGetEncoding:
+		return VA(pvarRetValue) << m_manager.getEncoding(paParams);
 	case eIsBinary:
-		return VA(pvarRetValue) << m_manager.isBinary(VarToStr(paParams));
+		return VA(pvarRetValue) << m_manager.isBinary(paParams, paParams + 1);
 	case eBlob:
-		return m_manager.blob(VarToStr(paParams), pvarRetValue);
+		return m_manager.blob(VarToStr(paParams), paParams + 1, pvarRetValue);
 	case eFindFiles:
 		return VA(pvarRetValue) << FileFinder(VarToStr(paParams + 2), VarToBool(paParams + 3)).find(VarToStr(paParams), VarToStr(paParams + 1));
 	default:
@@ -151,10 +154,13 @@ static bool DefBool(tVariant* pvar, bool value = false)
 bool GitControl::GetParamDefValue(const long lMethodNum, const long lParamNum, tVariant* pvarParamDefValue)
 {
 	switch (lMethodNum) {
+	case eAdd: if (lParamNum == 1) return DefStr(pvarParamDefValue); else return false;
+	case eBlob: if (lParamNum == 1) return DefInt(pvarParamDefValue); else return false;
 	case eInit: if (lParamNum == 1) return DefBool(pvarParamDefValue); else return false;
 	case eFile: if (lParamNum == 1) return DefBool(pvarParamDefValue); else return false;
 	case eTree: if (lParamNum == 0) return DefStr(pvarParamDefValue); else return false;
 	case eHistory: if (lParamNum == 0) return DefStr(pvarParamDefValue); else return false;
+	case eIsBinary: if (lParamNum == 1) return DefInt(pvarParamDefValue); else return false;
 	default: return false;
 	}
 }

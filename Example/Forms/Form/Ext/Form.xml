@@ -180,76 +180,6 @@
 					<PagesRepresentation>None</PagesRepresentation>
 					<ExtendedTooltip name="MainPagesExtendedTooltip" id="286"/>
 					<ChildItems>
-						<Page name="ExplorerPage" id="300">
-							<Title>
-								<v8:item>
-									<v8:lang>ru</v8:lang>
-									<v8:content>Explorer page</v8:content>
-								</v8:item>
-							</Title>
-							<ToolTip>
-								<v8:item>
-									<v8:lang>ru</v8:lang>
-									<v8:content>Explorer page</v8:content>
-								</v8:item>
-							</ToolTip>
-							<ExtendedTooltip name="ExplorerPageExtendedTooltip" id="301"/>
-							<ChildItems>
-								<Table name="Explorer" id="302">
-									<Representation>Tree</Representation>
-									<ReadOnly>true</ReadOnly>
-									<ChangeRowSet>false</ChangeRowSet>
-									<ChangeRowOrder>false</ChangeRowOrder>
-									<RowSelectionMode>Row</RowSelectionMode>
-									<Header>false</Header>
-									<AutoInsertNewRow>true</AutoInsertNewRow>
-									<EnableStartDrag>true</EnableStartDrag>
-									<EnableDrag>true</EnableDrag>
-									<DataPath>Explorer</DataPath>
-									<ContextMenu name="ExplorerContextMenu" id="303"/>
-									<AutoCommandBar name="ExplorerCommandBar" id="304">
-										<Autofill>false</Autofill>
-									</AutoCommandBar>
-									<ExtendedTooltip name="ExplorerExtendedTooltip" id="305"/>
-									<SearchStringAddition name="ExplorerSearchString" id="306">
-										<AdditionSource>
-											<Item>Explorer</Item>
-											<Type>SearchStringRepresentation</Type>
-										</AdditionSource>
-										<ContextMenu name="ExplorerSearchStringContextMenu" id="307"/>
-										<ExtendedTooltip name="ExplorerSearchStringExtendedTooltip" id="308"/>
-									</SearchStringAddition>
-									<ViewStatusAddition name="ExplorerViewStatus" id="309">
-										<AdditionSource>
-											<Item>Explorer</Item>
-											<Type>ViewStatusRepresentation</Type>
-										</AdditionSource>
-										<ContextMenu name="ExplorerViewStatusContextMenu" id="310"/>
-										<ExtendedTooltip name="ExplorerViewStatusExtendedTooltip" id="311"/>
-									</ViewStatusAddition>
-									<SearchControlAddition name="ExplorerSearchControl" id="312">
-										<AdditionSource>
-											<Item>Explorer</Item>
-											<Type>SearchControl</Type>
-										</AdditionSource>
-										<ContextMenu name="ExplorerSearchControlContextMenu" id="313"/>
-										<ExtendedTooltip name="ExplorerSearchControlExtendedTooltip" id="314"/>
-									</SearchControlAddition>
-									<Events>
-										<Event name="OnActivateRow">ExplorerOnActivateRow</Event>
-										<Event name="BeforeExpand">ExplorerBeforeExpand</Event>
-									</Events>
-									<ChildItems>
-										<InputField name="Explorername" id="315">
-											<DataPath>Explorer.Name</DataPath>
-											<EditMode>EnterOnInput</EditMode>
-											<ContextMenu name="ExplorernameContextMenu" id="316"/>
-											<ExtendedTooltip name="ExplorernameExtendedTooltip" id="317"/>
-										</InputField>
-									</ChildItems>
-								</Table>
-							</ChildItems>
-						</Page>
 						<Page name="FolderPage" id="287">
 							<Title>
 								<v8:item>
@@ -323,60 +253,182 @@
 								</UsualGroup>
 							</ChildItems>
 						</Page>
-						<Page name="InitializePage" id="291">
+						<Page name="ExplorerPage" id="300">
 							<Title>
 								<v8:item>
 									<v8:lang>ru</v8:lang>
-									<v8:content>Initialize page</v8:content>
+									<v8:content>Explorer page</v8:content>
 								</v8:item>
 							</Title>
 							<ToolTip>
 								<v8:item>
 									<v8:lang>ru</v8:lang>
-									<v8:content>Initialize page</v8:content>
+									<v8:content>Explorer page</v8:content>
 								</v8:item>
 							</ToolTip>
-							<Width>30</Width>
-							<ExtendedTooltip name="InitializePageExtendedTooltip" id="292"/>
+							<ExtendedTooltip name="ExplorerPageExtendedTooltip" id="301"/>
 							<ChildItems>
-								<UsualGroup name="GroupInitRepo" id="295">
+								<Table name="Explorer" id="302">
+									<Representation>Tree</Representation>
+									<ReadOnly>true</ReadOnly>
+									<ChangeRowSet>false</ChangeRowSet>
+									<ChangeRowOrder>false</ChangeRowOrder>
+									<RowSelectionMode>Row</RowSelectionMode>
+									<Header>false</Header>
+									<AutoInsertNewRow>true</AutoInsertNewRow>
+									<EnableStartDrag>true</EnableStartDrag>
+									<EnableDrag>true</EnableDrag>
+									<DataPath>Explorer</DataPath>
+									<ContextMenu name="ExplorerContextMenu" id="303"/>
+									<AutoCommandBar name="ExplorerCommandBar" id="304">
+										<Autofill>false</Autofill>
+									</AutoCommandBar>
+									<ExtendedTooltip name="ExplorerExtendedTooltip" id="305"/>
+									<SearchStringAddition name="ExplorerSearchString" id="306">
+										<AdditionSource>
+											<Item>Explorer</Item>
+											<Type>SearchStringRepresentation</Type>
+										</AdditionSource>
+										<ContextMenu name="ExplorerSearchStringContextMenu" id="307"/>
+										<ExtendedTooltip name="ExplorerSearchStringExtendedTooltip" id="308"/>
+									</SearchStringAddition>
+									<ViewStatusAddition name="ExplorerViewStatus" id="309">
+										<AdditionSource>
+											<Item>Explorer</Item>
+											<Type>ViewStatusRepresentation</Type>
+										</AdditionSource>
+										<ContextMenu name="ExplorerViewStatusContextMenu" id="310"/>
+										<ExtendedTooltip name="ExplorerViewStatusExtendedTooltip" id="311"/>
+									</ViewStatusAddition>
+									<SearchControlAddition name="ExplorerSearchControl" id="312">
+										<AdditionSource>
+											<Item>Explorer</Item>
+											<Type>SearchControl</Type>
+										</AdditionSource>
+										<ContextMenu name="ExplorerSearchControlContextMenu" id="313"/>
+										<ExtendedTooltip name="ExplorerSearchControlExtendedTooltip" id="314"/>
+									</SearchControlAddition>
+									<Events>
+										<Event name="OnActivateRow">ExplorerOnActivateRow</Event>
+										<Event name="BeforeExpand">ExplorerBeforeExpand</Event>
+									</Events>
+									<ChildItems>
+										<InputField name="Explorername" id="315">
+											<DataPath>Explorer.Name</DataPath>
+											<EditMode>EnterOnInput</EditMode>
+											<ContextMenu name="ExplorernameContextMenu" id="316"/>
+											<ExtendedTooltip name="ExplorernameExtendedTooltip" id="317"/>
+										</InputField>
+									</ChildItems>
+								</Table>
+							</ChildItems>
+						</Page>
+						<Page name="SearchPage" id="67">
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Search page</v8:content>
+								</v8:item>
+							</Title>
+							<ToolTip>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Search page</v8:content>
+								</v8:item>
+							</ToolTip>
+							<ExtendedTooltip name="SearchPageExtendedTooltip" id="68"/>
+							<ChildItems>
+								<UsualGroup name="GroupFindText" id="351">
 									<Title>
 										<v8:item>
 											<v8:lang>ru</v8:lang>
-											<v8:content>Group init repo</v8:content>
+											<v8:content>Group find text</v8:content>
 										</v8:item>
 									</Title>
 									<ToolTip>
 										<v8:item>
 											<v8:lang>ru</v8:lang>
-											<v8:content>Group init repo</v8:content>
+											<v8:content>Group find text</v8:content>
 										</v8:item>
 									</ToolTip>
-									<HorizontalStretch>true</HorizontalStretch>
-									<VerticalStretch>true</VerticalStretch>
-									<Group>Vertical</Group>
-									<HorizontalAlign>Center</HorizontalAlign>
 									<Representation>None</Representation>
 									<ShowTitle>false</ShowTitle>
-									<ExtendedTooltip name="GroupInitRepoExtendedTooltip" id="296"/>
+									<ExtendedTooltip name="GroupFindTextExtendedTooltip" id="352"/>
 									<ChildItems>
-										<LabelDecoration name="DecorationInitRepo" id="297">
-											<Title formatted="false">
+										<InputField name="SearchText" id="5">
+											<DataPath>SearchText</DataPath>
+											<Title>
 												<v8:item>
 													<v8:lang>ru</v8:lang>
-													<v8:content>The folder currently open doesn't have a git repository.</v8:content>
+													<v8:content>Text</v8:content>
 												</v8:item>
 											</Title>
-											<ContextMenu name="DecorationInitRepoContextMenu" id="298"/>
-											<ExtendedTooltip name="DecorationInitRepoExtendedTooltip" id="299"/>
-										</LabelDecoration>
-										<Button name="InitializeRepo" id="293">
+											<ChoiceButton>false</ChoiceButton>
+											<ContextMenu name="SearchTextContextMenu" id="6"/>
+											<ExtendedTooltip name="SearchTextExtendedTooltip" id="7"/>
+											<Events>
+												<Event name="OnChange">SearchTextOnChange</Event>
+											</Events>
+										</InputField>
+										<Button name="FindFiles" id="373">
 											<Type>UsualButton</Type>
-											<CommandName>Form.Command.InitializeRepo</CommandName>
-											<ExtendedTooltip name="InitializeRepoExtendedTooltip" id="294"/>
+											<CommandName>Form.Command.FindFiles</CommandName>
+											<ExtendedTooltip name="FindFilesExtendedTooltip" id="374"/>
 										</Button>
 									</ChildItems>
 								</UsualGroup>
+								<Table name="Files" id="353">
+									<Representation>Tree</Representation>
+									<ChangeRowSet>false</ChangeRowSet>
+									<ChangeRowOrder>false</ChangeRowOrder>
+									<RowSelectionMode>Row</RowSelectionMode>
+									<Header>false</Header>
+									<AutoInsertNewRow>true</AutoInsertNewRow>
+									<EnableStartDrag>true</EnableStartDrag>
+									<EnableDrag>true</EnableDrag>
+									<DataPath>Files</DataPath>
+									<ContextMenu name="FilesContextMenu" id="354"/>
+									<AutoCommandBar name="FilesCommandBar" id="355">
+										<Autofill>false</Autofill>
+									</AutoCommandBar>
+									<ExtendedTooltip name="FilesExtendedTooltip" id="356"/>
+									<SearchStringAddition name="FilesSearchString" id="357">
+										<AdditionSource>
+											<Item>Files</Item>
+											<Type>SearchStringRepresentation</Type>
+										</AdditionSource>
+										<ContextMenu name="FilesSearchStringContextMenu" id="358"/>
+										<ExtendedTooltip name="FilesSearchStringExtendedTooltip" id="359"/>
+									</SearchStringAddition>
+									<ViewStatusAddition name="FilesViewStatus" id="360">
+										<AdditionSource>
+											<Item>Files</Item>
+											<Type>ViewStatusRepresentation</Type>
+										</AdditionSource>
+										<ContextMenu name="FilesViewStatusContextMenu" id="361"/>
+										<ExtendedTooltip name="FilesViewStatusExtendedTooltip" id="362"/>
+									</ViewStatusAddition>
+									<SearchControlAddition name="FilesSearchControl" id="363">
+										<AdditionSource>
+											<Item>Files</Item>
+											<Type>SearchControl</Type>
+										</AdditionSource>
+										<ContextMenu name="FilesSearchControlContextMenu" id="364"/>
+										<ExtendedTooltip name="FilesSearchControlExtendedTooltip" id="365"/>
+									</SearchControlAddition>
+									<Events>
+										<Event name="OnActivateRow">FilesOnActivateRow</Event>
+									</Events>
+									<ChildItems>
+										<InputField name="FilesName" id="366">
+											<DataPath>Files.Name</DataPath>
+											<ReadOnly>true</ReadOnly>
+											<EditMode>EnterOnInput</EditMode>
+											<ContextMenu name="FilesNameContextMenu" id="367"/>
+											<ExtendedTooltip name="FilesNameExtendedTooltip" id="368"/>
+										</InputField>
+									</ChildItems>
+								</Table>
 							</ChildItems>
 						</Page>
 						<Page name="StatusPage" id="218">
@@ -596,107 +648,60 @@
 								</UsualGroup>
 							</ChildItems>
 						</Page>
-						<Page name="SearchPage" id="67">
+						<Page name="InitPage" id="291">
 							<Title>
 								<v8:item>
 									<v8:lang>ru</v8:lang>
-									<v8:content>Search page</v8:content>
+									<v8:content>Init page</v8:content>
 								</v8:item>
 							</Title>
 							<ToolTip>
 								<v8:item>
 									<v8:lang>ru</v8:lang>
-									<v8:content>Search page</v8:content>
+									<v8:content>Init page</v8:content>
 								</v8:item>
 							</ToolTip>
-							<ExtendedTooltip name="SearchPageExtendedTooltip" id="68"/>
+							<Width>30</Width>
+							<ExtendedTooltip name="InitPageExtendedTooltip" id="292"/>
 							<ChildItems>
-								<UsualGroup name="GroupFindText" id="351">
+								<UsualGroup name="GroupInitRepo" id="295">
 									<Title>
 										<v8:item>
 											<v8:lang>ru</v8:lang>
-											<v8:content>Group find text</v8:content>
+											<v8:content>Group init repo</v8:content>
 										</v8:item>
 									</Title>
 									<ToolTip>
 										<v8:item>
 											<v8:lang>ru</v8:lang>
-											<v8:content>Group find text</v8:content>
+											<v8:content>Group init repo</v8:content>
 										</v8:item>
 									</ToolTip>
+									<HorizontalStretch>true</HorizontalStretch>
+									<VerticalStretch>true</VerticalStretch>
+									<Group>Vertical</Group>
+									<HorizontalAlign>Center</HorizontalAlign>
 									<Representation>None</Representation>
 									<ShowTitle>false</ShowTitle>
-									<ExtendedTooltip name="GroupFindTextExtendedTooltip" id="352"/>
+									<ExtendedTooltip name="GroupInitRepoExtendedTooltip" id="296"/>
 									<ChildItems>
-										<InputField name="SearchText" id="5">
-											<DataPath>SearchText</DataPath>
-											<Title>
+										<LabelDecoration name="DecorationInitRepo" id="297">
+											<Title formatted="false">
 												<v8:item>
 													<v8:lang>ru</v8:lang>
-													<v8:content>Text</v8:content>
+													<v8:content>The folder currently open doesn't have a git repository.</v8:content>
 												</v8:item>
 											</Title>
-											<ChoiceButton>false</ChoiceButton>
-											<ContextMenu name="SearchTextContextMenu" id="6"/>
-											<ExtendedTooltip name="SearchTextExtendedTooltip" id="7"/>
-											<Events>
-												<Event name="OnChange">SearchTextOnChange</Event>
-											</Events>
-										</InputField>
+											<ContextMenu name="DecorationInitRepoContextMenu" id="298"/>
+											<ExtendedTooltip name="DecorationInitRepoExtendedTooltip" id="299"/>
+										</LabelDecoration>
+										<Button name="InitializeRepo" id="293">
+											<Type>UsualButton</Type>
+											<CommandName>Form.Command.InitializeRepo</CommandName>
+											<ExtendedTooltip name="InitializeRepoExtendedTooltip" id="294"/>
+										</Button>
 									</ChildItems>
 								</UsualGroup>
-								<Table name="Files" id="353">
-									<Representation>Tree</Representation>
-									<ChangeRowSet>false</ChangeRowSet>
-									<ChangeRowOrder>false</ChangeRowOrder>
-									<RowSelectionMode>Row</RowSelectionMode>
-									<Header>false</Header>
-									<AutoInsertNewRow>true</AutoInsertNewRow>
-									<EnableStartDrag>true</EnableStartDrag>
-									<EnableDrag>true</EnableDrag>
-									<DataPath>Files</DataPath>
-									<ContextMenu name="FilesContextMenu" id="354"/>
-									<AutoCommandBar name="FilesCommandBar" id="355">
-										<Autofill>false</Autofill>
-									</AutoCommandBar>
-									<ExtendedTooltip name="FilesExtendedTooltip" id="356"/>
-									<SearchStringAddition name="FilesSearchString" id="357">
-										<AdditionSource>
-											<Item>Files</Item>
-											<Type>SearchStringRepresentation</Type>
-										</AdditionSource>
-										<ContextMenu name="FilesSearchStringContextMenu" id="358"/>
-										<ExtendedTooltip name="FilesSearchStringExtendedTooltip" id="359"/>
-									</SearchStringAddition>
-									<ViewStatusAddition name="FilesViewStatus" id="360">
-										<AdditionSource>
-											<Item>Files</Item>
-											<Type>ViewStatusRepresentation</Type>
-										</AdditionSource>
-										<ContextMenu name="FilesViewStatusContextMenu" id="361"/>
-										<ExtendedTooltip name="FilesViewStatusExtendedTooltip" id="362"/>
-									</ViewStatusAddition>
-									<SearchControlAddition name="FilesSearchControl" id="363">
-										<AdditionSource>
-											<Item>Files</Item>
-											<Type>SearchControl</Type>
-										</AdditionSource>
-										<ContextMenu name="FilesSearchControlContextMenu" id="364"/>
-										<ExtendedTooltip name="FilesSearchControlExtendedTooltip" id="365"/>
-									</SearchControlAddition>
-									<Events>
-										<Event name="OnActivateRow">FilesOnActivateRow</Event>
-									</Events>
-									<ChildItems>
-										<InputField name="FilesName" id="366">
-											<DataPath>Files.Name</DataPath>
-											<ReadOnly>true</ReadOnly>
-											<EditMode>EnterOnInput</EditMode>
-											<ContextMenu name="FilesNameContextMenu" id="367"/>
-											<ExtendedTooltip name="FilesNameExtendedTooltip" id="368"/>
-										</InputField>
-									</ChildItems>
-								</Table>
 							</ChildItems>
 						</Page>
 					</ChildItems>

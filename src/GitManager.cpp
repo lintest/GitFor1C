@@ -92,7 +92,7 @@ static std::wstring error(int code)
 	return MB2WC(json.dump());
 }
 
-static std::wstring error(const std::string &msg)
+static std::wstring error(const std::string& msg)
 {
 	nlohmann::json json, j;
 	j["code"] = -1;
@@ -126,7 +126,7 @@ std::wstring GitManager::open(const std::wstring& path)
 	return success(true);
 }
 
-bool GitManager::close() 
+bool GitManager::close()
 {
 	if (m_repo) git_repository_free(m_repo);
 	m_repo = nullptr;
@@ -135,7 +135,7 @@ bool GitManager::close()
 
 std::wstring GitManager::find(const std::wstring& path)
 {
-	git_buf buffer ={ 0 };
+	git_buf buffer = { 0 };
 	ASSERT(git_repository_discover(&buffer, S(path), 0, nullptr));
 	std::string res = buffer.ptr;
 	git_buf_free(&buffer);
@@ -228,7 +228,7 @@ int status_cb(const char* path, unsigned int status_flags, void* payload)
 	return 0;
 }
 
-nlohmann::json delta2json(const git_diff_delta* delta)
+nlohmann::json delta2json(const git_diff_delta* delta, bool index = false)
 {
 	nlohmann::json j;
 	j["flag"] = delta->status;
@@ -239,14 +239,14 @@ nlohmann::json delta2json(const git_diff_delta* delta)
 	j["old_name"] = delta->old_file.path;
 	j["old_size"] = delta->old_file.size;
 	j["old_flags"] = delta->old_file.flags;
-	j["new_id"] = oid2str(&delta->new_file.id);
+	if (index) j["new_id"] = oid2str(&delta->new_file.id);
 	j["new_name"] = delta->new_file.path;
 	j["new_size"] = delta->new_file.size;
 	j["new_flags"] = delta->new_file.flags;
 	return j;
 }
 
-nlohmann::json commit2json(const git_commit *commit)
+nlohmann::json commit2json(const git_commit* commit)
 {
 	nlohmann::json j;
 	const git_oid* tree_id = git_commit_tree_id(commit);
@@ -273,7 +273,7 @@ std::wstring GitManager::status()
 	size_t count = git_status_list_entrycount(statuses);
 	for (size_t i = 0; i < count; ++i) {
 		const git_status_entry* entry = git_status_byindex(statuses, i);
-		if (entry->head_to_index) jIndex.push_back(delta2json(entry->head_to_index));
+		if (entry->head_to_index) jIndex.push_back(delta2json(entry->head_to_index, true));
 		if (entry->index_to_workdir) jWork.push_back(delta2json(entry->index_to_workdir));
 	}
 	if (jIndex.is_array()) json["index"] = jIndex;
@@ -348,26 +348,33 @@ std::wstring GitManager::commit(const std::wstring& msg)
 
 static nlohmann::json parse_file_list(const std::wstring& filelist)
 {
-	nlohmann::json json;
 	try {
-		json = nlohmann::json::parse(WC2MB(filelist));
+		return nlohmann::json::parse(WC2MB(filelist));
 	}
 	catch (nlohmann::json::parse_error e) {
+		nlohmann::json json;
 		json.push_back(WC2MB(filelist));
+		return json;
 	}
-	return json;
 }
 
-std::wstring GitManager::add(const std::wstring& filelist)
+std::wstring GitManager::add(const std::wstring& append, const std::wstring& remove)
 {
 	CHECK_REPO();
 	GIT_index index;
 	ASSERT(git_repository_index(&index, m_repo));
-	nlohmann::json json = parse_file_list(filelist);
-	if (json.is_array()) {
-		for (auto element : json) {
+	nlohmann::json json_add = parse_file_list(append);
+	if (json_add.is_array()) {
+		for (auto element : json_add) {
 			std::string path = element;
 			ASSERT(git_index_add_bypath(index, path.c_str()));
+		}
+	}
+	nlohmann::json json_del = parse_file_list(remove);
+	if (json_del.is_array()) {
+		for (auto element : json_del) {
+			std::string path = element;
+			ASSERT(git_index_remove_bypath(index, path.c_str()));
 		}
 	}
 	ASSERT(git_index_write(index));
@@ -529,30 +536,81 @@ bool GitManager::error(tVariant* pvar)
 	return ((AddInBase*)m_addin)->VA(pvar) << ::error();
 }
 
-bool GitManager::isBinary(const std::wstring& id)
-{
-	if (m_repo == nullptr) return false;
-	git_oid oid;
-	int ok = git_oid_fromstr(&oid, S(id));
-	if (ok < 0) return false;
-	GIT_blob blob = NULL;
-	ok = git_blob_lookup(&blob, m_repo, &oid);
-	if (ok < 0) return true;
-	return git_blob_is_binary(blob);
-}
-
 std::wstring GitManager::file(const std::wstring& path, bool full)
 {
 	if (m_repo == nullptr) return {};
 	git_oid oid;
-	int ok = full 
+	int ok = full
 		? git_blob_create_fromdisk(&oid, m_repo, S(path))
 		: git_blob_create_from_workdir(&oid, m_repo, S(path));
 	if (ok < 0) return {};
 	return MB2WC(oid2str(&oid));
 }
 
-bool GitManager::blob(const std::wstring& id, tVariant* pvarRetValue)
+namespace GIT {
+
+	typedef enum {
+		GIT_BOM_NONE = 0,
+		GIT_BOM_UTF8 = 1,
+		GIT_BOM_UTF16_LE = 2,
+		GIT_BOM_UTF16_BE = 3,
+		GIT_BOM_UTF32_LE = 4,
+		GIT_BOM_UTF32_BE = 5
+	} git_bom_t;
+
+	static int git_buf_text_detect_bom(git_bom_t* bom, const git_buf* buf)
+	{
+		const char* ptr;
+		size_t len;
+
+		*bom = GIT_BOM_NONE;
+		/* need at least 2 bytes to look for any BOM */
+		if (buf->size < 2)
+			return 0;
+
+		ptr = buf->ptr;
+		len = buf->size;
+
+		switch (*ptr++) {
+		case 0:
+			if (len >= 4 && ptr[0] == 0 && ptr[1] == '\xFE' && ptr[2] == '\xFF') {
+				*bom = GIT_BOM_UTF32_BE;
+				return 4;
+			}
+			break;
+		case '\xEF':
+			if (len >= 3 && ptr[0] == '\xBB' && ptr[1] == '\xBF') {
+				*bom = GIT_BOM_UTF8;
+				return 3;
+			}
+			break;
+		case '\xFE':
+			if (*ptr == '\xFF') {
+				*bom = GIT_BOM_UTF16_BE;
+				return 2;
+			}
+			break;
+		case '\xFF':
+			if (*ptr != '\xFE')
+				break;
+			if (len >= 4 && ptr[1] == 0 && ptr[2] == 0) {
+				*bom = GIT_BOM_UTF32_LE;
+				return 4;
+			}
+			else {
+				*bom = GIT_BOM_UTF16_LE;
+				return 2;
+			}
+			break;
+		default:
+			break;
+		}
+
+		return 0;
+	}
+}
+
+bool GitManager::blob(const std::wstring& id, tVariant* pvarEncoding, tVariant* pvarRetValue)
 {
 	if (m_repo == nullptr) return true;
 	git_oid oid;
@@ -564,12 +622,36 @@ bool GitManager::blob(const std::wstring& id, tVariant* pvarRetValue)
 	git_off_t rawsize = git_blob_rawsize(blob);
 	const void* rawcontent = git_blob_rawcontent(blob);
 	if (rawsize > 0) {
+		GIT::git_bom_t bom;
+		const git_buf buf = GIT_BUF_INIT_CONST(rawcontent, rawsize);
+		bool binary = git_buf_is_binary(&buf);
+		if (!binary) GIT::git_buf_text_detect_bom(&bom, &buf);
+		((AddInBase*)m_addin)->VA(pvarEncoding) << (binary ? -1 : bom);
 		m_addin->AllocMemory((void**)&pvarRetValue->pstrVal, rawsize);
 		memcpy((void*)pvarRetValue->pstrVal, rawcontent, rawsize);
 		TV_VT(pvarRetValue) = VTYPE_BLOB;
 		pvarRetValue->strLen = rawsize;
 	}
 	return true;
+}
+
+bool GitManager::isBinary(tVariant* pvarData, tVariant* pvarEncoding)
+{
+	if (pvarData->vt != VTYPE_BLOB) return true;
+	const git_buf buf = GIT_BUF_INIT_CONST(pvarData->pwstrVal, pvarData->wstrLen);
+	GIT::git_bom_t bom;
+	GIT::git_buf_text_detect_bom(&bom, &buf);
+	((AddInBase*)m_addin)->VA(pvarEncoding) << bom;
+	return git_buf_is_binary(&buf);
+}
+
+int GitManager::getEncoding(tVariant* pvar)
+{
+	if (pvar->vt != VTYPE_BLOB) return true;
+	const git_buf buf = GIT_BUF_INIT_CONST(pvar->pwstrVal, pvar->wstrLen);
+	GIT::git_bom_t bom;
+	GIT::git_buf_text_detect_bom(&bom, &buf);
+	return bom;
 }
 
 #include <filesystem>
@@ -580,3 +662,5 @@ std::wstring GitManager::fullpath(const std::wstring& path)
 	std::filesystem::path root = MB2WC(git_repository_path(m_repo));
 	return root.parent_path().parent_path().append(path).make_preferred();
 }
+
+
