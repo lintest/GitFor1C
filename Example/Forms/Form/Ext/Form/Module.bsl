@@ -289,29 +289,6 @@ Procedure EndCallingIndex(ResultCall, ParametersCall, AdditionalParameters) Expo
 EndProcedure
 
 &AtClient
-Procedure GetDefaultSignature(Command)
-	
-	signature = JsonLoad(git.signature);
-	SignatureName = signature.result.name;
-	SignatureEmail = signature.result.email;
-	
-EndProcedure
-
-&AtClient
-Procedure SetSignatureAuthor(Command)
-	
-	git.setAuthor(SignatureName, SignatureEmail);
-	
-EndProcedure
-
-&AtClient
-Procedure SetSignatureCommitter(Command)
-	
-	git.setCommitter(SignatureName, SignatureEmail);
-	
-EndProcedure
-
-&AtClient
 Procedure RepoTree(Command)
 	
 	Tree.Clear();
@@ -610,8 +587,7 @@ EndProcedure
 &AtClient
 Procedure CloneRepository(Command)
 	
-	NewName = GetFormName("Clone");
-	OpenForm(NewName, , ThisForm, New Uuid);
+	OpenForm(GetFormName("Clone"), , ThisForm, New Uuid);
 	
 EndProcedure
 
@@ -781,5 +757,12 @@ Procedure SearchReadFile() Export
 	If Data <> Undefined Then
 		OpenFile(Data.path);
 	EndIf;
+	
+EndProcedure
+
+&AtClient
+Procedure Signature(Command)
+
+	OpenForm(GetFormName("Sign"), , ThisForm, New Uuid);
 	
 EndProcedure

@@ -55,12 +55,6 @@
 		</InputField>
 	</ChildItems>
 	<Attributes>
-		<Attribute name="Object" id="1">
-			<Type>
-				<v8:Type>cfg:ExternalDataProcessorObject.Example</v8:Type>
-			</Type>
-			<MainAttribute>true</MainAttribute>
-		</Attribute>
 		<Attribute name="LocalPath" id="2">
 			<Title>
 				<v8:item>
