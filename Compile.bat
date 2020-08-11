@@ -5,6 +5,8 @@ oscript .\tools\MakePack.os
 
 copy /b ..\VAEditor\example\VanessaEditorSample\Templates\VanessaEditor\Ext\Template.bin .\Example\Templates\VAEditor\Ext\Template.bin 
 
+mkdir .\Example\Templates\GitFor1C
+mkdir .\Example\Templates\GitFor1C\Ext
 copy /b .\AddIn.zip .\Example\Templates\GitFor1C\Ext\Template.bin 
 
 oscript .\tools\Compile.os .\

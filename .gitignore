@@ -13,6 +13,7 @@
 /.vc
 /.vs
 /Example/fileversion
+/Example/Templates/GitFor1C/Ext/Template.bin
 AddIn.zip
 XxCompile.bat
 *.epf
