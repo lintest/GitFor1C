@@ -50,7 +50,7 @@ Procedure SetCurrentPage(Page)
 	Items.FormShowSearch.Check = (Page = Items.SearchPage);
 	Items.MainPages.CurrentPage = Page;
 	
-EndProcedure	
+EndProcedure
 
 #Region Json
 
@@ -167,6 +167,7 @@ Procedure EndCallingStatus(ResultCall, ParametersCall, AdditionalParameters) Exp
 		EndIf;
 	ElsIf JsonData.error.code = 0 Then
 		SetCurrentPage(Items.InitPage);
+		Repository = Undefined;
 	EndIf;
 	
 EndProcedure
@@ -236,14 +237,14 @@ Function SelectedStatusJson()
 	EndDo;
 	Return JsonDump(FileArray);
 	
-EndFunction	
+EndFunction
 
 &AtClient
 Function GetIndexNotify()
 	
 	Return New NotifyDescription("EndCallingIndex", ThisForm);
-
-EndFunction	
+	
+EndFunction
 
 &AtClient
 Procedure IndexAdd(Command)
@@ -274,7 +275,7 @@ EndProcedure
 
 &AtClient
 Procedure IndexDiscard(Command)
-
+	
 	git.BeginCallingDiscard(GetIndexNotify(), SelectedStatusJson());
 	
 EndProcedure
@@ -463,7 +464,7 @@ Procedure StatusOnActivateRow(Item)
 		Return;
 	EndIf;
 	
-	IF Row.Status = "DELETED" Then
+	If Row.Status = "DELETED" Then
 		VanessaEditor = VanessaEditor();
 		VanessaEditor.setValue(OldFileText(Row), Row.old_name);
 		VanessaEditor.setVisible(True);
@@ -484,13 +485,34 @@ Procedure OpenBlob(Команда)
 	Row = Items.Status.CurrentData;
 	If Row = Undefined Then
 		Return;
+	ElsIf Row.Status = "DELETED" Then
+		NotifyDescription = New NotifyDescription("EndOpenBlob", ThisForm, Row.old_name);
+		git.BeginCallingBlob(NotifyDescription, Row.old_id);
+	ElsIf Not IsBlankString(Row.new_id) Then
+		NotifyDescription = New NotifyDescription("EndOpenBlob", ThisForm, Row.new_name);
+		git.BeginCallingBlob(NotifyDescription, Row.new_id);
+	Else
+		OpenFile(Repository + Row.new_name);
 	EndIf;
 	
-	NewText = NewFileText(Row);
-	VanessaEditor = VanessaEditor();
-	VanessaEditor.setValue(NewText, Row.new_name);
-	VanessaEditor.setReadOnly(Not IsBlankString(Row.new_id) OR NewText = "binary");
-	VanessaEditor.setVisible(True);
+EndProcedure
+
+&AtClient
+Procedure EndOpenBlob(ResultCall, ParametersCall, AdditionalParameters) Export
+	
+	BinaryData = ResultCall;
+	Encoding = ParametersCall[1];
+	FileName = AdditionalParameters;
+	
+	If Encoding < 0 Then
+		VanessaEditor().setValue("binary", "");
+	Else
+		TextReader = New TextReader;
+		TextReader.Open(BinaryData.OpenStreamForRead(), TextEncoding.UTF8);
+		VanessaEditor().setValue(TextReader.Read(), AdditionalParameters);
+	EndIf;
+	VanessaEditor().setReadOnly(True);
+	VanessaEditor().setVisible(True);
 	
 EndProcedure
 
@@ -542,11 +564,13 @@ Procedure FindFolderEnd(ResultCall, ParametersCall, AdditionalParameters) Export
 	
 	JsonData = JsonLoad(ResultCall);
 	If JsonData.Success Then
+		File = New File(JsonData.result);
+		Repository = File.Path;
 		NotifyDescription = New NotifyDescription("OpenRepositoryEnd", ThisForm);
 		git.BeginCallingOpen(NotifyDescription, JsonData.Result);
 	Else
 		SetCurrentPage(Items.InitPage);
-	EndiF;
+	EndIf;
 	
 EndProcedure
 
@@ -556,7 +580,7 @@ Procedure OpenRepositoryEnd(ResultCall, ParametersCall, AdditionalParameters) Ex
 	JsonData = JsonLoad(ResultCall);
 	If JsonData.Success Then
 		git.BeginCallingStatus(GitStatusNotify());
-	EndiF;
+	EndIf;
 	
 EndProcedure
 
@@ -565,6 +589,7 @@ Procedure CloseFolder(Command)
 	
 	git.BeginCallingClose(New NotifyDescription);
 	SetCurrentPage(Items.FolderPage);
+	Repository = Undefined;
 	Directory = Undefined;
 	Title = Undefined;
 	
@@ -601,7 +626,7 @@ Procedure ClearAllItems()
 	Explorer.GetItems().Clear();
 	VanessaEditor().setVisible(False);
 	
-EndProcedure	
+EndProcedure
 
 &AtClient
 Procedure ShowExplorer(Command)
@@ -616,7 +641,7 @@ EndProcedure
 
 &AtClient
 Procedure ShowSearch(Command)
-
+	
 	If Not IsBlankString(Directory) Then
 		SetCurrentPage(Items.SearchPage);
 		CurrentItem = Items.SearchText;
@@ -626,7 +651,7 @@ EndProcedure
 
 &AtClient
 Procedure ShowControl(Command)
-
+	
 	If Not IsBlankString(Directory) Then
 		SetCurrentPage(Items.StatusPage);
 		git.BeginCallingStatus(GitStatusNotify());
@@ -661,7 +686,7 @@ Procedure EndFindingFiles(FilesFound, AdditionalParameters) Export
 			Row.IsDirectory = True;
 			FillPropertyValues(Row, File);
 			Row.GetItems().Add();
-		Else 
+		Else
 			OnlyFiles.Add(File);
 		EndIf;
 	EndDo;
@@ -683,7 +708,7 @@ EndProcedure
 Procedure ExplorerBeforeExpand(Item, Row, Cancel)
 	
 	ParentRow = Explorer.FindByID(Row);
-	If ParentRow <> Undefined Then 
+	If ParentRow <> Undefined Then
 		FillExplorerItems(ParentRow.GetItems(), ParentRow.Fullname, ParentRow);
 	EndIf;
 	
@@ -733,11 +758,11 @@ Procedure EndSearchText(ResultCall, ParametersCall, AdditionalParameters) Export
 		EndDo;
 	EndIf;
 	
-EndProcedure	
+EndProcedure
 
 &AtClient
 Procedure FilesOnActivateRow(Item)
-
+	
 	AttachIdleHandler("SearchReadFile", 0.1, True);
 	
 EndProcedure
