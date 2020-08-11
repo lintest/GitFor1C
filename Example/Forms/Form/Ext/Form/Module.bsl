@@ -5,10 +5,22 @@ Var AddInId, git Export;
 Procedure OnCreateAtServer(Cancel, StandardProcessing)
 	
 	LoadEditor();
-	If Not Parameters.Property("AddInURL", AddInURL) Then
-		AddInTemplate = FormAttributeToValue("Object").GetTemplate("GitFor1C");
-		AddInURL = PutToTempStorage(AddInTemplate, UUID);
+	If Parameters.Property("AddInURL", AddInURL) Then
+		File = New File(AddInURL);
+		If Not File.Exist() Then
+			SetAddInURL();
+		EndIf;
+	Else
+		SetAddInURL();
 	EndIf;
+	
+EndProcedure
+
+&AtServer
+Procedure SetAddInURL()
+	
+	AddInTemplate = FormAttributeToValue("Object").GetTemplate("GitFor1C");
+	AddInURL = PutToTempStorage(AddInTemplate, UUID);
 	
 EndProcedure
 
@@ -52,6 +64,63 @@ Procedure SetCurrentPage(Page)
 	Items.MainPages.CurrentPage = Page;
 	
 EndProcedure
+
+&AtClient
+Function GetKeywords()
+	
+	WordsRu = "
+		|и
+		|когда
+		|тогда
+		|затем
+		|дано
+		|функция
+		|функционал
+		|функциональность
+		|свойство
+		|предыстория
+		|контекст
+		|сценарий
+		|структура сценария
+		|к тому же
+		|примеры
+		|допустим
+		|пусть
+		|если
+		|иначеесли
+		|иначе
+		|то
+		|также
+		|но
+		|а
+		|";
+	
+	WordsEn = "
+		|feature
+		|functionality
+		|business need
+		|ability
+		|background
+		|scenario outline
+		|scenario
+		|examples
+		|given
+		|when
+		|then
+		|and
+		|but
+		|if
+		|elseif
+		|else
+		|";
+	
+	split = "
+		|";
+	
+	WordList = StrSplit(WordsRu + WordsEn, split, False);
+	Return JsonDump(WordList);
+	
+EndFunction
 
 #Region Json
 
@@ -401,8 +470,11 @@ EndFunction
 &AtClient
 Procedure EditorDocumentComplete(Item)
 	
-	Items.Editor.Document.defaultView.createVanessaDiffEditor("", "", "text");
-	Items.Editor.Document.defaultView.createVanessaEditor("", "text").setVisible(False);
+	view = Items.Editor.Document.defaultView;
+	VanessaGherkinProvider = view.VanessaGherkinProvider;
+	VanessaGherkinProvider.setKeywords(GetKeywords());
+	view.createVanessaDiffEditor("", "", "text");
+	view.createVanessaEditor("", "text").setVisible(False);
 	
 EndProcedure
 
@@ -762,7 +834,7 @@ EndProcedure
 
 &AtClient
 Procedure Signature(Command)
-
+	
 	OpenForm(GetFormName("Sign"), , ThisForm, New Uuid);
 	
 EndProcedure
