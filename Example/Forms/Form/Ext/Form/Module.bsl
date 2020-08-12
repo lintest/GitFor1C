@@ -1,6 +1,8 @@
 ﻿&AtClient
 Var AddInId, git Export;
 
+#Region FormEvents
+
 &AtServer
 Procedure OnCreateAtServer(Cancel, StandardProcessing)
 	
@@ -15,6 +17,191 @@ Procedure OnCreateAtServer(Cancel, StandardProcessing)
 	EndIf;
 	
 EndProcedure
+
+&AtClient
+Procedure OnOpen(Cancel)
+	
+	Items.MainPages.CurrentPage = Items.FolderPage;
+	AddInId = "_" + StrReplace(New UUID, "-", "");
+	DoAttachingAddIn(True);
+	
+EndProcedure
+
+&AtClient
+Procedure EditorDocumentComplete(Item)
+	
+	view = Items.Editor.Document.defaultView;
+	VanessaGherkinProvider = view.VanessaGherkinProvider;
+	VanessaGherkinProvider.setKeywords(GetKeywords());
+	view.createVanessaDiffEditor("", "", "text");
+	view.createVanessaEditor("", "text").setVisible(False);
+	
+EndProcedure
+
+#EndRegion
+
+#Region FormActions
+
+&AtClient
+Procedure AutoTest(Command)
+	
+	NewName = GetFormName("Test");
+	NewParams = New Structure("AddInId", AddInId);
+	TestForm = GetForm(NewName, NewParams, ThisForm, New Uuid);
+	TestForm.Test(AddInId);
+	
+EndProcedure
+
+&AtClient
+Procedure OpenFolder(Command)
+	
+	NotifyDescription = New NotifyDescription("OpenFolderEnd", ThisForm);
+	FileDialog = New FileDialog(FileDialogMode.ChooseDirectory);
+	FileDialog.Show(NotifyDescription);
+	
+EndProcedure
+
+&AtClient
+Procedure CloseFolder(Command)
+	
+	git.BeginCallingClose(New NotifyDescription);
+	SetCurrentPage(Items.FolderPage);
+	Repository = Undefined;
+	Directory = Undefined;
+	Title = Undefined;
+	
+EndProcedure
+
+&AtClient
+Procedure CloneRepository(Command)
+	
+	OpenForm(GetFormName("Clone"), , ThisForm, New Uuid);
+	
+EndProcedure
+
+&AtClient
+Procedure InitRepository(Command)
+	
+	NotifyDescription = New NotifyDescription("OpenRepositoryEnd", ThisForm);
+	git.BeginCallingInit(NotifyDescription, Directory);
+	
+EndProcedure
+
+&AtClient
+Procedure ViewSettings(Command)
+	
+	OpenForm(GetFormName("Settings"), , ThisForm, New Uuid);
+	
+EndProcedure
+
+&AtClient
+Procedure ViewHistory(Command)
+
+	OpenForm(GetFormName("History"), , ThisForm, New Uuid);
+	
+EndProcedure
+
+&AtClient
+Procedure ShowExplorer(Command)
+	
+	If Not IsBlankString(Directory) Then
+		SetCurrentPage(Items.ExplorerPage);
+		FillExplorerItems(Explorer.GetItems(), Directory);
+		CurrentItem = Items.Explorer;
+	EndIf;
+	
+EndProcedure
+
+&AtClient
+Procedure ShowSearch(Command)
+	
+	If Not IsBlankString(Directory) Then
+		SetCurrentPage(Items.SearchPage);
+		CurrentItem = Items.SearchText;
+	EndIf;
+	
+EndProcedure
+
+&AtClient
+Procedure ShowControl(Command)
+	
+	If Not IsBlankString(Directory) Then
+		SetCurrentPage(Items.StatusPage);
+		BeginCallingStatus();
+	EndIf;
+	
+EndProcedure
+
+#EndRegion
+
+#Region FormHandlers
+
+&AtClient
+Procedure OpenFolderEnd(SelectedFiles, AdditionalParameters) Export
+	
+	If SelectedFiles <> Undefined Then
+		VanessaEditor().setVisible(False);
+		EditableFilename = Undefined;
+		File = New File(SelectedFiles[0]);
+		Title = File.Name;
+		AutoTitle = True;
+		Directory = File.FullName;
+		NotifyDescription = New NotifyDescription("FindFolderEnd", ThisForm, File.FullName);
+		git.BeginCallingFind(NotifyDescription, SelectedFiles[0]);
+	EndIf;
+	
+EndProcedure
+
+&AtClient
+Procedure FindFolderEnd(ResultCall, ParametersCall, AdditionalParameters) Export
+	
+	JsonData = JsonLoad(ResultCall);
+	If JsonData.Success Then
+		File = New File(JsonData.result);
+		Repository = File.Path;
+		NotifyDescription = New NotifyDescription("OpenRepositoryEnd", ThisForm);
+		git.BeginCallingOpen(NotifyDescription, JsonData.Result);
+	Else
+		SetCurrentPage(Items.InitPage);
+	EndIf;
+	
+EndProcedure
+
+&AtClient
+Procedure OpenRepositoryEnd(ResultCall, ParametersCall, AdditionalParameters) Export
+	
+	JsonData = JsonLoad(ResultCall);
+	If JsonData.Success Then
+		BeginCallingStatus();
+	EndIf;
+	
+EndProcedure
+
+&AtClient
+Procedure EndOpenFile(ResultCall, ParametersCall, AdditionalParameters) Export
+	
+	BinaryData = ParametersCall[0];
+	Encoding = ParametersCall[1];
+	FileName = AdditionalParameters;
+	
+	If ResultCall = True Then
+		VanessaEditor().setValue("binary", "");
+		VanessaEditor().setReadOnly(True);
+	Else
+		TextReader = New TextReader;
+		TextReader.Open(BinaryData.OpenStreamForRead(), TextEncoding.UTF8);
+		VanessaEditor().setValue(TextReader.Read(), FileName);
+		VanessaEditor().setReadOnly(False);
+		EditableFilename = FileName;
+		EditableEncoding = Encoding;
+	EndIf;
+	VanessaEditor().setVisible(True);
+	
+EndProcedure
+
+#EndRegion
+
+#Region ServerTools
 
 &AtServer
 Procedure SetAddInURL()
@@ -43,27 +230,23 @@ Procedure LoadEditor()
 	
 EndProcedure
 
-&AtClient
-Procedure OnOpen(Cancel)
-	
-	Items.MainPages.CurrentPage = Items.FolderPage;
-	AddInId = "_" + StrReplace(New UUID, "-", "");
-	DoAttachingAddIn(True);
-	
-EndProcedure
+#EndRegion
+
+#Region ClientTools
 
 &AtClient
-Procedure SetCurrentPage(Page)
+Function VanessaEditor()
 	
-	ClearAllItems();
-	VanessaEditor().setVisible(False);
-	EditableFilename = Undefined;
-	Items.FormShowControl.Check = (Page = Items.StatusPage OR Page = Items.InitPage);
-	Items.FormShowExplorer.Check = (Page = Items.ExplorerPage);
-	Items.FormShowSearch.Check = (Page = Items.SearchPage);
-	Items.MainPages.CurrentPage = Page;
+	Return Items.Editor.Document.defaultView.VanessaEditor;
 	
-EndProcedure
+EndFunction
+
+&AtClient
+Function VADiffEditor()
+	
+	Return Items.Editor.Document.defaultView.VADiffEditor;
+	
+EndFunction
 
 &AtClient
 Function GetKeywords()
@@ -122,8 +305,6 @@ Function GetKeywords()
 	
 EndFunction
 
-#Region Json
-
 &AtClient
 Function JsonLoad(Json) Export
 	
@@ -145,430 +326,6 @@ Function JsonDump(Value) Export
 	
 EndFunction
 
-#EndRegion
-
-&AtClient
-Procedure DoAttachingAddIn(AdditionalParameters) Export
-	
-	NotifyDescription = New NotifyDescription("AfterAttachingAddIn", ThisForm, AdditionalParameters);
-	BeginAttachingAddIn(NotifyDescription, AddInURL, AddInId, AddInType.Native);
-	
-EndProcedure
-
-&AtClient
-Procedure AfterAttachingAddIn(Подключение, ДополнительныеПараметры) Экспорт
-	
-	Если Подключение Тогда
-		git = Новый("AddIn." + AddInId + ".GitFor1C");
-		NotifyDescription = New NotifyDescription("AfterGettingVersion", ThisForm);
-		git.BeginGettingVersion(NotifyDescription);
-	ИначеЕсли ДополнительныеПараметры = Истина Тогда
-		NotifyDescription = New NotifyDescription("DoAttachingAddIn", ЭтотОбъект, Ложь);
-		BeginInstallAddIn(NotifyDescription, AddInURL);
-	КонецЕсли;
-	
-EndProcedure
-
-&AtClient
-Procedure AfterGettingVersion(Value, AdditionalParameters) Экспорт
-	
-	Title = "GIT for 1C, version " + Value;
-	AutoTitle = False;
-	
-EndProcedure
-
-&AtClient
-Procedure EndCallingMessage(ResultCall, ParametersCall, AdditionalParameters) Export
-	
-	If Not IsBlankString(ResultCall) Then
-		Message(ResultCall);
-	EndIf
-	
-EndProcedure
-
-&AtClient
-Function GitMessageNotify()
-	
-	Return New NotifyDescription("EndCallingMessage", ThisForm);
-	
-EndFunction
-
-&AtClient
-Function GitStatusNotify()
-	
-	Return New NotifyDescription("EndCallingStatus", ThisForm);
-	
-EndFunction
-
-&AtClient
-Procedure AddStatusItems(JsonData, Key, Name)
-	
-	Var Array;
-	
-	If JsonData.Property(Key, Array) Then
-		ParentRow = Status.GetItems().Add();
-		ParentRow.Name = Name;
-		For Each Item In Array Do
-			If Item.Status = "IGNORED" Then
-				Continue;
-			EndIf;
-			Row = ParentRow.GetItems().Add();
-			FillPropertyValues(Row, Item);
-			Row.name = Item.new_name;
-			Row.size = Item.new_size;
-		EndDo;
-		Items.Status.Expand(ParentRow.GetID());
-		If ParentRow.GetItems().Count() = 0 Then
-			Status.GetItems().Delete(ParentRow);
-		EndIf
-	EndIf
-	
-EndProcedure
-
-&AtClient
-Procedure EndCallingStatus(ResultCall, ParametersCall, AdditionalParameters) Export
-	
-	JsonData = JsonLoad(ResultCall);
-	If JsonData.success Then
-		SetCurrentPage(Items.StatusPage);
-		If TypeOf(JsonData.result) = Type("Structure") Then
-			AddStatusItems(JsonData.result, "Index", "Staged Changes");
-			AddStatusItems(JsonData.result, "Work", "Changes");
-		EndIf;
-	ElsIf JsonData.error.code = 0 Then
-		SetCurrentPage(Items.InitPage);
-		Repository = Undefined;
-	EndIf;
-	
-EndProcedure
-
-&AtClient
-Procedure RepoCommit(Command)
-	
-	If IsBlankString(Message) Then
-		UserMessage = New UserMessage;
-		UserMessage.Text = "Fill the field ""Message""";
-		UserMessage.DataPath = "Message";
-		UserMessage.Message();
-	Else
-		NotifyDescription = New NotifyDescription("EndCallingCommit", ThisForm);
-		git.BeginCallingCommit(NotifyDescription, Message);
-	EndIf;
-	
-EndProcedure
-
-&AtClient
-Procedure EndCallingCommit(ResultCall, ParametersCall, AdditionalParameters) Export
-	
-	JsonData = JsonLoad(ResultCall);
-	If JsonData.success Then
-		ClearAllItems();
-		Message = Undefined;
-		git.BeginCallingStatus(GitStatusNotify());
-	ElsIf JsonData.error.code = 0 Then
-		SetCurrentPage(Items.InitPage);
-	Else
-		UserMessage = New UserMessage;
-		UserMessage.Text = JsonData.error.Message;
-		UserMessage.Message();
-	EndIf;
-	
-EndProcedure
-
-&AtClient
-Procedure RepoInfo(Command)
-	
-	git.BeginCallingInfo(GitMessageNotify(), "HEAD^{commit}");
-	
-EndProcedure
-
-&AtClient
-Procedure RepoHistory(Command)
-	
-	History.Clear();
-	TextJSON = git.history();
-	For Each Item In JsonLoad(TextJSON).result Do
-		Row = History.Add();
-		FillPropertyValues(Row, Item);
-		Row.Date = ToLocalTime('19700101' + Item.time);
-	EndDo;
-	
-EndProcedure
-
-&AtClient
-Function SelectedStatusJson()
-	
-	FileArray = New Array;
-	For Each Id In Items.Status.SelectedRows Do
-		Row = Status.FindByID(Id);
-		If Not IsBlankString(Row.new_name) Then
-			FileArray.Add(Row.new_name);
-		EndIf;
-	EndDo;
-	Return JsonDump(FileArray);
-	
-EndFunction
-
-&AtClient
-Function GetIndexNotify()
-	
-	Return New NotifyDescription("EndCallingIndex", ThisForm);
-	
-EndFunction
-
-&AtClient
-Procedure IndexAdd(Command)
-	
-	AppendArray = New Array;
-	RemoveArray = New Array;
-	For Each Id In Items.Status.SelectedRows Do
-		Row = Status.FindByID(Id);
-		If Not IsBlankString(Row.new_name) Then
-			If Row.status = "DELETED" Then
-				RemoveArray.Add(Row.new_name);
-			Else
-				AppendArray.Add(Row.new_name);
-			EndIf;
-		EndIf;
-	EndDo;
-	
-	git.BeginCallingAdd(GetIndexNotify(), JsonDump(AppendArray), JsonDump(RemoveArray));
-	
-EndProcedure
-
-&AtClient
-Procedure IndexReset(Команда)
-	
-	git.BeginCallingReset(GetIndexNotify(), SelectedStatusJson());
-	
-EndProcedure
-
-&AtClient
-Procedure IndexDiscard(Command)
-	
-	git.BeginCallingDiscard(GetIndexNotify(), SelectedStatusJson());
-	
-EndProcedure
-
-&AtClient
-Procedure EndCallingIndex(ResultCall, ParametersCall, AdditionalParameters) Export
-	
-	git.BeginCallingStatus(GitStatusNotify());
-	
-EndProcedure
-
-&AtClient
-Procedure RepoTree(Command)
-	
-	Tree.Clear();
-	TextJSON = git.tree();
-	For Each Item In JsonLoad(TextJSON).result Do
-		Row = Tree.Add();
-		FillPropertyValues(Row, Item);
-	EndDo;
-	
-EndProcedure
-
-&AtClient
-Procedure RepoDiff1(Command)
-	RepoDiff("INDEX", "WORK")
-EndProcedure
-
-&AtClient
-Procedure RepoDiff2(Command)
-	RepoDiff("HEAD", "INDEX")
-EndProcedure
-
-&AtClient
-Procedure RepoDiff3(Command)
-	RepoDiff("HEAD", "WORK")
-EndProcedure
-
-&AtClient
-Procedure RepoDiff(s1, s2)
-	
-	Diff.Clear();
-	TextJSON = git.diff(s1, s2);
-	result = JsonLoad(TextJSON).result;
-	If TypeOf(result) = Type("Array") Then
-		For Each Item In result Do
-			Row = Diff.Add();
-			FillPropertyValues(Row, Item);
-		EndDo;
-	EndIf;
-	
-EndProcedure
-
-&AtClient
-Function ReadBlob(id)
-	
-	If IsBlankString(id) Then
-		Return "";
-	Else
-		Encoding = Undefined;
-		BinaryData = git.blob(id, Encoding);
-		If Encoding < 0 Then
-			Return "binary";
-		Else
-			If TypeOf(BinaryData) = Type("BinaryData") Then
-				TextReader = New TextReader;
-				TextReader.Open(BinaryData.OpenStreamForRead(), TextEncoding.UTF8);
-				Return TextReader.Read();
-			Else
-				Return "";
-			EndIf;
-		EndIf;
-	EndIf;
-	
-EndFunction
-
-&AtClient
-Function OpenFile(FileName)
-	
-	BinaryData = New BinaryData(FileName);
-	NotifyDescription = New NotifyDescription("EndOpenFile", ThisForm, FileName);
-	git.BeginCallingIsBinary(NotifyDescription, BinaryData);
-	
-EndFunction
-
-&AtClient
-Procedure EndOpenFile(ResultCall, ParametersCall, AdditionalParameters) Export
-	
-	BinaryData = ParametersCall[0];
-	Encoding = ParametersCall[1];
-	FileName = AdditionalParameters;
-	
-	If ResultCall = True Then
-		VanessaEditor().setValue("binary", "");
-		VanessaEditor().setReadOnly(True);
-	Else
-		TextReader = New TextReader;
-		TextReader.Open(BinaryData.OpenStreamForRead(), TextEncoding.UTF8);
-		VanessaEditor().setValue(TextReader.Read(), FileName);
-		VanessaEditor().setReadOnly(False);
-		EditableFilename = FileName;
-		EditableEncoding = Encoding;
-	EndIf;
-	VanessaEditor().setVisible(True);
-	
-EndProcedure
-
-&AtClient
-Function VanessaEditor()
-	
-	Return Items.Editor.Document.defaultView.VanessaEditor;
-	
-EndFunction
-
-&AtClient
-Function VADiffEditor()
-	
-	Return Items.Editor.Document.defaultView.VADiffEditor;
-	
-EndFunction
-
-&AtClient
-Procedure EditorDocumentComplete(Item)
-	
-	view = Items.Editor.Document.defaultView;
-	VanessaGherkinProvider = view.VanessaGherkinProvider;
-	VanessaGherkinProvider.setKeywords(GetKeywords());
-	view.createVanessaDiffEditor("", "", "text");
-	view.createVanessaEditor("", "text").setVisible(False);
-	
-EndProcedure
-
-&AtClient
-Function NewFileText(Row)
-	
-	If IsBlankString(Row.new_id) Then
-		id = git.file(Row.new_name);
-	Else
-		id = Row.new_id;
-	EndIf;
-	
-	Return ReadBlob(id);
-	
-	
-EndFunction
-
-&AtClient
-Function OldFileText(Row)
-	
-	If IsBlankString(Row.old_id) Then
-		Return "";
-	Else
-		Return ReadBlob(Row.old_id);
-	EndIf;
-	
-EndFunction
-
-&AtClient
-Procedure StatusOnActivateRow(Item)
-	
-	Row = Items.Status.CurrentData;
-	If Row = Undefined Then
-		Return;
-	EndIf;
-	
-	If IsBlankString(Row.status) Then
-		VanessaEditor().setVisible(False);
-		EditableFilename = Undefined;
-		Return;
-	EndIf;
-	
-	If Row.Status = "DELETED" Then
-		VanessaEditor = VanessaEditor();
-		VanessaEditor.setValue(OldFileText(Row), Row.old_name);
-		VanessaEditor.setVisible(True);
-		VanessaEditor.setReadOnly(True);
-	Else
-		NewText = NewFileText(Row);
-		DiffEditor = VADiffEditor();
-		DiffEditor.setValue(OldFileText(Row), Row.old_name, NewText, Row.new_name);
-		DiffEditor.setReadOnly(Not IsBlankString(Row.new_id) OR NewText = "binary");
-		DiffEditor.setVisible(True);
-	EndIf;
-	
-EndProcedure
-
-&AtClient
-Procedure OpenBlob(Команда)
-	
-	Row = Items.Status.CurrentData;
-	If Row = Undefined Then
-		Return;
-	ElsIf Row.Status = "DELETED" Then
-		NotifyDescription = New NotifyDescription("EndOpenBlob", ThisForm, Row.old_name);
-		git.BeginCallingBlob(NotifyDescription, Row.old_id);
-	ElsIf Not IsBlankString(Row.new_id) Then
-		NotifyDescription = New NotifyDescription("EndOpenBlob", ThisForm, Row.new_name);
-		git.BeginCallingBlob(NotifyDescription, Row.new_id);
-	Else
-		OpenFile(Repository + Row.new_name);
-	EndIf;
-	
-EndProcedure
-
-&AtClient
-Procedure EndOpenBlob(ResultCall, ParametersCall, AdditionalParameters) Export
-	
-	BinaryData = ResultCall;
-	Encoding = ParametersCall[1];
-	FileName = AdditionalParameters;
-	
-	If Encoding < 0 Then
-		VanessaEditor().setValue("binary", "");
-	Else
-		TextReader = New TextReader;
-		TextReader.Open(BinaryData.OpenStreamForRead(), TextEncoding.UTF8);
-		VanessaEditor().setValue(TextReader.Read(), FileName);
-	EndIf;
-	VanessaEditor().setReadOnly(True);
-	VanessaEditor().setVisible(True);
-	
-EndProcedure
-
 &AtClient
 Function GetFormName(Name)
 	
@@ -579,95 +336,15 @@ Function GetFormName(Name)
 EndFunction
 
 &AtClient
-Procedure AutoTest(Command)
+Procedure SetCurrentPage(Page)
 	
-	NewName = GetFormName("Test");
-	NewParams = New Structure("AddInId", AddInId);
-	TestForm = GetForm(NewName, NewParams, ThisForm, New Uuid);
-	TestForm.Test(AddInId);
-	
-EndProcedure
-
-&AtClient
-Procedure OpenFolder(Command)
-	
-	NotifyDescription = New NotifyDescription("OpenFolderEnd", ThisForm);
-	FileDialog = New FileDialog(FileDialogMode.ChooseDirectory);
-	FileDialog.Show(NotifyDescription);
-	
-EndProcedure
-
-&AtClient
-Procedure OpenFolderEnd(SelectedFiles, AdditionalParameters) Export
-	
-	If SelectedFiles <> Undefined Then
-		VanessaEditor().setVisible(False);
-		EditableFilename = Undefined;
-		File = New File(SelectedFiles[0]);
-		Title = File.Name;
-		AutoTitle = True;
-		Directory = File.FullName;
-		NotifyDescription = New NotifyDescription("FindFolderEnd", ThisForm, File.FullName);
-		git.BeginCallingFind(NotifyDescription, SelectedFiles[0]);
-	EndIf;
-	
-EndProcedure
-
-&AtClient
-Procedure FindFolderEnd(ResultCall, ParametersCall, AdditionalParameters) Export
-	
-	JsonData = JsonLoad(ResultCall);
-	If JsonData.Success Then
-		File = New File(JsonData.result);
-		Repository = File.Path;
-		NotifyDescription = New NotifyDescription("OpenRepositoryEnd", ThisForm);
-		git.BeginCallingOpen(NotifyDescription, JsonData.Result);
-	Else
-		SetCurrentPage(Items.InitPage);
-	EndIf;
-	
-EndProcedure
-
-&AtClient
-Procedure OpenRepositoryEnd(ResultCall, ParametersCall, AdditionalParameters) Export
-	
-	JsonData = JsonLoad(ResultCall);
-	If JsonData.Success Then
-		git.BeginCallingStatus(GitStatusNotify());
-	EndIf;
-	
-EndProcedure
-
-&AtClient
-Procedure CloseFolder(Command)
-	
-	git.BeginCallingClose(New NotifyDescription);
-	SetCurrentPage(Items.FolderPage);
-	Repository = Undefined;
-	Directory = Undefined;
-	Title = Undefined;
-	
-EndProcedure
-
-&AtClient
-Procedure RefreshStatus(Command)
-	
-	git.BeginCallingStatus(GitStatusNotify());
-	
-EndProcedure
-
-&AtClient
-Procedure CloneRepository(Command)
-	
-	OpenForm(GetFormName("Clone"), , ThisForm, New Uuid);
-	
-EndProcedure
-
-&AtClient
-Procedure InitializeRepo(Command)
-	
-	NotifyDescription = New NotifyDescription("OpenRepositoryEnd", ThisForm);
-	git.BeginCallingInit(NotifyDescription, Directory);
+	ClearAllItems();
+	VanessaEditor().setVisible(False);
+	EditableFilename = Undefined;
+	Items.FormShowControl.Check = (Page = Items.StatusPage OR Page = Items.InitPage);
+	Items.FormShowExplorer.Check = (Page = Items.ExplorerPage);
+	Items.FormShowSearch.Check = (Page = Items.SearchPage);
+	Items.MainPages.CurrentPage = Page;
 	
 EndProcedure
 
@@ -683,45 +360,74 @@ Procedure ClearAllItems()
 EndProcedure
 
 &AtClient
-Procedure ShowExplorer(Command)
+Function BeginOpenFile(FileName)
 	
-	If Not IsBlankString(Directory) Then
-		SetCurrentPage(Items.ExplorerPage);
-		FillExplorerItems(Explorer.GetItems(), Directory);
-		CurrentItem = Items.Explorer;
+	BinaryData = New BinaryData(FileName);
+	NotifyDescription = New NotifyDescription("EndOpenFile", ThisForm, FileName);
+	git.BeginCallingIsBinary(NotifyDescription, BinaryData);
+	
+EndFunction
+
+#EndRegion
+
+#Region AttachAddIn
+
+&AtClient
+Procedure DoAttachingAddIn(AdditionalParameters) Export
+	
+	NotifyDescription = New NotifyDescription("AfterAttachingAddIn", ThisForm, AdditionalParameters);
+	BeginAttachingAddIn(NotifyDescription, AddInURL, AddInId, AddInType.Native);
+	
+EndProcedure
+
+&AtClient
+Procedure AfterAttachingAddIn(Connected, AdditionalParameters) Export
+	
+	If Connected Then
+		git = New("AddIn." + AddInId + ".GitFor1C");
+		NotifyDescription = New NotifyDescription("AfterGettingVersion", ThisForm);
+		git.BeginGettingVersion(NotifyDescription);
+	ElsIf AdditionalParameters = True Then
+		NotifyDescription = New NotifyDescription("DoAttachingAddIn", ThisForm, False);
+		BeginInstallAddIn(NotifyDescription, AddInURL);
 	EndIf;
 	
 EndProcedure
 
 &AtClient
-Procedure ShowSearch(Command)
+Procedure AfterGettingVersion(Value, AdditionalParameters) Экспорт
 	
-	If Not IsBlankString(Directory) Then
-		SetCurrentPage(Items.SearchPage);
-		CurrentItem = Items.SearchText;
-	EndIf;
+	Title = "GIT for 1C, version " + Value;
+	AutoTitle = False;
+	
+EndProcedure
+
+#EndRegion
+
+#Region FileExplorer
+
+#Region FileExplorer_Events
+
+&AtClient
+Procedure ExplorerOnActivateRow(Item)
+	
+	AttachIdleHandler("ExplorerReadFile", 0.1, True);
 	
 EndProcedure
 
 &AtClient
-Procedure ShowControl(Command)
+Procedure ExplorerBeforeExpand(Item, Row, Cancel)
 	
-	If Not IsBlankString(Directory) Then
-		SetCurrentPage(Items.StatusPage);
-		git.BeginCallingStatus(GitStatusNotify());
-		CurrentItem = Items.Status;
+	ParentRow = Explorer.FindByID(Row);
+	If ParentRow <> Undefined Then
+		FillExplorerItems(ParentRow.GetItems(), ParentRow.Fullname, ParentRow);
 	EndIf;
 	
 EndProcedure
 
-&AtClient
-Procedure FillExplorerItems(Items, Directory, Parent = Undefined)
-	
-	AdditionalParameters = New Structure("Items, Parent", Items, Parent);
-	NotifyDescription = New NotifyDescription("EndFindingFiles", ThisForm, AdditionalParameters);
-	BeginFindingFiles(NotifyDescription, Directory, "*.*", False);
-	
-EndProcedure
+#EndRegion
+
+#Region FileExplorer_Handlers
 
 &AtClient
 Procedure EndFindingFiles(FilesFound, AdditionalParameters) Export
@@ -759,23 +465,6 @@ Procedure EndFindingFiles(FilesFound, AdditionalParameters) Export
 EndProcedure
 
 &AtClient
-Procedure ExplorerBeforeExpand(Item, Row, Cancel)
-	
-	ParentRow = Explorer.FindByID(Row);
-	If ParentRow <> Undefined Then
-		FillExplorerItems(ParentRow.GetItems(), ParentRow.Fullname, ParentRow);
-	EndIf;
-	
-EndProcedure
-
-&AtClient
-Procedure ExplorerOnActivateRow(Item)
-	
-	AttachIdleHandler("ExplorerReadFile", 0.1, True);
-	
-EndProcedure
-
-&AtClient
 Procedure ExplorerReadFile() Export
 	
 	Data = Items.Explorer.CurrentData;
@@ -784,22 +473,57 @@ Procedure ExplorerReadFile() Export
 			VanessaEditor().setVisible(False);
 			EditableFilename = Undefined;
 		Else
-			OpenFile(Data.fullname);
+			BeginOpenFile(Data.fullname);
 		EndIf;
 	EndIf;
 	
 EndProcedure
 
+#EndRegion
+
+#Region FileExplorer_Tools
+
+&AtClient
+Procedure FillExplorerItems(Items, Directory, Parent = Undefined)
+	
+	AdditionalParameters = New Structure("Items, Parent", Items, Parent);
+	NotifyDescription = New NotifyDescription("EndFindingFiles", ThisForm, AdditionalParameters);
+	BeginFindingFiles(NotifyDescription, Directory, "*.*", False);
+	
+EndProcedure
+
+#EndRegion
+
+#EndRegion
+
+#Region FileSearching
+
+#Region FileSearching_Events
+
 &AtClient
 Procedure SearchTextOnChange(Item)
 	
-	Files.GetItems().Clear();
-	If Not IsBlankString(SearchText) Then
-		NotifyDescription = New NotifyDescription("EndSearchText", ThisForm);
-		git.BeginCallingFindFiles(NotifyDescription, Directory, "*.*", SearchText, True);
-	EndIf;
+	BeginSearchText();
 	
 EndProcedure
+
+&AtClient
+Procedure SearchFiles(Command)
+
+	BeginSearchText();
+	
+EndProcedure
+
+&AtClient
+Procedure FilesOnActivateRow(Item)
+	
+	AttachIdleHandler("SearchReadFile", 0.1, True);
+	
+EndProcedure
+
+#EndRegion
+
+#Region FileSearching_Handlers
 
 &AtClient
 Procedure EndSearchText(ResultCall, ParametersCall, AdditionalParameters) Export
@@ -815,10 +539,18 @@ Procedure EndSearchText(ResultCall, ParametersCall, AdditionalParameters) Export
 	
 EndProcedure
 
+#EndRegion
+
+#Region FileSearching_Tools
+
 &AtClient
-Procedure FilesOnActivateRow(Item)
+Procedure BeginSearchText()
 	
-	AttachIdleHandler("SearchReadFile", 0.1, True);
+	Files.GetItems().Clear();
+	If Not IsBlankString(SearchText) Then
+		NotifyDescription = New NotifyDescription("EndSearchText", ThisForm);
+		git.BeginCallingFindFiles(NotifyDescription, Directory, "*.*", SearchText, True);
+	EndIf;
 	
 EndProcedure
 
@@ -827,14 +559,332 @@ Procedure SearchReadFile() Export
 	
 	Data = Items.Files.CurrentData;
 	If Data <> Undefined Then
-		OpenFile(Data.path);
+		BeginOpenFile(Data.path);
+	EndIf;
+	
+EndProcedure
+
+#EndRegion
+
+#EndRegion
+
+#Region SourceControl
+
+#Region SourceControl_Actions
+
+&AtClient
+Procedure IndexRefresh(Command)
+	
+	BeginCallingStatus();
+	
+EndProcedure
+
+&AtClient
+Procedure IndexAdd(Command)
+	
+	AppendArray = New Array;
+	RemoveArray = New Array;
+	For Each Id In Items.Status.SelectedRows Do
+		Row = Status.FindByID(Id);
+		If Not IsBlankString(Row.new_name) Then
+			If Row.status = "DELETED" Then
+				RemoveArray.Add(Row.new_name);
+			Else
+				AppendArray.Add(Row.new_name);
+			EndIf;
+		EndIf;
+	EndDo;
+	
+	git.BeginCallingAdd(GetIndexNotify(), JsonDump(AppendArray), JsonDump(RemoveArray));
+	
+EndProcedure
+
+&AtClient
+Procedure IndexReset(Command)
+	
+	git.BeginCallingReset(GetIndexNotify(), SelectedStatusJson());
+	
+EndProcedure
+
+&AtClient
+Procedure IndexDiscard(Command)
+	
+	NotifyDescription = New NotifyDescription("BeforeCallingDiscard", ThisForm);
+	MessageText = "Are you sure you want to discard changes?";
+	ShowQueryBox(NotifyDescription, MessageText, QuestionDialogMode.OKCancel, 10);
+	
+EndProcedure
+
+&AtClient
+Procedure IndexOpen(Command)
+	
+	Row = Items.Status.CurrentData;
+	If Row = Undefined Then
+		Return;
+	ElsIf Row.Status = "DELETED" Then
+		NotifyDescription = New NotifyDescription("EndIndexOpen", ThisForm, Row.old_name);
+		git.BeginCallingBlob(NotifyDescription, Row.old_id);
+	ElsIf Not IsBlankString(Row.new_id) Then
+		NotifyDescription = New NotifyDescription("EndIndexOpen", ThisForm, Row.new_name);
+		git.BeginCallingBlob(NotifyDescription, Row.new_id);
+	Else
+		BeginOpenFile(Repository + Row.new_name);
 	EndIf;
 	
 EndProcedure
 
 &AtClient
-Procedure Signature(Command)
+Procedure RepoCommit(Command)
 	
-	OpenForm(GetFormName("Sign"), , ThisForm, New Uuid);
+	If IsBlankString(Message) Then
+		UserMessage = New UserMessage;
+		UserMessage.Text = "Fill the field ""Message""";
+		UserMessage.DataPath = "Message";
+		UserMessage.Message();
+	Else
+		NotifyDescription = New NotifyDescription("BeforeCallingCommit", ThisForm);
+		git.BeginCallingStatus(NotifyDescription);
+	EndIf;
 	
 EndProcedure
+
+#EndRegion
+
+#Region SourceControl_Events
+
+&AtClient
+Procedure StatusOnActivateRow(Item)
+	
+	Row = Items.Status.CurrentData;
+	If Row = Undefined Then
+		Return;
+	EndIf;
+	
+	If IsBlankString(Row.status) Then
+		VanessaEditor().setVisible(False);
+		EditableFilename = Undefined;
+		Return;
+	EndIf;
+	
+	If Row.Status = "DELETED" Then
+		VanessaEditor = VanessaEditor();
+		VanessaEditor.setValue(OldFileText(Row), Row.old_name);
+		VanessaEditor.setVisible(True);
+		VanessaEditor.setReadOnly(True);
+	Else
+		NewText = NewFileText(Row);
+		DiffEditor = VADiffEditor();
+		DiffEditor.setValue(OldFileText(Row), Row.old_name, NewText, Row.new_name);
+		DiffEditor.setReadOnly(Not IsBlankString(Row.new_id) OR NewText = "binary");
+		DiffEditor.setVisible(True);
+	EndIf;
+	
+EndProcedure
+
+#EndRegion
+
+#Region SourceControl_Handlers
+
+&AtClient
+Procedure BeforeCallingDiscard(QuestionResult, AdditionalParameters) Export
+	
+	If QuestionResult = DialogReturnCode.OK Then
+		git.BeginCallingDiscard(GetIndexNotify(), SelectedStatusJson());
+	EndIf;
+	
+EndProcedure
+
+&AtClient
+Procedure BeforeCallingCommit(ResultCall, ParametersCall, AdditionalParameters) Export
+	
+	Var Array;
+	
+	JsonData = JsonLoad(ResultCall);
+	If JsonData.success Then
+		If TypeOf(JsonData.result) = Type("Structure") Then
+			If JsonData.result.Property("Index", Array) And TypeOf(Array) = Type("Array") Then
+				For Each Item In Array Do
+					NotifyDescription = New NotifyDescription("EndCallingCommit", ThisForm);
+					git.BeginCallingCommit(NotifyDescription, Message);
+					Return;
+				EndDo;
+			EndIf;
+		EndIf;
+	EndIf;
+	
+	MessageText = "There are no staged changes to commit.";
+	ShowMessageBox(New NotifyDescription, MessageText, 10, );
+	
+EndProcedure
+
+&AtClient
+Procedure EndCallingCommit(ResultCall, ParametersCall, AdditionalParameters) Export
+	
+	JsonData = JsonLoad(ResultCall);
+	If JsonData.success Then
+		ClearAllItems();
+		Message = Undefined;
+		BeginCallingStatus();
+	ElsIf JsonData.error.code = 0 Then
+		SetCurrentPage(Items.InitPage);
+	Else
+		UserMessage = New UserMessage;
+		UserMessage.Text = JsonData.error.Message;
+		UserMessage.Message();
+	EndIf;
+	
+EndProcedure
+
+&AtClient
+Procedure EndCallingStatus(ResultCall, ParametersCall, AdditionalParameters) Export
+	
+	JsonData = JsonLoad(ResultCall);
+	If JsonData.success Then
+		SetCurrentPage(Items.StatusPage);
+		CurrentItem = Items.Status;
+		If TypeOf(JsonData.result) = Type("Structure") Then
+			AddStatusItems(JsonData.result, "Index", "Staged Changes");
+			AddStatusItems(JsonData.result, "Work", "Changes");
+		EndIf;
+	ElsIf JsonData.error.code = 0 Then
+		SetCurrentPage(Items.InitPage);
+		Repository = Undefined;
+	EndIf;
+	
+EndProcedure
+
+&AtClient
+Procedure EndCallingIndex(ResultCall, ParametersCall, AdditionalParameters) Export
+	
+	BeginCallingStatus();
+	
+EndProcedure
+
+&AtClient
+Procedure EndIndexOpen(ResultCall, ParametersCall, AdditionalParameters) Export
+	
+	BinaryData = ResultCall;
+	Encoding = ParametersCall[1];
+	FileName = AdditionalParameters;
+	
+	If Encoding < 0 Then
+		VanessaEditor().setValue("binary", "");
+	Else
+		TextReader = New TextReader;
+		TextReader.Open(BinaryData.OpenStreamForRead(), TextEncoding.UTF8);
+		VanessaEditor().setValue(TextReader.Read(), FileName);
+	EndIf;
+	VanessaEditor().setReadOnly(True);
+	VanessaEditor().setVisible(True);
+	
+EndProcedure
+
+#EndRegion
+
+#Region SourceControl_Tools
+
+&AtClient
+Function BeginCallingStatus()
+	
+	NotifyDescription = New NotifyDescription("EndCallingStatus", ThisForm);
+	git.BeginCallingStatus(NotifyDescription);
+	
+EndFunction
+
+&AtClient
+Procedure AddStatusItems(JsonData, Key, Name)
+	
+	Var Array;
+	
+	If JsonData.Property(Key, Array) Then
+		ParentRow = Status.GetItems().Add();
+		ParentRow.Name = Name;
+		For Each Item In Array Do
+			If Item.Status = "IGNORED" Then
+				Continue;
+			EndIf;
+			Row = ParentRow.GetItems().Add();
+			FillPropertyValues(Row, Item);
+			Row.name = Item.new_name;
+			Row.size = Item.new_size;
+		EndDo;
+		Items.Status.Expand(ParentRow.GetID());
+		If ParentRow.GetItems().Count() = 0 Then
+			Status.GetItems().Delete(ParentRow);
+		EndIf
+	EndIf
+	
+EndProcedure
+
+&AtClient
+Function SelectedStatusJson()
+	
+	FileArray = New Array;
+	For Each Id In Items.Status.SelectedRows Do
+		Row = Status.FindByID(Id);
+		If Not IsBlankString(Row.new_name) Then
+			FileArray.Add(Row.new_name);
+		EndIf;
+	EndDo;
+	Return JsonDump(FileArray);
+	
+EndFunction
+
+&AtClient
+Function GetIndexNotify()
+	
+	Return New NotifyDescription("EndCallingIndex", ThisForm);
+	
+EndFunction
+
+&AtClient
+Function ReadIndexBlob(id)
+	
+	If IsBlankString(id) Then
+		Return "";
+	Else
+		Encoding = Undefined;
+		BinaryData = git.blob(id, Encoding);
+		If Encoding < 0 Then
+			Return "binary";
+		Else
+			If TypeOf(BinaryData) = Type("BinaryData") Then
+				TextReader = New TextReader;
+				TextReader.Open(BinaryData.OpenStreamForRead(), TextEncoding.UTF8);
+				Return TextReader.Read();
+			Else
+				Return "";
+			EndIf;
+		EndIf;
+	EndIf;
+	
+EndFunction
+
+&AtClient
+Function NewFileText(Row)
+	
+	If IsBlankString(Row.new_id) Then
+		id = git.file(Row.new_name);
+	Else
+		id = Row.new_id;
+	EndIf;
+	
+	Return ReadIndexBlob(id);
+	
+	
+EndFunction
+
+&AtClient
+Function OldFileText(Row)
+	
+	If IsBlankString(Row.old_id) Then
+		Return "";
+	Else
+		Return ReadIndexBlob(Row.old_id);
+	EndIf;
+	
+EndFunction
+
+#EndRegion
+
+#EndRegion
