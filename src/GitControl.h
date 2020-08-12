@@ -13,6 +13,7 @@ private:
 	enum Props
 	{
 		eVersion = 0,
+		eRemoteList,
 		eSignature,
 	};
 

@@ -52,6 +52,7 @@ public:
 	std::wstring diff(const std::wstring& s1, const std::wstring& s2);
 	std::wstring file(const std::wstring& path, bool full);
 	std::wstring tree(const std::wstring& msg);
+	std::wstring remoteList();
 	std::wstring signature();
 	std::wstring status();
 };

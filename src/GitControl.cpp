@@ -20,6 +20,7 @@ const wchar_t* GitControl::m_ExtensionName = L"GitFor1C";
 const std::vector<AddInBase::Alias> GitControl::m_PropList{
 	Alias(eVersion   , false , L"Version"   , L"Версия"),
 	Alias(eSignature , false , L"Signature" , L"Подпись"),
+	Alias(eRemoteList, false , L"RemoteList" , L"RemoteList"),
 };
 
 const std::vector<AddInBase::Alias> GitControl::m_MethList{
@@ -56,6 +57,8 @@ bool GitControl::GetPropVal(const long lPropNum, tVariant* pvarPropVal)
 	switch (lPropNum) {
 	case eVersion:
 		return VA(pvarPropVal) << MB2WC(VER_FILE_VERSION_STR);
+	case eRemoteList:
+		return VA(pvarPropVal) << m_manager.remoteList();
 	case eSignature:
 		return VA(pvarPropVal) << m_manager.signature();
 	default:

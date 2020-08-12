@@ -44,6 +44,7 @@ AUTO_GIT(GIT_signature, git_signature, git_signature_free)
 AUTO_GIT(GIT_revwalk, git_revwalk, git_revwalk_free)
 AUTO_GIT(GIT_commit, git_commit, git_commit_free)
 AUTO_GIT(GIT_object, git_object, git_object_free)
+AUTO_GIT(GIT_remote, git_remote, git_remote_free)
 AUTO_GIT(GIT_index, git_index, git_index_free)
 AUTO_GIT(GIT_blob, git_blob, git_blob_free)
 AUTO_GIT(GIT_diff, git_diff, git_diff_free)
@@ -295,12 +296,29 @@ bool GitManager::setCommitter(const std::wstring& name, const std::wstring& emai
 	return true;
 }
 
+std::wstring GitManager::remoteList()
+{
+	CHECK_REPO();
+	git_strarray strarray;
+	ASSERT(git_remote_list(&strarray, m_repo));
+	nlohmann::json json;
+	for (size_t i = 0; i < strarray.count; i++) {
+		GIT_remote remote;
+		ASSERT(git_remote_lookup(&remote, m_repo, strarray.strings[i]));
+		nlohmann::json j;
+		j["name"] = strarray.strings[i];
+		j["url"] = git_remote_url(remote);
+		json.push_back(j);
+	}
+	git_strarray_free(&strarray);
+	return success(json);
+}
+
 std::wstring GitManager::signature()
 {
 	CHECK_REPO();
 	git_signature* sig = nullptr;
 	ASSERT(git_signature_default(&sig, m_repo));
-
 	nlohmann::json j;
 	j["name"] = sig->name;
 	j["email"] = sig->email;
