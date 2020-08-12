@@ -1,0 +1,180 @@
+body, div, form {
+    margin: 0;
+    padding: 0
+}
+
+html {
+    text-align: left
+}
+
+body {
+    color: #4b4b4b;
+    background-color: #fff;
+    font-family: Almarai, Arial, sans-serif;
+    font-size: 10pt;
+    cursor: default;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    overflow: hidden;
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    -ms-user-select: none;
+    -moz-user-select: none;
+    -webkit-user-select: none
+}
+
+.ico {
+    fill: #4b4b4b;
+    display: inline-flex;
+    flex: 0 0 auto;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    width: 16px;
+    height: 16px
+}
+
+.iHoverRound:not(.disabled):HOVER:before {
+    content: '';
+    border-radius: 50%;
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    opacity: .15;
+    box-shadow: 0 0 0 1em inset
+}
+
+.absolute {
+    position: absolute
+}
+
+@keyframes loading {
+    0% {
+        -webkit-transform: rotate(0);
+        -ms-transform: rotate(0);
+        transform: rotate(0)
+    }
+    to {
+        -webkit-transform: rotate(360deg);
+        -ms-transform: rotate(360deg);
+        transform: rotate(360deg)
+    }
+}
+
+#openedCell {
+    display: flex;
+    fill: #4b4b4b;
+    z-index: 0
+}
+
+.opened {
+    background-color: #f2f2f2;
+    position: relative;
+    overflow: hidden
+}
+
+.openedHor .opened {
+    display: inherit
+}
+
+.openedItemTitle {
+    margin: 0 5px
+}
+
+.openedItem {
+    padding: 0 5px;
+    display: inherit;
+    flex: 1 1 auto;
+    align-items: center;
+    border-width: 0 1px;
+    border-style: solid;
+    border-color: #a0a0a0;
+    color: #333;
+    background-color: #f2f2f2;
+    position: relative;
+    line-height: 1.2em;
+    z-index: 0
+}
+
+.openedHor .openedItem {
+    margin: 0 0 0 -1px
+}
+
+.openedItem>div:not(.openedClose):not(.openedMenu) {
+    padding: 4px 0
+}
+
+.openedHor .openedItemTitle {
+    flex: 1 1 auto
+}
+
+.openedClose {
+    background: inherit;
+    margin: -2px
+}
+
+.openedItem:not(.openedItemNumbered) .openedItemNumber {
+    display: none
+}
+
+.openedItemNumber {
+    flex: 6 0 auto;
+    max-width: calc(100% - 24px);
+    padding: 5px
+}
+
+.select.openedItem {
+    background-color: #fff
+}
+
+.select.openedItem:before {
+    content: '';
+    background: #009646;
+    position: absolute
+}
+
+.openedHor .select.openedItem:before {
+    height: 2px;
+    right: 3px;
+    bottom: 2px;
+    left: 3px
+}
+
+.openedItem {
+    transition: width .1s;
+    -webkit-transition: width .1s;
+    -moz-transition: width .1s;
+    -ms-transition: width .1s
+}
+
+.openedAnimated .openedBox {
+    transition: padding .1s linear, left .1s linear, right .1s linear, top .1s linear;
+    -webkit-transition: padding .1s linear, left .1s linear, right .1s linear, top .1s linear;
+    -moz-transition: padding .1s linear, left .1s linear, right .1s linear, top .1s linear;
+    -ms-transition: padding .1s linear, left .1s linear, right .1s linear, top .1s linear
+}
+
+.flex {
+    display: flex
+}
+
+.flex-1-1-100 {
+    flex: 1 1 100%
+}
+
+.dots {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis
+}
+
+.panelsBorder {
+    border-width: 1px;
+    border-style: solid;
+    border-color: rgba(0, 0, 0, .4)
+}
