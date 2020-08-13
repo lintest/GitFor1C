@@ -1,10 +1,10 @@
-body, div, form {
-    margin: 0;
-    padding: 0
-}
-
 html {
     text-align: left
+}
+
+body {
+    margin: 0;
+    padding: 0;
 }
 
 body {
@@ -26,67 +26,43 @@ body {
     -webkit-user-select: none
 }
 
-.ico {
-    fill: #4b4b4b;
-    display: inline-flex;
-    flex: 0 0 auto;
-    justify-content: center;
-    align-items: center;
-    position: relative;
-    width: 16px;
-    height: 16px
+#VanessaPageContainer {
+    position: absolute; 
+    bottom: 0; 
+    left: 0; 
+    top: 2em; 
+    width: 100%; 
 }
 
-.iHoverRound:not(.disabled):HOVER:before {
-    content: '';
-    border-radius: 50%;
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    opacity: .15;
-    box-shadow: 0 0 0 1em inset
-}
-
-.absolute {
-    position: absolute
-}
-
-@keyframes loading {
-    0% {
-        -webkit-transform: rotate(0);
-        -ms-transform: rotate(0);
-        transform: rotate(0)
-    }
-    to {
-        -webkit-transform: rotate(360deg);
-        -ms-transform: rotate(360deg);
-        transform: rotate(360deg)
-    }
-}
-
-#openedCell {
+#VanessaTabsContainer {
     display: flex;
     fill: #4b4b4b;
-    z-index: 0
+    z-index: 0;
+    position: absolute; 
+    overflow: hidden; 
+    border-width: 0px 0px 1px;
+    margin: 0;
+    padding: 0;
+    left: 0; 
+    top: 0; 
+    width: 100%; 
+    height: 2em; 
+    border-style: solid;
+    border-color: rgba(0, 0, 0, .4);
 }
 
-.opened {
+.VanessaTabPanel {
     background-color: #f2f2f2;
     position: relative;
-    overflow: hidden
+    overflow: hidden;
+    flex: 1 1 100%;
+    display: inherit;
+    margin: 0;
+    padding: 0;
 }
 
-.openedHor .opened {
-    display: inherit
-}
-
-.openedItemTitle {
-    margin: 0 5px
-}
-
-.openedItem {
+.VanessaTabItem {
+    margin: 0 0 0 -1px;
     padding: 0 5px;
     display: inherit;
     flex: 1 1 auto;
@@ -98,83 +74,83 @@ body {
     background-color: #f2f2f2;
     position: relative;
     line-height: 1.2em;
-    z-index: 0
+    z-index: 0;
 }
 
-.openedHor .openedItem {
-    margin: 0 0 0 -1px
-}
-
-.openedItem>div:not(.openedClose):not(.openedMenu) {
+.VanessaTabItem>div:not(.VanessaTabClose) {
     padding: 4px 0
 }
 
-.openedHor .openedItemTitle {
-    flex: 1 1 auto
-}
-
-.openedClose {
+.VanessaTabClose {
     background: inherit;
-    margin: -2px
+    margin: -2px;
+    padding: 0;
 }
 
-.openedItem:not(.openedItemNumbered) .openedItemNumber {
-    display: none
+.VanessaTabClose {
+    fill: #4b4b4b;
+    display: inline-flex;
+    flex: 0 0 auto;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    width: 16px;
+    height: 16px
 }
 
-.openedItemNumber {
-    flex: 6 0 auto;
-    max-width: calc(100% - 24px);
-    padding: 5px
+.VanessaTabClose:HOVER:before {
+    content: '';
+    border-radius: 50%;
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    opacity: .15;
+    box-shadow: 0 0 0 1em inset
 }
 
-.select.openedItem {
+.VanessaTabSelect.VanessaTabItem {
     background-color: #fff
 }
 
-.select.openedItem:before {
+.VanessaTabSelect.VanessaTabItem:before {
     content: '';
     background: #009646;
     position: absolute
 }
 
-.openedHor .select.openedItem:before {
+.VanessaTabSelect.VanessaTabItem:before {
     height: 2px;
     right: 3px;
     bottom: 2px;
     left: 3px
 }
 
-.openedItem {
+.VanessaTabItem {
     transition: width .1s;
     -webkit-transition: width .1s;
     -moz-transition: width .1s;
-    -ms-transition: width .1s
+    -ms-transition: width .1s;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.openedAnimated .openedBox {
+.VanessaTabBox {
     transition: padding .1s linear, left .1s linear, right .1s linear, top .1s linear;
     -webkit-transition: padding .1s linear, left .1s linear, right .1s linear, top .1s linear;
     -moz-transition: padding .1s linear, left .1s linear, right .1s linear, top .1s linear;
-    -ms-transition: padding .1s linear, left .1s linear, right .1s linear, top .1s linear
+    -ms-transition: padding .1s linear, left .1s linear, right .1s linear, top .1s linear;
+    display: flex;
+    margin: 0;
+    padding: 0;
 }
 
-.flex {
-    display: flex
-}
-
-.flex-1-1-100 {
-    flex: 1 1 100%
-}
-
-.dots {
+.VanessaTabTitle {
+    flex: 1 1 auto;
+    margin: 0 5px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis
-}
-
-.panelsBorder {
-    border-width: 1px;
-    border-style: solid;
-    border-color: rgba(0, 0, 0, .4)
 }
