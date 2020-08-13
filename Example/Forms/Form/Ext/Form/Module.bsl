@@ -46,9 +46,8 @@ EndProcedure
 Procedure AutoTest(Command)
 	
 	NewName = GetFormName("Test");
-	NewParams = New Structure("AddInId", AddInId);
-	TestForm = GetForm(NewName, NewParams, ThisForm, New Uuid);
-	TestForm.Test(AddInId);
+	NewParams = New Structure("AddInURL", AddInURL);
+	OpenForm(NewName, NewParams, ThisForm, New Uuid);
 	
 EndProcedure
 
@@ -82,7 +81,7 @@ EndProcedure
 &AtClient
 Procedure InitRepository(Command)
 	
-	NotifyDescription = New NotifyDescription("OpenRepositoryEnd", ThisForm);
+	NotifyDescription = New NotifyDescription("InitRepositoryEnd", ThisForm, Directory);
 	git.BeginCallingInit(NotifyDescription, Directory);
 	
 EndProcedure
@@ -168,6 +167,17 @@ Procedure FindFolderEnd(ResultCall, ParametersCall, AdditionalParameters) Export
 EndProcedure
 
 &AtClient
+Procedure InitRepositoryEnd(ResultCall, ParametersCall, AdditionalParameters) Export
+	
+	JsonData = JsonLoad(ResultCall);
+	If JsonData.Success Then
+		NotifyDescription = New NotifyDescription("FindFolderEnd", ThisForm, AdditionalParameters);
+		git.BeginCallingFind(NotifyDescription, AdditionalParameters);
+	EndIf;
+	
+EndProcedure
+
+&AtClient
 Procedure OpenRepositoryEnd(ResultCall, ParametersCall, AdditionalParameters) Export
 	
 	JsonData = JsonLoad(ResultCall);
@@ -180,22 +190,19 @@ EndProcedure
 &AtClient
 Procedure EndOpenFile(ResultCall, ParametersCall, AdditionalParameters) Export
 	
+	Var BinaryData, Encoding, FileName;
+	
 	BinaryData = ParametersCall[0];
 	Encoding = ParametersCall[1];
 	FileName = AdditionalParameters;
 	
 	If ResultCall = True Then
-		VanessaEditor().setValue("binary", "");
-		VanessaEditor().setReadOnly(True);
+		SetEditorContent("binary", "", True);
 	Else
-		TextReader = New TextReader;
-		TextReader.Open(BinaryData.OpenStreamForRead(), TextEncoding.UTF8);
-		VanessaEditor().setValue(TextReader.Read(), FileName);
-		VanessaEditor().setReadOnly(False);
-		EditableFilename = FileName;
 		EditableEncoding = Encoding;
+		TextReader = New TextReader(BinaryData.OpenStreamForRead(), TextEncoding.UTF8);
+		SetEditorContent(TextReader.Read(), FileName, False);
 	EndIf;
-	VanessaEditor().setVisible(True);
 	
 EndProcedure
 
@@ -362,11 +369,26 @@ EndProcedure
 &AtClient
 Function BeginOpenFile(FileName)
 	
-	BinaryData = New BinaryData(FileName);
-	NotifyDescription = New NotifyDescription("EndOpenFile", ThisForm, FileName);
-	git.BeginCallingIsBinary(NotifyDescription, BinaryData);
+	Try
+		BinaryData = New BinaryData(FileName);
+		NotifyDescription = New NotifyDescription("EndOpenFile", ThisForm, FileName);
+		git.BeginCallingIsBinary(NotifyDescription, BinaryData);
+	Except
+		VanessaEditor().setVisible(False);
+		EditableFilename = Undefined;
+	EndTry;
 	
 EndFunction
+
+&AtClient
+Procedure SetEditorContent(Content, FileName, ReadOnly)
+	
+	VanessaEditor = VanessaEditor();
+	VanessaEditor.setValue(Content, FileName);
+	VanessaEditor.setReadOnly(ReadOnly);
+	VanessaEditor.setVisible(True);
+	
+EndProcedure	
 
 #EndRegion
 
@@ -436,23 +458,15 @@ Procedure EndFindingFiles(FilesFound, AdditionalParameters) Export
 	ParentItems = AdditionalParameters.Items;
 	
 	ParentItems.Clear();
-	OnlyFiles = New Array;
 	For Each File In FilesFound Do
-		If (File.IsDirectory()) Then
-			If File.Name = ".git" Then
-				Continue;
-			EndIf;
-			Row = ParentItems.Add();
-			Row.IsDirectory = True;
-			FillPropertyValues(Row, File);
-			Row.GetItems().Add();
-		Else
-			OnlyFiles.Add(File);
+		If File.Name = ".git" Then
+			Continue;
 		EndIf;
-	EndDo;
-	
-	For Each File In OnlyFiles Do
-		FillPropertyValues(ParentItems.Add(), File);
+		Row = ParentItems.Add();
+		FillPropertyValues(Row, File);
+		RowParams = New Structure("FileName, ParentItems", File.Name, ParentItems);
+		NotifyDescription = New NotifyDescription("EndCheckingIsDirectory", ThisForm, RowParams);
+		File.BeginCheckingIsDirectory(NotifyDescription);
 	EndDo;
 	
 	If ParentNode <> Undefined Then
@@ -463,6 +477,47 @@ Procedure EndFindingFiles(FilesFound, AdditionalParameters) Export
 	EndIf;
 	
 EndProcedure
+
+&AtServer
+Function CompareNames(Name1, Name2)
+	
+	CompareValues = New CompareValues;
+	Return CompareValues.Compare(Name1, Name2);
+	
+EndFunction
+
+&AtClient
+Procedure EndCheckingIsDirectory(IsDirectory, AdditionalParameters) Export
+	
+	If (IsDirectory) Then
+		FileName = AdditionalParameters.FileName;
+		ParentItems = AdditionalParameters.ParentItems;
+		For Each Row In ParentItems Do
+			If Row.Name = FileName Then
+				Row.IsDirectory = True;
+				If Row.GetItems().Count() = 0 Then
+					Row.GetItems().Add();
+				EndIf;
+				RowIndex = ParentItems.IndexOf(Row);
+				While RowIndex > 0 Do
+					PriorRow = ParentItems.Get(RowIndex - 1);
+					If PriorRow.IsDirectory Then
+						If CompareNames(PriorRow.Name, Row.Name) > 0 Then
+							ParentItems.Move(RowIndex, -1);
+						Else
+							Break;
+						EndIf;
+					Else
+						ParentItems.Move(RowIndex, -1);
+					EndIf;
+					RowIndex = ParentItems.IndexOf(Row);
+				EndDo;
+				Break;
+			EndIf;
+		EndDo;
+	EndIf;
+	
+EndProcedure	
 
 &AtClient
 Procedure ExplorerReadFile() Export
@@ -667,16 +722,29 @@ Procedure StatusOnActivateRow(Item)
 	EndIf;
 	
 	If Row.Status = "DELETED" Then
-		VanessaEditor = VanessaEditor();
-		VanessaEditor.setValue(OldFileText(Row), Row.old_name);
-		VanessaEditor.setVisible(True);
-		VanessaEditor.setReadOnly(True);
+		If IsBlankString(Row.old_id) Then
+			SetEditorContent("", "", True);
+		Else
+			NotifyDescription = New NotifyDescription("EndReadingDeleted", ThisForm, Row.old_name);
+			git.BeginCallingBlob(NotifyDescription, Row.old_id, 0);
+		EndIf;
 	Else
-		NewText = NewFileText(Row);
-		DiffEditor = VADiffEditor();
-		DiffEditor.setValue(OldFileText(Row), Row.old_name, NewText, Row.new_name);
-		DiffEditor.setReadOnly(Not IsBlankString(Row.new_id) OR NewText = "binary");
-		DiffEditor.setVisible(True);
+		RowData = New Structure("old_id,old_name,new_id,new_name");
+		FillPropertyValues(RowData, Row);
+		If IsBlankString(Row.new_id) Then
+			Try
+				BinaryData = New BinaryData(Repository + Row.new_name);
+				RowData.Insert("BinaryData", BinaryData);
+				NotifyDescription = New NotifyDescription("EndDiffFile", ThisForm, RowData);
+				git.BeginCallingIsBinary(NotifyDescription, BinaryData);
+			Except
+				VanessaEditor().setVisible(False);
+				EditableFilename = Undefined;
+			EndTry;
+		Else
+			NotifyDescription = New NotifyDescription("EndDiffBlob", ThisForm, RowData);
+			BinaryData = git.BeginCallingBlob(NotifyDescription, RowData.new_id, 0);
+		EndIf;
 	EndIf;
 	
 EndProcedure
@@ -684,6 +752,98 @@ EndProcedure
 #EndRegion
 
 #Region SourceControl_Handlers
+
+&AtClient
+Procedure EndDiffFile(ResultCall, ParametersCall, AdditionalParameters) Export
+	
+	RowData = AdditionalParameters;
+	RowData.Insert("Encoding", ParametersCall[1]);
+	RowData.Insert("ReadOnly", False);
+	NotifyDescription = New NotifyDescription("EndReadingDiff", ThisForm, RowData);
+	BinaryData = git.BeginCallingBlob(NotifyDescription, RowData.old_id, 0);
+	
+EndProcedure
+
+&AtClient
+Procedure EndDiffBlob(ResultCall, ParametersCall, AdditionalParameters) Export
+	
+	RowData = AdditionalParameters;
+	RowData.Insert("BinaryData", ResultCall);
+	RowData.Insert("Encoding", ParametersCall[1]);
+	RowData.Insert("ReadOnly", True);
+	NotifyDescription = New NotifyDescription("EndReadingDiff", ThisForm, RowData);
+	BinaryData = git.BeginCallingBlob(NotifyDescription, RowData.old_id, 0);
+	
+EndProcedure
+
+&AtClient
+Procedure EndReadingDiff(ResultCall, ParametersCall, AdditionalParameters) Export
+	
+	Var BinaryData, Encoding, ReadOnly;
+	
+	BinaryData = ResultCall;
+	Encoding = ParametersCall[1];
+	RowData = AdditionalParameters;
+	
+	If Encoding < 0 Then
+		old_text = "binary";
+		old_name = "";
+	Else
+		If TypeOf(BinaryData) = Type("BinaryData") Then
+			TextReader = New TextReader(BinaryData.OpenStreamForRead(), TextEncoding.UTF8);
+			old_text = TextReader.Read();
+			old_name = RowData.old_name;
+		Else
+			new_text = "error";
+			old_name = "";
+		EndIf;
+	EndIf;
+	
+	If RowData.Encoding < 0 Then
+		ReadOnly = true;
+		new_text = "binary";
+		new_name = "";
+	Else
+		If TypeOf(RowData.BinaryData) = Type("BinaryData") Then
+			TextReader = New TextReader(RowData.BinaryData.OpenStreamForRead(), TextEncoding.UTF8);
+			new_text = TextReader.Read();
+			new_name = RowData.new_name;
+			ReadOnly = RowData.ReadOnly;
+		Else
+			new_text = "error";
+			new_name = "";
+			ReadOnly = true;
+		EndIf;
+	EndIf;
+	
+	DiffEditor = VADiffEditor();
+	DiffEditor.setValue(old_text, old_name, new_text, new_name);
+	DiffEditor.setReadOnly(ReadOnly);
+	DiffEditor.setVisible(True);
+	
+EndProcedure
+
+&AtClient
+Procedure EndReadingDeleted(ResultCall, ParametersCall, AdditionalParameters) Export
+	
+	Var BinaryData, Encoding, FileName;
+	
+	BinaryData = ResultCall;
+	Encoding = ParametersCall[1];
+	FileName = AdditionalParameters;
+	
+	If Encoding < 0 Then
+		SetEditorContent("binary", "", True);
+	Else
+		If TypeOf(BinaryData) = Type("BinaryData") Then
+			TextReader = New TextReader(BinaryData.OpenStreamForRead(), TextEncoding.UTF8);
+			SetEditorContent(TextReader.Read(), FileName, True);
+		Else
+			SetEditorContent("", "", True);
+		EndIf;
+	EndIf;
+	
+EndProcedure
 
 &AtClient
 Procedure BeforeCallingDiscard(QuestionResult, AdditionalParameters) Export
@@ -763,19 +923,19 @@ EndProcedure
 &AtClient
 Procedure EndIndexOpen(ResultCall, ParametersCall, AdditionalParameters) Export
 	
+	Var BinaryData, Encoding, FileName;
+	
 	BinaryData = ResultCall;
 	Encoding = ParametersCall[1];
 	FileName = AdditionalParameters;
 	
 	If Encoding < 0 Then
-		VanessaEditor().setValue("binary", "");
+		SetEditorContent("binary", "", True);
 	Else
-		TextReader = New TextReader;
-		TextReader.Open(BinaryData.OpenStreamForRead(), TextEncoding.UTF8);
+		TextReader = New TextReader(BinaryData.OpenStreamForRead(), TextEncoding.UTF8);
 		VanessaEditor().setValue(TextReader.Read(), FileName);
+		SetEditorContent(TextReader.Read(), FileName, True);
 	EndIf;
-	VanessaEditor().setReadOnly(True);
-	VanessaEditor().setVisible(True);
 	
 EndProcedure
 
@@ -788,6 +948,27 @@ Function BeginCallingStatus()
 	
 	NotifyDescription = New NotifyDescription("EndCallingStatus", ThisForm);
 	git.BeginCallingStatus(NotifyDescription);
+	
+EndFunction
+
+&AtClient
+Function SelectedStatusJson()
+	
+	FileArray = New Array;
+	For Each Id In Items.Status.SelectedRows Do
+		Row = Status.FindByID(Id);
+		If Not IsBlankString(Row.new_name) Then
+			FileArray.Add(Row.new_name);
+		EndIf;
+	EndDo;
+	Return JsonDump(FileArray);
+	
+EndFunction
+
+&AtClient
+Function GetIndexNotify()
+	
+	Return New NotifyDescription("EndCallingIndex", ThisForm);
 	
 EndFunction
 
@@ -815,75 +996,6 @@ Procedure AddStatusItems(JsonData, Key, Name)
 	EndIf
 	
 EndProcedure
-
-&AtClient
-Function SelectedStatusJson()
-	
-	FileArray = New Array;
-	For Each Id In Items.Status.SelectedRows Do
-		Row = Status.FindByID(Id);
-		If Not IsBlankString(Row.new_name) Then
-			FileArray.Add(Row.new_name);
-		EndIf;
-	EndDo;
-	Return JsonDump(FileArray);
-	
-EndFunction
-
-&AtClient
-Function GetIndexNotify()
-	
-	Return New NotifyDescription("EndCallingIndex", ThisForm);
-	
-EndFunction
-
-&AtClient
-Function ReadIndexBlob(id)
-	
-	If IsBlankString(id) Then
-		Return "";
-	Else
-		Encoding = Undefined;
-		BinaryData = git.blob(id, Encoding);
-		If Encoding < 0 Then
-			Return "binary";
-		Else
-			If TypeOf(BinaryData) = Type("BinaryData") Then
-				TextReader = New TextReader;
-				TextReader.Open(BinaryData.OpenStreamForRead(), TextEncoding.UTF8);
-				Return TextReader.Read();
-			Else
-				Return "";
-			EndIf;
-		EndIf;
-	EndIf;
-	
-EndFunction
-
-&AtClient
-Function NewFileText(Row)
-	
-	If IsBlankString(Row.new_id) Then
-		id = git.file(Row.new_name);
-	Else
-		id = Row.new_id;
-	EndIf;
-	
-	Return ReadIndexBlob(id);
-	
-	
-EndFunction
-
-&AtClient
-Function OldFileText(Row)
-	
-	If IsBlankString(Row.old_id) Then
-		Return "";
-	Else
-		Return ReadIndexBlob(Row.old_id);
-	EndIf;
-	
-EndFunction
 
 #EndRegion
 
