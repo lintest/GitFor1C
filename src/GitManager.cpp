@@ -334,7 +334,7 @@ std::wstring GitManager::commit(const std::wstring& msg)
 	if (m_author) m_author->now(&author);
 	if (m_committer) m_committer->now(&committer);
 	if (m_author == nullptr || m_committer == nullptr) {
-		git_signature_default(&sig, m_repo);
+		ASSERT(git_signature_default(&sig, m_repo));
 	}
 
 	int ok = 0;
