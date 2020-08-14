@@ -33,8 +33,9 @@ Procedure EditorDocumentComplete(Item)
 	view = Items.Editor.Document.defaultView;
 	VanessaGherkinProvider = view.VanessaGherkinProvider;
 	VanessaGherkinProvider.setKeywords(GetKeywords());
-	view.createVanessaDiffEditor("", "", "text");
-	view.createVanessaEditor("", "text").setVisible(False);
+	view.createVanessaDiffEditor();
+	view.createVanessaEditor().setVisible(False);
+	view.createVanessaTabs();
 	
 EndProcedure
 
@@ -139,8 +140,6 @@ EndProcedure
 Procedure OpenFolderEnd(SelectedFiles, AdditionalParameters) Export
 	
 	If SelectedFiles <> Undefined Then
-		VanessaEditor().setVisible(False);
-		EditableFilename = Undefined;
 		File = New File(SelectedFiles[0]);
 		Title = File.Name;
 		AutoTitle = True;
@@ -197,11 +196,11 @@ Procedure EndOpenFile(ResultCall, ParametersCall, AdditionalParameters) Export
 	FileName = AdditionalParameters;
 	
 	If ResultCall = True Then
-		SetEditorContent("binary", "", True);
+		SetEditorContent("binary", "", FileName, True);
 	Else
 		EditableEncoding = Encoding;
 		TextReader = New TextReader(BinaryData.OpenStreamForRead(), TextEncoding.UTF8);
-		SetEditorContent(TextReader.Read(), FileName, False);
+		SetEditorContent(TextReader.Read(), FileName, FileName, False);
 	EndIf;
 	
 EndProcedure
@@ -240,20 +239,6 @@ EndProcedure
 #EndRegion
 
 #Region ClientTools
-
-&AtClient
-Function VanessaEditor()
-	
-	Return Items.Editor.Document.defaultView.VanessaEditor;
-	
-EndFunction
-
-&AtClient
-Function VADiffEditor()
-	
-	Return Items.Editor.Document.defaultView.VADiffEditor;
-	
-EndFunction
 
 &AtClient
 Function GetKeywords()
@@ -346,8 +331,6 @@ EndFunction
 Procedure SetCurrentPage(Page)
 	
 	ClearAllItems();
-	VanessaEditor().setVisible(False);
-	EditableFilename = Undefined;
 	Items.FormShowControl.Check = (Page = Items.StatusPage OR Page = Items.InitPage);
 	Items.FormShowExplorer.Check = (Page = Items.ExplorerPage);
 	Items.FormShowSearch.Check = (Page = Items.SearchPage);
@@ -361,8 +344,6 @@ Procedure ClearAllItems()
 	Files.GetItems().Clear();
 	Status.GetItems().Clear();
 	Explorer.GetItems().Clear();
-	VanessaEditor().setVisible(False);
-	EditableFilename = Undefined;
 	
 EndProcedure
 
@@ -374,19 +355,17 @@ Function BeginOpenFile(FileName)
 		NotifyDescription = New NotifyDescription("EndOpenFile", ThisForm, FileName);
 		git.BeginCallingIsBinary(NotifyDescription, BinaryData);
 	Except
-		VanessaEditor().setVisible(False);
-		EditableFilename = Undefined;
+		//Is director
 	EndTry;
 	
 EndFunction
 
 &AtClient
-Procedure SetEditorContent(Content, FileName, ReadOnly)
+Procedure SetEditorContent(Content, FileName, Title, ReadOnly)
 	
-	VanessaEditor = VanessaEditor();
-	VanessaEditor.setValue(Content, FileName);
-	VanessaEditor.setReadOnly(ReadOnly);
-	VanessaEditor.setVisible(True);
+	File = New File(Title);
+	VanessaTabs = Items.Editor.Document.defaultView.VanessaTabs;
+	VanessaTabs.edit(Content, FileName, File.Name).setReadOnly(ReadOnly);
 	
 EndProcedure	
 
@@ -524,10 +503,7 @@ Procedure ExplorerReadFile() Export
 	
 	Data = Items.Explorer.CurrentData;
 	If Data <> Undefined Then
-		If Data.IsDirectory Then
-			VanessaEditor().setVisible(False);
-			EditableFilename = Undefined;
-		Else
+		If Not Data.IsDirectory Then
 			BeginOpenFile(Data.fullname);
 		EndIf;
 	EndIf;
@@ -716,15 +692,11 @@ Procedure StatusOnActivateRow(Item)
 	EndIf;
 	
 	If IsBlankString(Row.status) Then
-		VanessaEditor().setVisible(False);
-		EditableFilename = Undefined;
 		Return;
 	EndIf;
 	
 	If Row.Status = "DELETED" Then
-		If IsBlankString(Row.old_id) Then
-			SetEditorContent("", "", True);
-		Else
+		If Not IsBlankString(Row.old_id) Then
 			NotifyDescription = New NotifyDescription("EndReadingDeleted", ThisForm, Row.old_name);
 			git.BeginCallingBlob(NotifyDescription, Row.old_id, 0);
 		EndIf;
@@ -738,8 +710,7 @@ Procedure StatusOnActivateRow(Item)
 				NotifyDescription = New NotifyDescription("EndDiffFile", ThisForm, RowData);
 				git.BeginCallingIsBinary(NotifyDescription, BinaryData);
 			Except
-				VanessaEditor().setVisible(False);
-				EditableFilename = Undefined;
+				//Is director
 			EndTry;
 		Else
 			NotifyDescription = New NotifyDescription("EndDiffBlob", ThisForm, RowData);
@@ -816,10 +787,10 @@ Procedure EndReadingDiff(ResultCall, ParametersCall, AdditionalParameters) Expor
 		EndIf;
 	EndIf;
 	
-	DiffEditor = VADiffEditor();
-	DiffEditor.setValue(old_text, old_name, new_text, new_name);
+	File = New File(new_name);
+	VanessaTabs = Items.Editor.Document.defaultView.VanessaTabs;
+	DiffEditor = VanessaTabs.diff(old_text, old_name, new_text, new_name, File.Name);
 	DiffEditor.setReadOnly(ReadOnly);
-	DiffEditor.setVisible(True);
 	
 EndProcedure
 
@@ -833,13 +804,11 @@ Procedure EndReadingDeleted(ResultCall, ParametersCall, AdditionalParameters) Ex
 	FileName = AdditionalParameters;
 	
 	If Encoding < 0 Then
-		SetEditorContent("binary", "", True);
+		SetEditorContent("binary", "", FileName, True);
 	Else
 		If TypeOf(BinaryData) = Type("BinaryData") Then
 			TextReader = New TextReader(BinaryData.OpenStreamForRead(), TextEncoding.UTF8);
-			SetEditorContent(TextReader.Read(), FileName, True);
-		Else
-			SetEditorContent("", "", True);
+			SetEditorContent(TextReader.Read(), FileName, FileName, True);
 		EndIf;
 	EndIf;
 	
@@ -930,11 +899,10 @@ Procedure EndIndexOpen(ResultCall, ParametersCall, AdditionalParameters) Export
 	FileName = AdditionalParameters;
 	
 	If Encoding < 0 Then
-		SetEditorContent("binary", "", True);
+		SetEditorContent("binary", "", FileName, True);
 	Else
 		TextReader = New TextReader(BinaryData.OpenStreamForRead(), TextEncoding.UTF8);
-		VanessaEditor().setValue(TextReader.Read(), FileName);
-		SetEditorContent(TextReader.Read(), FileName, True);
+		SetEditorContent(TextReader.Read(), FileName, FileName, True);
 	EndIf;
 	
 EndProcedure
