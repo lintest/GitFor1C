@@ -378,6 +378,56 @@
 									<ContextMenu name="ExplorerContextMenu" id="303"/>
 									<AutoCommandBar name="ExplorerCommandBar" id="304">
 										<Autofill>false</Autofill>
+										<ChildItems>
+											<ButtonGroup name="ExplorerGroupFile" id="411">
+												<Title>
+													<v8:item>
+														<v8:lang>ru</v8:lang>
+														<v8:content>Explorer group file</v8:content>
+													</v8:item>
+												</Title>
+												<ToolTip>
+													<v8:item>
+														<v8:lang>ru</v8:lang>
+														<v8:content>Explorer group file</v8:content>
+													</v8:item>
+												</ToolTip>
+												<Representation>Compact</Representation>
+												<ExtendedTooltip name="ExplorerGroupFileExtendedTooltip" id="412"/>
+												<ChildItems>
+													<Button name="ExplorerFileCreateNew" id="407">
+														<Type>CommandBarButton</Type>
+														<CommandName>Form.Command.FileCreateNew</CommandName>
+														<Picture>
+															<xr:Abs>Picture.png</xr:Abs>
+															<xr:LoadTransparent>true</xr:LoadTransparent>
+															<xr:TransparentPixel x="159" y="15"/>
+														</Picture>
+														<ExtendedTooltip name="ExplorerFileCreateNewExtendedTooltip" id="408"/>
+													</Button>
+													<Button name="ExplorerFileCreateDir" id="409">
+														<Type>CommandBarButton</Type>
+														<CommandName>Form.Command.FileCreateDir</CommandName>
+														<Picture>
+															<xr:Abs>Picture.png</xr:Abs>
+															<xr:LoadTransparent>true</xr:LoadTransparent>
+															<xr:TransparentPixel x="159" y="15"/>
+														</Picture>
+														<ExtendedTooltip name="ExplorerFileCreateDirExtendedTooltip" id="410"/>
+													</Button>
+												</ChildItems>
+											</ButtonGroup>
+											<Button name="ExplorerFileOpen" id="415">
+												<Type>CommandBarButton</Type>
+												<CommandName>Form.Command.FileOpenFile</CommandName>
+												<Picture>
+													<xr:Abs>Picture.png</xr:Abs>
+													<xr:LoadTransparent>true</xr:LoadTransparent>
+													<xr:TransparentPixel x="159" y="15"/>
+												</Picture>
+												<ExtendedTooltip name="ExplorerFileOpenExtendedTooltip" id="416"/>
+											</Button>
+										</ChildItems>
 									</AutoCommandBar>
 									<ExtendedTooltip name="ExplorerExtendedTooltip" id="305"/>
 									<SearchStringAddition name="ExplorerSearchString" id="306">
@@ -1934,6 +1984,20 @@
 				<v8:item>
 					<v8:lang>ru</v8:lang>
 					<v8:content>File save as</v8:content>
+				</v8:item>
+			</ToolTip>
+		</Command>
+		<Command name="FileOpenFile" id="16">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>File open file</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>File open file</v8:content>
 				</v8:item>
 			</ToolTip>
 		</Command>
