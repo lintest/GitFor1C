@@ -33,8 +33,6 @@ Procedure EditorDocumentComplete(Item)
 	view = Items.Editor.Document.defaultView;
 	VanessaGherkinProvider = view.VanessaGherkinProvider;
 	VanessaGherkinProvider.setKeywords(GetKeywords());
-	view.createVanessaDiffEditor();
-	view.createVanessaEditor().setVisible(False);
 	view.createVanessaTabs();
 	
 EndProcedure
@@ -365,7 +363,7 @@ Procedure SetEditorContent(Content, FileName, Title, ReadOnly)
 	
 	File = New File(Title);
 	VanessaTabs = Items.Editor.Document.defaultView.VanessaTabs;
-	VanessaTabs.edit(Content, FileName, File.Name).setReadOnly(ReadOnly);
+	VanessaTabs.edit(Content, FileName, FileName, File.Name, 0, ReadOnly);
 	
 EndProcedure	
 
@@ -788,9 +786,10 @@ Procedure EndReadingDiff(ResultCall, ParametersCall, AdditionalParameters) Expor
 	EndIf;
 	
 	File = New File(new_name);
+	old_path = "blob:" + RowData.old_id;
+	new_path = ?(IsBlankString(RowData.new_id), Repository + new_name, "blob:" + RowData.new_id);
 	VanessaTabs = Items.Editor.Document.defaultView.VanessaTabs;
-	DiffEditor = VanessaTabs.diff(old_text, old_name, new_text, new_name, File.Name);
-	DiffEditor.setReadOnly(ReadOnly);
+	DiffEditor = VanessaTabs.diff(old_text, old_name, old_path, new_text, new_name, new_path, File.Name, ReadOnly);
 	
 EndProcedure
 
