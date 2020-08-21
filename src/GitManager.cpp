@@ -26,7 +26,7 @@ GitManager::GitManager()
 	AddFunction(u"Blob", u"Blob", [&](VH id, VH encoding) { this->blob(id, encoding); }, { { 1, 0 } });
 	AddFunction(u"Tree", u"Tree", [&](VH id) { this->result = this->tree(id); });
 	AddFunction(u"Status", u"Status", [&]() { this->result = this->status(); });
-	AddFunction(u"Commit", u"Commit", [&](VH msg) { this->result = this->info(msg); });
+	AddFunction(u"Commit", u"Commit", [&](VH msg) { this->result = this->commit(msg); });
 	AddFunction(u"Add", u"Add", [&](VH append, VH remove) { this->result = this->add(append, remove); }, { {1, u""} });
 	AddFunction(u"Reset", u"Reset", [&](VH path) { this->result = this->reset(path); });
 	AddFunction(u"Remove", u"Remove", [&](VH path) { this->result = this->remove(path); });
