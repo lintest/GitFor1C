@@ -2,14 +2,15 @@
 #define __CLIPMNGR_H__
 
 #include "stdafx.h"
+#include "AddInNative.h"
 #include <git2.h> 
 
-class GitManager {
+class GitManager : public AddInNative {
 
 	class Signature {
 	public:
-		Signature(std::wstring name, std::wstring email)
-			: m_name(WC2MB(name)), m_email(WC2MB(email)) {}
+		Signature(const std::string& name, const std::string& email)
+			: m_name(name), m_email(email) {}
 
 		virtual ~Signature() {}
 
@@ -22,39 +23,43 @@ class GitManager {
 	};
 
 private:
-	AddInNative* m_addin = nullptr;
 	git_repository* m_repo = nullptr;
 	Signature* m_author = nullptr;
 	Signature* m_committer = nullptr;
-	bool error(tVariant* pvar);
+	bool error(VH var);
+
+private:
+	static std::vector<std::u16string> names;
+	GitManager();
 
 public:
-	GitManager(AddInNative* addin);
 	virtual ~GitManager();
+
+private:
 	bool close();
-	int getEncoding(tVariant* pvar);
-	bool isBinary(tVariant* pvarData, tVariant* pvarEncoding);
-	bool blob(const std::wstring& id, tVariant* pvarEncoding, tVariant* pvarRetValue);
-	bool setAuthor(const std::wstring& name, const std::wstring& email);
-	bool setCommitter(const std::wstring& name, const std::wstring& email);
-	std::wstring fullpath(const std::wstring& path);
-	std::wstring init(const std::wstring& path, bool is_bare);
-	std::wstring clone(const std::wstring& url, const std::wstring& path);
-	std::wstring info(const std::wstring& msg);
-	std::wstring open(const std::wstring& path);
-	std::wstring find(const std::wstring& path);
-	std::wstring add(const std::wstring& append, const std::wstring& remove);
-	std::wstring reset(const std::wstring& filelist);
-	std::wstring remove(const std::wstring& filelist);
-	std::wstring discard(const std::wstring& filelist);
-	std::wstring commit(const std::wstring& msg);
-	std::wstring history(const std::wstring& msg);
-	std::wstring diff(const std::wstring& s1, const std::wstring& s2);
-	std::wstring file(const std::wstring& path, bool full);
-	std::wstring tree(const std::wstring& msg);
-	std::wstring remoteList();
-	std::wstring signature();
-	std::wstring status();
+	void setAuthor(const std::string& name, const std::string& email);
+	void setCommitter(const std::string& name, const std::string& email);
+	long getEncoding(VH blob);
+	bool isBinary(VH blob, VH encoding);
+	void blob(VH id, VH encoding);
+	std::wstring getFullpath(const std::wstring& path);
+	std::string init(const std::string& path);
+	std::string clone(const std::string& url, const std::string& path);
+	std::string info(const std::string& msg);
+	std::string open(const std::string& path);
+	std::string find(const std::string& path);
+	std::string add(const std::string& append, const std::string& remove);
+	std::string reset(const std::string& filelist);
+	std::string remove(const std::string& filelist);
+	std::string discard(const std::string& filelist);
+	std::string commit(const std::string& msg);
+	std::string history(const std::string& msg);
+	std::string diff(const std::u16string s1, const std::u16string& s2);
+	std::string file(const std::string& path, bool full);
+	std::string tree(const std::string& id);
+	std::string remoteList();
+	std::string signature();
+	std::string status();
 };
 
 #endif //__CLIPMNGR_H__

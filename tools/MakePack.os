@@ -50,8 +50,8 @@
 	ЗаписьXML.ЗаписатьНачалоЭлемента("bundle");	
 	ЗаписьXML.ЗаписатьАтрибут("xmlns", "http://v8.1c.ru/8.2/addin/bundle");
 	
-	ДобавитьЭлемент("Windows" , "i386"   , "bin32/libGitFor1cWin32.dll");
-	ДобавитьЭлемент("Windows" , "x86_64" , "bin64/libGitFor1cWin64.dll");
+	ДобавитьЭлемент("Windows" , "i386"   , "build32Win/Release/libGitFor1cWin32.dll");
+	ДобавитьЭлемент("Windows" , "x86_64" , "build64Win/Release/libGitFor1cWin64.dll");
 //	ДобавитьЭлемент("Linux"   , "i386"   , "bin/libGitFor1cLin32.so");
 //	ДобавитьЭлемент("Linux"   , "x86_64" , "bin/libGitFor1cLin64.so");
 	

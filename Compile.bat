@@ -1,5 +1,14 @@
-"%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" GitFor1C.sln /property:Configuration=Release /property:Platform=x64
-"%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" GitFor1C.sln /property:Configuration=Release /property:Platform=x86
+mkdir build32Win
+cd build32Win
+cmake .. -A Win32 -DMySuffix2=32
+cmake --build . --config Release
+cd ..
+
+mkdir build64Win
+cd build64Win
+cmake .. -A x64 -DMySuffix2=64
+cmake --build . --config Release
+cd ..
 
 oscript .\tools\MakePack.os
 

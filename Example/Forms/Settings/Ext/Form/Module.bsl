@@ -2,7 +2,7 @@
 Procedure OnOpen(Cancel)
 
 	NotifyDescription = New NotifyDescription("EndRemoteList", ThisForm);
-	FormOwner.git.BeginGettingRemoteList(NotifyDescription);
+	FormOwner.git.BeginGettingRemotes(NotifyDescription);
 	
 EndProcedure
 
