@@ -37,6 +37,35 @@ Procedure EditorDocumentComplete(Item)
 	
 EndProcedure
 
+&AtClient
+Procedure EditorOnClick(Item, EventData, StandardProcessing)
+	
+	Element = EventData.Element;
+	If Element.id = "VanessaEditorEventForwarder" Then
+		view = Items.Editor.Document.defaultView;
+		While (True) Do
+			msg = view.popVanessaMessage();
+			If (msg = Undefined) Then Break; EndIf;
+			VanessaEditorOnReceiveEventHandler(msg.type, msg.data);
+		EndDo;
+	EndIf;
+	
+EndProcedure
+
+&AtClient
+Procedure BeforeTabClosing(QuestionResult, AdditionalParameters) Export
+	
+	If QuestionResult = DialogReturnCode.Yes Then
+		AdditionalParameters.model.resetModified();
+		SaveEditorFile(AdditionalParameters);
+	ElsIf QuestionResult = DialogReturnCode.No Then
+		AdditionalParameters.accept();
+	Else
+		Return;
+	EndIf;
+	
+EndProcedure
+
 #EndRegion
 
 #Region FormActions
@@ -59,6 +88,19 @@ Procedure OpenFolder(Command)
 	
 EndProcedure
 
+&AtClient
+Procedure FileSave(Command)
+	
+	VanessaTabs = Items.Editor.Document.defaultView.VanessaTabs;
+	VanessaTabs.onFileSave();
+	
+EndProcedure
+
+&AtClient
+Procedure FileSaveAs(Command)
+	// TODO: Save file as...
+EndProcedure	
+	
 &AtClient
 Procedure CloseFolder(Command)
 	
@@ -94,7 +136,7 @@ EndProcedure
 
 &AtClient
 Procedure ViewHistory(Command)
-
+	
 	OpenForm(GetFormName("History"), , ThisForm, New Uuid);
 	
 EndProcedure
@@ -234,6 +276,13 @@ Procedure LoadEditor()
 	
 EndProcedure
 
+&AtServerNoContext
+Procedure WriteErrorEvent(FileName)
+
+	WriteLogEvent("OpenFile.Error", EventLogLevel.Error, , FileName);
+	
+EndProcedure
+
 #EndRegion
 
 #Region ClientTools
@@ -346,17 +395,17 @@ Procedure ClearAllItems()
 EndProcedure
 
 &AtClient
-Function BeginOpenFile(FileName)
+Procedure BeginOpenFile(FileName)
 	
 	Try
 		BinaryData = New BinaryData(FileName);
 		NotifyDescription = New NotifyDescription("EndOpenFile", ThisForm, FileName);
 		git.BeginCallingIsBinary(NotifyDescription, BinaryData);
 	Except
-		//Is director
+		WriteErrorEvent(FileName);
 	EndTry;
 	
-EndFunction
+EndProcedure
 
 &AtClient
 Procedure SetEditorContent(Content, FileName, Title, ReadOnly)
@@ -365,7 +414,55 @@ Procedure SetEditorContent(Content, FileName, Title, ReadOnly)
 	VanessaTabs = Items.Editor.Document.defaultView.VanessaTabs;
 	VanessaTabs.edit(Content, FileName, FileName, File.Name, 0, ReadOnly);
 	
-EndProcedure	
+EndProcedure
+
+&AtClient
+Procedure VanessaEditorOnReceiveEventHandler(Event, Data)
+	
+	VanessaTabs = Items.Editor.Document.defaultView.VanessaTabs;
+	
+	If Event = "PRESS_CTRL_S" Then
+		SaveEditorFile(Data);
+		Data.model.resetModified();
+	ElsIf Event = "ON_TAB_CLOSING" Then
+		NotifyDescription = New NotifyDescription("BeforeTabClosing", ThisForm, Data);
+		MessageText = "Do you want to save the changes you made to file?
+			|
+			|Filename: " + Data.title;
+		ShowQueryBox(NotifyDescription, MessageText, QuestionDialogMode.YesNoCancel, 10);
+	EndIf;
+	
+EndProcedure
+
+&AtClient
+Procedure SaveEditorFile(Data)
+	
+	WriteBOM = True;
+	If Data.encoding = 1 Then
+		Encoding = TextEncoding.UTF8;
+	ElsIf Data.encoding = 2 Then
+		Encoding = "UTF-16LE";
+	ElsIf Data.encoding = 3 Then
+		Encoding = "UTF-16BE";
+	ElsIf Data.encoding = 4 Then
+		Encoding = "UTF-32LE";
+	ElsIf Data.encoding = 5 Then
+		Encoding = "UTF-32BE";
+	Else
+		Encoding = TextEncoding.UTF8;
+		WriteBOM = False;
+	EndIf;
+	
+	Status("Save file", , Data.Title, PictureLib.DialogInformation);
+	
+	FileStream = New FileStream(Data.filename, FileOpenMode.Create, FileAccess.Write);
+	TextWriter = New TextWriter(FileStream, Encoding, , , WriteBOM);
+	TextWriter.Write(Data.model.getValue());
+	TextWriter.Close();
+	
+	Data.accept();
+	
+EndProcedure
 
 #EndRegion
 
@@ -480,12 +577,12 @@ Procedure EndCheckingIsDirectory(IsDirectory, AdditionalParameters) Export
 					PriorRow = ParentItems.Get(RowIndex - 1);
 					If PriorRow.IsDirectory Then
 						If CompareNames(PriorRow.Name, Row.Name) > 0 Then
-							ParentItems.Move(RowIndex, -1);
+							ParentItems.Move(RowIndex, - 1);
 						Else
 							Break;
 						EndIf;
 					Else
-						ParentItems.Move(RowIndex, -1);
+						ParentItems.Move(RowIndex, - 1);
 					EndIf;
 					RowIndex = ParentItems.IndexOf(Row);
 				EndDo;
@@ -494,7 +591,7 @@ Procedure EndCheckingIsDirectory(IsDirectory, AdditionalParameters) Export
 		EndDo;
 	EndIf;
 	
-EndProcedure	
+EndProcedure
 
 &AtClient
 Procedure ExplorerReadFile() Export
@@ -538,7 +635,7 @@ EndProcedure
 
 &AtClient
 Procedure SearchFiles(Command)
-
+	
 	BeginSearchText();
 	
 EndProcedure
@@ -702,13 +799,14 @@ Procedure StatusOnActivateRow(Item)
 		RowData = New Structure("old_id,old_name,new_id,new_name");
 		FillPropertyValues(RowData, Row);
 		If IsBlankString(Row.new_id) Then
+			FileName = Repository + Row.new_name;
 			Try
-				BinaryData = New BinaryData(Repository + Row.new_name);
+				BinaryData = New BinaryData(FileName);
 				RowData.Insert("BinaryData", BinaryData);
 				NotifyDescription = New NotifyDescription("EndDiffFile", ThisForm, RowData);
 				git.BeginCallingIsBinary(NotifyDescription, BinaryData);
 			Except
-				//Is director
+				WriteErrorEvent(FileName);
 			EndTry;
 		Else
 			NotifyDescription = New NotifyDescription("EndDiffBlob", ThisForm, RowData);
@@ -789,7 +887,7 @@ Procedure EndReadingDiff(ResultCall, ParametersCall, AdditionalParameters) Expor
 	old_path = "blob:" + RowData.old_id;
 	new_path = ?(IsBlankString(RowData.new_id), Repository + new_name, "blob:" + RowData.new_id);
 	VanessaTabs = Items.Editor.Document.defaultView.VanessaTabs;
-	DiffEditor = VanessaTabs.diff(old_text, old_name, old_path, new_text, new_name, new_path, File.Name, ReadOnly);
+	DiffEditor = VanessaTabs.diff(old_text, old_name, old_path, new_text, new_name, new_path, File.Name, ReadOnly, Encoding, ReadOnly);
 	
 EndProcedure
 
@@ -911,12 +1009,12 @@ EndProcedure
 #Region SourceControl_Tools
 
 &AtClient
-Function BeginCallingStatus()
+Procedure BeginCallingStatus()
 	
 	NotifyDescription = New NotifyDescription("EndCallingStatus", ThisForm);
 	git.BeginCallingStatus(NotifyDescription);
 	
-EndFunction
+EndProcedure
 
 &AtClient
 Function SelectedStatusJson()

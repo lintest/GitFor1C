@@ -991,6 +991,7 @@
 					<ExtendedTooltip name="EditorExtendedTooltip" id="248"/>
 					<Events>
 						<Event name="DocumentComplete">EditorDocumentComplete</Event>
+						<Event name="OnClick">EditorOnClick</Event>
 					</Events>
 				</HTMLDocumentField>
 			</ChildItems>
@@ -1972,6 +1973,7 @@
 					<v8:content>File save</v8:content>
 				</v8:item>
 			</ToolTip>
+			<Action>FileSave</Action>
 		</Command>
 		<Command name="FileSaveAs" id="15">
 			<Title>
@@ -1986,6 +1988,7 @@
 					<v8:content>File save as</v8:content>
 				</v8:item>
 			</ToolTip>
+			<Action>FileSaveAs</Action>
 		</Command>
 		<Command name="FileOpenFile" id="16">
 			<Title>
