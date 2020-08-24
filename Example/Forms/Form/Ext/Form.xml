@@ -848,23 +848,25 @@
 												</InputField>
 											</ChildItems>
 										</Table>
-										<CommandBar name="RepoCommands" id="379">
+										<UsualGroup name="GroupBranch" id="417">
 											<Title>
 												<v8:item>
 													<v8:lang>ru</v8:lang>
-													<v8:content>Repo commands</v8:content>
+													<v8:content>Group branch</v8:content>
 												</v8:item>
 											</Title>
 											<ToolTip>
 												<v8:item>
 													<v8:lang>ru</v8:lang>
-													<v8:content>Repo commands</v8:content>
+													<v8:content>Group branch</v8:content>
 												</v8:item>
 											</ToolTip>
-											<ExtendedTooltip name="RepoCommandsExtendedTooltip" id="380"/>
+											<Representation>None</Representation>
+											<ShowTitle>false</ShowTitle>
+											<ExtendedTooltip name="GroupBranchExtendedTooltip" id="418"/>
 											<ChildItems>
 												<Button name="RepoBranch" id="387">
-													<Type>CommandBarButton</Type>
+													<Type>UsualButton</Type>
 													<Representation>PictureAndText</Representation>
 													<CommandName>Form.Command.RepoBranch</CommandName>
 													<Picture>
@@ -880,48 +882,65 @@
 													</Title>
 													<ExtendedTooltip name="RepoBranchExtendedTooltip" id="388"/>
 												</Button>
-												<ButtonGroup name="GroupRemote" id="385">
+												<CommandBar name="RepoCommands" id="379">
 													<Title>
 														<v8:item>
 															<v8:lang>ru</v8:lang>
-															<v8:content>Group remote</v8:content>
+															<v8:content>Repo commands</v8:content>
 														</v8:item>
 													</Title>
 													<ToolTip>
 														<v8:item>
 															<v8:lang>ru</v8:lang>
-															<v8:content>Group remote</v8:content>
+															<v8:content>Repo commands</v8:content>
 														</v8:item>
 													</ToolTip>
-													<Representation>Compact</Representation>
-													<ExtendedTooltip name="GroupRemoteExtendedTooltip" id="386"/>
+													<ExtendedTooltip name="RepoCommandsExtendedTooltip" id="380"/>
 													<ChildItems>
-														<Button name="RepoPull" id="381">
-															<Type>CommandBarButton</Type>
-															<Representation>PictureAndText</Representation>
-															<CommandName>Form.Command.RepoPull</CommandName>
-															<Picture>
-																<xr:Abs>Picture.png</xr:Abs>
-																<xr:LoadTransparent>true</xr:LoadTransparent>
-																<xr:TransparentPixel x="159" y="15"/>
-															</Picture>
-															<ExtendedTooltip name="RepoPullExtendedTooltip" id="382"/>
-														</Button>
-														<Button name="RepoPush" id="383">
-															<Type>CommandBarButton</Type>
-															<Representation>PictureAndText</Representation>
-															<CommandName>Form.Command.RepoPush</CommandName>
-															<Picture>
-																<xr:Abs>Picture.png</xr:Abs>
-																<xr:LoadTransparent>true</xr:LoadTransparent>
-																<xr:TransparentPixel x="159" y="15"/>
-															</Picture>
-															<ExtendedTooltip name="RepoPushExtendedTooltip" id="384"/>
-														</Button>
+														<ButtonGroup name="GroupRemote" id="385">
+															<Title>
+																<v8:item>
+																	<v8:lang>ru</v8:lang>
+																	<v8:content>Group remote</v8:content>
+																</v8:item>
+															</Title>
+															<ToolTip>
+																<v8:item>
+																	<v8:lang>ru</v8:lang>
+																	<v8:content>Group remote</v8:content>
+																</v8:item>
+															</ToolTip>
+															<Representation>Compact</Representation>
+															<ExtendedTooltip name="GroupRemoteExtendedTooltip" id="386"/>
+															<ChildItems>
+																<Button name="RepoPull" id="381">
+																	<Type>CommandBarButton</Type>
+																	<Representation>PictureAndText</Representation>
+																	<CommandName>Form.Command.RepoPull</CommandName>
+																	<Picture>
+																		<xr:Abs>Picture.png</xr:Abs>
+																		<xr:LoadTransparent>true</xr:LoadTransparent>
+																		<xr:TransparentPixel x="159" y="15"/>
+																	</Picture>
+																	<ExtendedTooltip name="RepoPullExtendedTooltip" id="382"/>
+																</Button>
+																<Button name="RepoPush" id="383">
+																	<Type>CommandBarButton</Type>
+																	<Representation>PictureAndText</Representation>
+																	<CommandName>Form.Command.RepoPush</CommandName>
+																	<Picture>
+																		<xr:Abs>Picture.png</xr:Abs>
+																		<xr:LoadTransparent>true</xr:LoadTransparent>
+																		<xr:TransparentPixel x="159" y="15"/>
+																	</Picture>
+																	<ExtendedTooltip name="RepoPushExtendedTooltip" id="384"/>
+																</Button>
+															</ChildItems>
+														</ButtonGroup>
 													</ChildItems>
-												</ButtonGroup>
+												</CommandBar>
 											</ChildItems>
-										</CommandBar>
+										</UsualGroup>
 									</ChildItems>
 								</UsualGroup>
 							</ChildItems>
@@ -1931,6 +1950,7 @@
 					<v8:content>Repo branch</v8:content>
 				</v8:item>
 			</ToolTip>
+			<Action>RepoBranch</Action>
 		</Command>
 		<Command name="FileCreateNew" id="3">
 			<Title>

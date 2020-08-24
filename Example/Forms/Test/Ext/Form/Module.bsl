@@ -131,4 +131,7 @@ EndFunction
 	ТекстовыйДокумент.Записать(ПолноеИмя, КодировкаТекста.UTF8);
 	git.add(ИмяФайла);
 	
+	head = git.head;
+	branches = git.branches;
+	
 КонецПроцедуры

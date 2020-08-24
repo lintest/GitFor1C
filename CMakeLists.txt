@@ -56,7 +56,7 @@ else(UNIX)
 	target_compile_options(${TARGET} PRIVATE /utf-8)
 endif(UNIX)
 
-target_include_directories(${TARGET} PRIVATE ./libgit2-1.0.1/include)
+target_include_directories(${TARGET} PRIVATE libgit2-1.0.1/include)
 set(EMBED_SSH_PATH "../../libssh2-1.9.0" CACHE BOOL "" FORCE)
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 set(BUILD_CLAR OFF CACHE BOOL "" FORCE)

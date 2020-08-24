@@ -3,6 +3,8 @@
 #include "json.hpp"
 #include "version.h"
 
+using JSON = nlohmann::json;
+
 std::vector<std::u16string> GitManager::names = {
 	AddComponent(u"GitFor1C", []() { return new GitManager; }),
 };
@@ -11,7 +13,9 @@ GitManager::GitManager()
 {
 	git_libgit2_init();
 
+	AddProperty(u"Head", u"Head", [&](VH var) { var = this->head(); });
 	AddProperty(u"Remotes", u"Remotes", [&](VH var) { var = this->remoteList(); });
+	AddProperty(u"Branches", u"Branches", [&](VH var) { var = this->branchList(); });
 	AddProperty(u"Signature", u"Подпись", [&](VH var) { var = this->signature(); });
 	AddProperty(u"Version", u"Версия", [&](VH var) { var = std::string(VER_FILE_VERSION_STR); });
 
@@ -77,9 +81,10 @@ public:                                \
 }                                      \
 ;
 
-
+AUTO_GIT(GIT_branch_iterator, git_branch_iterator, git_branch_iterator_free);
 AUTO_GIT(GIT_status_list, git_status_list, git_status_list_free)
 AUTO_GIT(GIT_signature, git_signature, git_signature_free)
+AUTO_GIT(GIT_reference, git_reference, git_reference_free);
 AUTO_GIT(GIT_revwalk, git_revwalk, git_revwalk_free)
 AUTO_GIT(GIT_commit, git_commit, git_commit_free)
 AUTO_GIT(GIT_object, git_object, git_object_free)
@@ -97,9 +102,9 @@ GitManager::~GitManager()
 	git_libgit2_shutdown();
 }
 
-static std::string success(const nlohmann::json& result)
+static std::string success(const JSON& result)
 {
-	nlohmann::json json;
+	JSON json;
 	json["result"] = result;
 	json["success"] = true;
 	return json.dump();
@@ -108,7 +113,7 @@ static std::string success(const nlohmann::json& result)
 static std::string error()
 {
 	const git_error* e = git_error_last();
-	nlohmann::json json, j;
+	JSON json, j;
 	j["code"] = e->klass;
 	j["message"] = e->message;
 	json["error"] = j;
@@ -118,7 +123,7 @@ static std::string error()
 
 static std::string error(int code)
 {
-	nlohmann::json json, j;
+	JSON json, j;
 	j["code"] = code;
 	j["message"] = "Repo is null";
 	json["error"] = j;
@@ -128,7 +133,7 @@ static std::string error(int code)
 
 static std::string error(const std::string& msg)
 {
-	nlohmann::json json, j;
+	JSON json, j;
 	j["code"] = -1;
 	j["message"] = msg;
 	json["error"] = j;
@@ -223,8 +228,8 @@ static std::string diff2str(git_diff_flag_t flag) {
 	}
 }
 
-static nlohmann::json flags2json(unsigned int status_flags) {
-	nlohmann::json json;
+static JSON flags2json(unsigned int status_flags) {
+	JSON json;
 	for (unsigned int i = 0; i < 16; i++) {
 		git_status_t status = git_status_t(1u << i);
 		if (status & status_flags) {
@@ -234,8 +239,8 @@ static nlohmann::json flags2json(unsigned int status_flags) {
 	return json;
 }
 
-static nlohmann::json diff2json(unsigned int status_flags) {
-	nlohmann::json json;
+static JSON diff2json(unsigned int status_flags) {
+	JSON json;
 	for (unsigned int i = 0; i < 4; i++) {
 		git_diff_flag_t flag = git_diff_flag_t(1u << i);
 		if (flag & status_flags) {
@@ -256,16 +261,16 @@ static std::string oid2str(const git_oid* id)
 
 int status_cb(const char* path, unsigned int status_flags, void* payload)
 {
-	nlohmann::json j;
+	JSON j;
 	j["filepath"] = path;
 	j["statuses"] = flags2json(status_flags);
-	((nlohmann::json*)payload)->push_back(j);
+	((JSON*)payload)->push_back(j);
 	return 0;
 }
 
-nlohmann::json delta2json(const git_diff_delta* delta, bool index = false)
+JSON delta2json(const git_diff_delta* delta, bool index = false)
 {
-	nlohmann::json j;
+	JSON j;
 	j["flag"] = delta->status;
 	j["status"] = delta2str(delta->status);
 	j["similarity"] = delta->similarity;
@@ -281,9 +286,9 @@ nlohmann::json delta2json(const git_diff_delta* delta, bool index = false)
 	return j;
 }
 
-nlohmann::json commit2json(const git_commit* commit)
+JSON commit2json(const git_commit* commit)
 {
-	nlohmann::json j;
+	JSON j;
 	const git_oid* tree_id = git_commit_tree_id(commit);
 	const git_signature* author = git_commit_author(commit);
 	const git_signature* committer = git_commit_committer(commit);
@@ -300,7 +305,7 @@ nlohmann::json commit2json(const git_commit* commit)
 std::string GitManager::status()
 {
 	CHECK_REPO();
-	nlohmann::json json, jIndex, jWork;
+	JSON json, jIndex, jWork;
 	GIT_status_list statuses = NULL;
 	git_status_options opts = GIT_STATUS_OPTIONS_INIT;
 	opts.flags = GIT_STATUS_OPT_DEFAULTS;
@@ -328,16 +333,34 @@ void GitManager::setCommitter(const std::string& name, const std::string& email)
 	m_committer = new Signature(name, email);
 }
 
+std::string GitManager::branchList()
+{
+	CHECK_REPO();
+	GIT_branch_iterator iterator;
+	ASSERT(git_branch_iterator_new(&iterator, m_repo, GIT_BRANCH_LOCAL));
+	git_reference *ref;
+	git_branch_t type;
+	JSON json;
+	while (git_branch_next(&ref, &type, iterator) == 0) {
+		const char* name;
+		GIT_reference reference(ref);
+		if (git_branch_name(&name, reference) == 0) {
+			if (name) json.push_back(std::string(name));
+		}
+	}
+	return success(json);
+}
+
 std::string GitManager::remoteList()
 {
 	CHECK_REPO();
 	git_strarray strarray;
 	ASSERT(git_remote_list(&strarray, m_repo));
-	nlohmann::json json;
+	JSON json;
 	for (size_t i = 0; i < strarray.count; i++) {
 		GIT_remote remote;
 		ASSERT(git_remote_lookup(&remote, m_repo, strarray.strings[i]));
-		nlohmann::json j;
+		JSON j;
 		j["name"] = strarray.strings[i];
 		j["url"] = git_remote_url(remote);
 		json.push_back(j);
@@ -351,7 +374,7 @@ std::string GitManager::signature()
 	CHECK_REPO();
 	git_signature* sig = nullptr;
 	ASSERT(git_signature_default(&sig, m_repo));
-	nlohmann::json j;
+	JSON j;
 	j["name"] = sig->name;
 	j["email"] = sig->email;
 	return success(j);
@@ -396,13 +419,13 @@ std::string GitManager::commit(const std::string& msg)
 	return success(true);
 }
 
-static nlohmann::json parse_file_list(std::string filelist)
+static JSON parse_file_list(std::string filelist)
 {
 	try {
-		return nlohmann::json::parse(filelist);
+		return JSON::parse(filelist);
 	}
-	catch (nlohmann::json::parse_error e) {
-		nlohmann::json json;
+	catch (JSON::parse_error e) {
+		JSON json;
 		json.push_back(filelist);
 		return json;
 	}
@@ -413,14 +436,14 @@ std::string GitManager::add(const std::string& append, const std::string& remove
 	CHECK_REPO();
 	GIT_index index;
 	ASSERT(git_repository_index(&index, m_repo));
-	nlohmann::json json_add = parse_file_list(append);
+	JSON json_add = parse_file_list(append);
 	if (json_add.is_array()) {
 		for (auto element : json_add) {
 			std::string path = element;
 			ASSERT(git_index_add_bypath(index, path.c_str()));
 		}
 	}
-	nlohmann::json json_del = parse_file_list(remove);
+	JSON json_del = parse_file_list(remove);
 	if (json_del.is_array()) {
 		for (auto element : json_del) {
 			std::string path = element;
@@ -436,7 +459,7 @@ std::string GitManager::reset(const std::string& filelist)
 	CHECK_REPO();
 	GIT_object obj = NULL;
 	ASSERT(git_revparse_single(&obj, m_repo, "HEAD^{commit}"));
-	nlohmann::json json = parse_file_list(filelist);
+	JSON json = parse_file_list(filelist);
 	if (json.is_array()) {
 		for (auto element : json) {
 			std::string path = element;
@@ -455,7 +478,7 @@ std::string GitManager::discard(const std::string& filelist)
 	ASSERT(git_checkout_options_init(&options, GIT_CHECKOUT_OPTIONS_VERSION));
 	options.checkout_strategy = GIT_CHECKOUT_FORCE;
 	options.paths.count = 1;
-	nlohmann::json json = parse_file_list(filelist);
+	JSON json = parse_file_list(filelist);
 	if (json.is_array()) {
 		for (auto element : json) {
 			std::string path = element;
@@ -472,7 +495,7 @@ std::string GitManager::remove(const std::string& filelist)
 	CHECK_REPO();
 	GIT_index index;
 	ASSERT(git_repository_index(&index, m_repo));
-	nlohmann::json json = parse_file_list(filelist);
+	JSON json = parse_file_list(filelist);
 	if (json.is_array()) {
 		for (auto element : json) {
 			std::string path = element;
@@ -491,6 +514,18 @@ std::string GitManager::info(const std::string& spec)
 	return success(commit2json((git_commit*)(git_object*)head_commit));
 }
 
+std::string GitManager::head()
+{
+	CHECK_REPO();
+	GIT_reference head;
+	ASSERT(git_repository_head(&head, m_repo));
+	std::string result;
+	const char* name = git_reference_symbolic_target(head);
+	if (name == nullptr) name = git_reference_name(head);
+	if (name) result = name;
+	return success(result);
+}
+
 std::string GitManager::history(const std::string& spec)
 {
 	CHECK_REPO();
@@ -501,7 +536,7 @@ std::string GitManager::history(const std::string& spec)
 	git_revwalk_sorting(walker, GIT_SORT_TIME);
 	git_revwalk_push_head(walker);
 
-	nlohmann::json json;
+	JSON json;
 	while (git_revwalk_next(&oid, walker) == 0) {
 		GIT_commit commit;
 		ASSERT(git_commit_lookup(&commit, m_repo, &oid));
@@ -520,13 +555,13 @@ std::string type2str(git_object_t type) {
 
 int tree_walk_cb(const char* root, const git_tree_entry* entry, void* payload)
 {
-	nlohmann::json j;
+	JSON j;
 	git_object_t type = git_tree_entry_type(entry);
 	j["id"] = oid2str(git_tree_entry_id(entry));
 	j["name"] = git_tree_entry_name(entry);
 	j["type"] = type2str(type);
 	j["root"] = root;
-	((nlohmann::json*)payload)->push_back(j);
+	((JSON*)payload)->push_back(j);
 	return 0;
 }
 
@@ -538,7 +573,7 @@ std::string GitManager::tree(const std::string& id)
 	ASSERT(git_revparse_single(&obj, m_repo, "HEAD^{tree}"));
 	GIT_tree tree = (git_tree*)obj;
 
-	nlohmann::json json;
+	JSON json;
 	ASSERT(git_tree_walk(tree, GIT_TREEWALK_PRE, tree_walk_cb, &json));
 	return success(json);
 }
@@ -546,7 +581,7 @@ std::string GitManager::tree(const std::string& id)
 
 int diff_file_cb(const git_diff_delta* delta, float progress, void* payload)
 {
-	((nlohmann::json*)payload)->push_back(delta2json(delta));
+	((JSON*)payload)->push_back(delta2json(delta));
 	return 0;
 }
 
@@ -571,7 +606,7 @@ std::string GitManager::diff(const std::u16string s1, const std::u16string& s2)
 		ASSERT(git_tree_lookup(&tree, m_repo, git_object_id(obj)));
 		ASSERT(git_diff_tree_to_workdir_with_index(&diff, m_repo, tree, NULL));
 	}
-	nlohmann::json json;
+	JSON json;
 	if (diff) {
 		git_diff_find_options opts = GIT_DIFF_FIND_OPTIONS_INIT;
 		opts.flags = GIT_DIFF_FIND_RENAMES | GIT_DIFF_FIND_COPIES | GIT_DIFF_FIND_FOR_UNTRACKED;

@@ -57,9 +57,11 @@ private:
 	std::string diff(const std::u16string s1, const std::u16string& s2);
 	std::string file(const std::string& path, bool full);
 	std::string tree(const std::string& id);
+	std::string branchList();
 	std::string remoteList();
 	std::string signature();
 	std::string status();
+	std::string head();
 };
 
 #endif //__CLIPMNGR_H__

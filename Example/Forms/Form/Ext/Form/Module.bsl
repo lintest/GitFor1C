@@ -227,6 +227,17 @@ Procedure OpenRepositoryEnd(ResultCall, ParametersCall, AdditionalParameters) Ex
 EndProcedure
 
 &AtClient
+Procedure AfterGettingHead(Value, AdditionalParameters) Export
+	
+	JsonData = JsonLoad(Value);
+	If JsonData.Success Then
+		File = New File(JsonData.Result);
+		Items.RepoBranch.Title = File.Name;
+	EndIf;
+	
+EndProcedure
+
+&AtClient
 Procedure EndOpenFile(ResultCall, ParametersCall, AdditionalParameters) Export
 	
 	Var BinaryData, Encoding, FileName;
@@ -491,7 +502,7 @@ Procedure AfterAttachingAddIn(Connected, AdditionalParameters) Export
 EndProcedure
 
 &AtClient
-Procedure AfterGettingVersion(Value, AdditionalParameters) Экспорт
+Procedure AfterGettingVersion(Value, AdditionalParameters) Export
 	
 	Title = "GIT for 1C, version " + Value;
 	AutoTitle = False;
@@ -1011,8 +1022,8 @@ EndProcedure
 &AtClient
 Procedure BeginCallingStatus()
 	
-	NotifyDescription = New NotifyDescription("EndCallingStatus", ThisForm);
-	git.BeginCallingStatus(NotifyDescription);
+	git.BeginGettingHead(New NotifyDescription("AfterGettingHead", ThisForm));
+	git.BeginCallingStatus(New NotifyDescription("EndCallingStatus", ThisForm));
 	
 EndProcedure
 
@@ -1065,3 +1076,33 @@ EndProcedure
 #EndRegion
 
 #EndRegion
+
+&AtClient
+Procedure RepoBranch(Command)
+	
+	NotifyDescription = New NotifyDescription("AfterGettingBranches", ThisForm);
+	git.BeginGettingBranches(NotifyDescription);
+	
+EndProcedure
+
+&AtClient
+Procedure AfterGettingBranches(Value, AdditionalParameters) Export
+	
+	JsonData = JsonLoad(Value);
+	If JsonData.Success Then
+		If TypeOf(JsonData.result) = Type("Array") Then
+			ValueList = New ValueList;
+			ValueList.LoadValues(JsonData.result);
+			SeletcedItem = ValueList.FindByValue(Items.RepoBranch.Title);
+			NotifyDescription = New NotifyDescription("AfterSelectingBranch", ThisForm);
+			ShowChooseFromList(NotifyDescription, ValueList, Items.RepoBranch, SeletcedItem);
+		EndIf;
+	EndIf;
+	
+EndProcedure
+
+&AtClient
+Procedure AfterSelectingBranch(SelectedElement, AdditionalParameters) Export
+	
+EndProcedure
+
