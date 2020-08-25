@@ -1093,6 +1093,7 @@ Procedure AfterGettingBranches(Value, AdditionalParameters) Export
 		If TypeOf(JsonData.result) = Type("Array") Then
 			ValueList = New ValueList;
 			ValueList.LoadValues(JsonData.result);
+			ValueList.Add(1, "<create new>");
 			SeletcedItem = ValueList.FindByValue(Items.RepoBranch.Title);
 			NotifyDescription = New NotifyDescription("AfterSelectingBranch", ThisForm);
 			ShowChooseFromList(NotifyDescription, ValueList, Items.RepoBranch, SeletcedItem);
@@ -1104,5 +1105,40 @@ EndProcedure
 &AtClient
 Procedure AfterSelectingBranch(SelectedElement, AdditionalParameters) Export
 	
+	If SelectedElement = Undefined Then
+		Return
+	ElsIf SelectedElement.Value = 1 Then
+		Tooltip = "Input new branch name";
+		NotifyDescription = New NotifyDescription("AfterInputBranch", ThisForm);
+		ShowInputString(NotifyDescription, , Tooltip);
+	Else
+		NotifyDescription = New NotifyDescription("EndCallingCheckout", ThisForm);
+		git.BeginCallingCheckout(NotifyDescription, SelectedElement.Value);
+	EndIf;
+	
 EndProcedure
 
+&AtClient
+Procedure AfterInputBranch(BranchName, AdditionalParameters) Export
+	
+	If Not IsBlankString(BranchName) Then
+		NotifyDescription = New NotifyDescription("EndCallingCheckout", ThisForm);
+		git.BeginCallingCheckout(NotifyDescription, BranchName, True);
+	EndIf;
+	
+EndProcedure
+
+&AtClient
+Procedure EndCallingCheckout(ResultCall, ParametersCall, AdditionalParameters) Export
+	
+	BeginCallingStatus();
+	
+EndProcedure
+
+&AtClient
+Procedure CloseFile(Command)
+	
+	view = Items.Editor.Document.defaultView;
+	view.VanessaTabs.close();
+	
+EndProcedure

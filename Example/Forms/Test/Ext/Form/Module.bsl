@@ -29,6 +29,7 @@ EndFunction
 	МассивФайлов = Новый Массив;
 	МассивФайлов.Добавить(ВременнаяПапка);
 	ВладелецФормы.OpenFolderEnd(МассивФайлов, Undefined);
+	Сообщить(ВременнаяПапка);
 	
 КонецПроцедуры
 
@@ -88,6 +89,7 @@ EndFunction
 		git.SetCommitter("Test Committer", "committer@mail.com");
 	КонецЕсли;
 	git.commit("Инициализация");
+	git.checkout("develop", True);
 	
 	ИмяФайла = "tools/Decompile.os";
 	ПолноеИмя = ВременнаяПапка + ИмяФайла;

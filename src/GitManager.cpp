@@ -19,6 +19,9 @@ GitManager::GitManager()
 	AddProperty(u"Signature", u"Подпись", [&](VH var) { var = this->signature(); });
 	AddProperty(u"Version", u"Версия", [&](VH var) { var = std::string(VER_FILE_VERSION_STR); });
 
+	AddProcedure(u"SetAuthor", u"SetAuthor", [&](VH name, VH email) { this->setAuthor(name, email); });
+	AddProcedure(u"SetCommitter", u"SetCommitter", [&](VH name, VH email) { this->setCommitter(name, email); });
+
 	AddFunction(u"Init", u"Init", [&](VH path) { this->result = this->init(path); });
 	AddFunction(u"Open", u"Open", [&](VH path) { this->result = this->open(path); });
 	AddFunction(u"Find", u"Find", [&](VH path) { this->result = this->find(path); });
@@ -31,17 +34,18 @@ GitManager::GitManager()
 	AddFunction(u"Tree", u"Tree", [&](VH id) { this->result = this->tree(id); });
 	AddFunction(u"Status", u"Status", [&]() { this->result = this->status(); });
 	AddFunction(u"Commit", u"Commit", [&](VH msg) { this->result = this->commit(msg); });
+	AddFunction(u"Checkout", u"Checkout", [&](VH name, VH create) { this->result = this->checkout(name, create); }, { {1, false} });
+	AddFunction(u"Fetch", u"Fetch", [&](VH name, VH ref) { this->result = this->fetch(name, ref); }, { { 0, u"" } });
+	AddFunction(u"Push", u"Push", [&](VH name, VH ref) { this->result = this->push(name, ref); }, { { 0, u"" } });
 	AddFunction(u"Add", u"Add", [&](VH append, VH remove) { this->result = this->add(append, remove); }, { {1, u""} });
 	AddFunction(u"Reset", u"Reset", [&](VH path) { this->result = this->reset(path); });
 	AddFunction(u"Remove", u"Remove", [&](VH path) { this->result = this->remove(path); });
 	AddFunction(u"Discard", u"Discard", [&](VH path) { this->result = this->discard(path); });
 	AddFunction(u"History", u"History", [&](VH path) { this->result = this->history(path); }, { { 0, u"HEAD" } });
-
-	AddProcedure(u"SetAuthor", u"SetAuthor", [&](VH name, VH email) { this->setAuthor(name, email); });
-	AddProcedure(u"SetCommitter", u"SetCommitter", [&](VH name, VH email) { this->setCommitter(name, email); });
 	AddFunction(u"IsBinary", u"IsBinary", [&](VH blob, VH encoding) { this->result = this->isBinary(blob, encoding); }, { {1, 0} });
 	AddFunction(u"GetFullpath", u"GetFullpath", [&](VH path) { this->result = this->getFullpath(path); });
 	AddFunction(u"GetEncoding", u"GetEncoding", [&](VH path) { this->result = this->getEncoding(path); });
+
 	AddFunction(u"FindFiles", u"НайтиФайлы", [&](VH path, VH mask, VH text, VH ignore) {
 		this->result = FileFinder(text, ignore).find(path, mask);
 		}, { {4, true} });
@@ -741,4 +745,62 @@ std::wstring GitManager::getFullpath(const std::wstring& path)
 	if (m_repo == nullptr) return {};
 	std::filesystem::path root = MB2WC(git_repository_path(m_repo));
 	return root.parent_path().parent_path().append(path).make_preferred();
+}
+
+std::string GitManager::checkout(const std::string& name, bool create)
+{
+	if (create) {
+		git_object *head;
+		const char* spec = "HEAD^{commit}";
+		ASSERT(git_revparse_single(&head, m_repo, spec));
+		GIT_commit commit = (git_commit*)head;
+		GIT_reference reference;
+		ASSERT(git_branch_create(&reference, m_repo, name.c_str(), commit, 0));
+	}
+	GIT_object treeish = NULL;
+	git_checkout_options opts = GIT_CHECKOUT_OPTIONS_INIT;
+	opts.checkout_strategy = GIT_CHECKOUT_SAFE;
+	ASSERT(git_revparse_single(&treeish, m_repo, name.c_str()));
+	ASSERT(git_checkout_tree(m_repo, treeish, &opts));
+	const std::string ref = "refs/heads/" + name;
+	ASSERT(git_repository_set_head(m_repo, ref.c_str()));
+	return success(true);
+}
+
+std::string GitManager::fetch(const std::string& name, const std::string& ref)
+{
+	GIT_remote remote;
+	ASSERT(git_remote_lookup(&remote, m_repo, name.c_str()));
+	ASSERT(git_remote_fetch(remote, nullptr, nullptr, nullptr));
+	return success(true);
+}
+
+std::string GitManager::push(const std::string& name, const std::string& ref)
+{
+	GIT_remote remote;
+	git_push_options options;
+	git_push_options_init(&options, GIT_PUSH_OPTIONS_VERSION);
+	ASSERT(git_remote_lookup(&remote, m_repo, name.c_str()));
+	if (ref.empty()) {
+		ASSERT(git_remote_push(remote, nullptr, &options));
+	}
+	else {
+		const char* paths[] = { ref.c_str() };
+		const git_strarray strarray = { (char**)paths, 1 };
+		ASSERT(git_remote_push(remote, &strarray, &options));
+	}
+	return success(true);
+}
+
+std::string GitManager::compare(const std::string& name, const std::string& ref)
+{
+	GIT_revwalk walker;
+	git_revwalk_new(&walker, m_repo);
+	git_revwalk_push_ref(walker, "refs/remotes/origin/master");
+	git_revwalk_hide_ref(walker, "refs/heads/master");
+
+	git_oid id;
+	long count = 0;
+	while (!git_revwalk_next(&id, walker)) count++;
+	return success(count);
 }

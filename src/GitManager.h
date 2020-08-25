@@ -49,11 +49,15 @@ private:
 	std::string open(const std::string& path);
 	std::string find(const std::string& path);
 	std::string add(const std::string& append, const std::string& remove);
+	std::string checkout(const std::string& name, bool create);
+	std::string fetch(const std::string& name, const std::string& ref);
+	std::string push(const std::string& name, const std::string& ref);
 	std::string reset(const std::string& filelist);
 	std::string remove(const std::string& filelist);
 	std::string discard(const std::string& filelist);
 	std::string commit(const std::string& msg);
 	std::string history(const std::string& msg);
+	std::string compare(const std::string& ref1, const std::string& ref2);
 	std::string diff(const std::u16string s1, const std::u16string& s2);
 	std::string file(const std::string& path, bool full);
 	std::string tree(const std::string& id);

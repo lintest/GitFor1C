@@ -89,6 +89,11 @@
 								</Picture>
 								<ExtendedTooltip name="FormFileSaveAsExtendedTooltip" id="400"/>
 							</Button>
+							<Button name="FormCloseFile" id="419">
+								<Type>CommandBarButton</Type>
+								<CommandName>Form.Command.CloseFile</CommandName>
+								<ExtendedTooltip name="FormCloseFileExtendedTooltip" id="420"/>
+							</Button>
 						</ChildItems>
 					</ButtonGroup>
 					<ButtonGroup name="FormGroupFileFolder" id="389">
@@ -2023,6 +2028,22 @@
 					<v8:content>File open file</v8:content>
 				</v8:item>
 			</ToolTip>
+		</Command>
+		<Command name="CloseFile" id="17">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Close File</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Close file</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Shortcut>Ctrl+W</Shortcut>
+			<Action>CloseFile</Action>
 		</Command>
 	</Commands>
 </Form>
