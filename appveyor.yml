@@ -1,0 +1,115 @@
+version: 0.3.0.{build}
+configuration: Release
+platform: x64
+
+branches:
+  only:
+    - develop
+    - master
+
+skip_branch_with_pr: true
+
+environment:
+  global:
+    KEY_1CV8T:
+      secure: OolAVEKkEg1cGCpG/VK2FaM0LWrPgMR/Kn4nTLYyKR0=
+
+  matrix:
+    - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu1804
+      job_name: Linux
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+      job_depends_on: Linux
+      job_name: Windows
+
+matrix:
+  fast_finish: true
+
+install:
+  - cmd: git clone -q --branch=platform https://github.com/lintest/tools1c.git bin
+  - cmd: cd bin
+  - cmd: 7z x tools1c.part01.rar -p%KEY_1CV8T%
+  - cmd: cd ..
+
+  - git clone -q --branch=master https://github.com/libgit2/libgit2.git libgit2-1.1.0
+  - cd libgit2-1.1.0
+  - git checkout -b version v1.1.0
+  - cd ..
+
+  - git clone -q --branch=master https://github.com/libssh2/libssh2.git libssh2-1.9.0
+  - cd libssh2-1.9.0
+  - git checkout -b version libssh2-1.9.0
+  - cd ..
+
+  - sh: sudo dpkg --add-architecture i386
+  - sh: sudo apt -qq update
+  - sh: sudo apt -qq -y install
+      uuid-dev uuid-dev:i386
+      libz-dev libz-dev:i386
+      libssl-dev libssl-dev:i386
+      gcc-multilib g++-multilib
+
+init:
+  - cmd: cmake --version
+  - cmd: msbuild /version
+  - cmd: echo.
+
+build_script:
+  - sh: echo "#define VERSION_FULL " ${APPVEYOR_BUILD_VERSION} > "version.h"
+  - cmd: Powershell.exe -File manifest.ps1
+
+  - mkdir build32
+  - cd build32
+  - sh: cmake -D CMAKE_BUILD_TYPE:STRING=Release -D TARGET_PLATFORM_32:BOOL=ON --build ..
+  - cmd: cmake .. -A Win32 -DMySuffix2=32
+  - cmake --build . --config Release --target GitFor1C
+  - cd ..
+
+  - mkdir build64
+  - cd build64
+  - sh: cmake -D CMAKE_BUILD_TYPE:STRING=Release -D TARGET_PLATFORM_32:BOOL=OFF --build ..
+  - cmd: cmake .. -A x64 -DMySuffix2=64
+  - cmake --build . --config Release --target GitFor1C
+  - cd ..
+
+for:
+  - matrix:
+      only:
+        - job_name: Linux
+
+    after_build:
+      - 7z a AddIn.zip ./bin32/lib${APPVEYOR_PROJECT_NAME}Lin32.so
+      - 7z a AddIn.zip ./bin64/lib${APPVEYOR_PROJECT_NAME}Lin64.so
+
+    artifacts:
+      - path: AddIn.zip
+
+  - matrix:
+      only:
+        - job_name: Windows
+
+    after_build:
+      - copy bin32\Release\lib%APPVEYOR_PROJECT_NAME%Win32.dll .
+      - copy bin64\Release\lib%APPVEYOR_PROJECT_NAME%Win64.dll .
+      - Powershell.exe -File appveyor.ps1
+      - appveyor PushArtifact AddIn.zip
+      - mkdir database
+      - bin\1cv8t.exe CREATEINFOBASE File=%CD%/database
+      - bin\1cv8t.exe DESIGNER /F %CD%/database /LoadExternalDataProcessorOrReportFromFiles Example.xml %APPVEYOR_PROJECT_NAME%.epf /Out example.log
+
+    artifacts:
+      - path: AddIn.zip
+      - path: ${APPVEYOR_PROJECT_NAME}.epf
+      - path: autotest.log
+      - path: example.log
+
+    deploy:
+      - provider: GitHub
+        auth_token:
+          secure: v7P89NQ2I5+WGNNdhpFrZEt6OCTPf8A8VSC5rttZMXh3DJ2fTChNEjZ1Wvm3kfBt
+        repository: ${APPVEYOR_ACCOUNT_NAME}/${APPVEYOR_PROJECT_NAME}
+        artifact: AddIn.zip, ${APPVEYOR_PROJECT_NAME}.epf
+        draft: true
+        prerelease: true
+        force_update: true
+        on:
+          branch: master

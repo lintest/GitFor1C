@@ -1,7 +1,8 @@
-﻿#include "GitManager.h"
+﻿#ifdef USE_LIBGIT2
+
+#include "GitManager.h"
 #include "FileFinder.h"
 #include "json.hpp"
-#include "version.h"
 
 using JSON = nlohmann::json;
 
@@ -17,7 +18,11 @@ GitManager::GitManager()
 	AddProperty(u"Remotes", u"Remotes", [&](VH var) { var = this->remoteList(); });
 	AddProperty(u"Branches", u"Branches", [&](VH var) { var = this->branchList(); });
 	AddProperty(u"Signature", u"Подпись", [&](VH var) { var = this->signature(); });
-	AddProperty(u"Version", u"Версия", [&](VH var) { var = std::string(VER_FILE_VERSION_STR); });
+
+	AddProperty(u"Username", u"Логин", [&](VH var) { var = this->m_credential.username; }, [&](VH var) { this->m_credential.username = (std::string)var; });
+	AddProperty(u"Password", u"Пароль", [&](VH var) { var = this->m_credential.password; }, [&](VH var) { this->m_credential.password = (std::string)var; });
+	AddProperty(u"privkey", u"ПриватныйКлюч", [&](VH var) { var = this->m_credential.privkey; }, [&](VH var) { this->m_credential.privkey = (std::string)var; });
+	AddProperty(u"pubkey", u"ПубличныйКлюч", [&](VH var) { var = this->m_credential.pubkey; }, [&](VH var) { this->m_credential.pubkey = (std::string)var; });
 
 	AddProcedure(u"SetAuthor", u"SetAuthor", [&](VH name, VH email) { this->setAuthor(name, email); });
 	AddProcedure(u"SetCommitter", u"SetCommitter", [&](VH name, VH email) { this->setCommitter(name, email); });
@@ -30,20 +35,19 @@ GitManager::GitManager()
 	AddFunction(u"Info", u"Info", [&](VH id) { this->result = this->info(id); });
 	AddFunction(u"Diff", u"Diff", [&](VH p1, VH p2) { this->result = this->diff(p1, p2); });
 	AddFunction(u"File", u"File", [&](VH path, VH full) { this->result = this->file(path, full); });
-	AddFunction(u"Blob", u"Blob", [&](VH id, VH encoding) { this->blob(id, encoding); }, { { 1, 0 } });
+	AddFunction(u"Blob", u"Blob", [&](VH id, VH encoding) { this->blob(id, encoding); }, { { 1, (int64_t)0 } });
 	AddFunction(u"Tree", u"Tree", [&](VH id) { this->result = this->tree(id); });
 	AddFunction(u"Status", u"Status", [&]() { this->result = this->status(); });
 	AddFunction(u"Commit", u"Commit", [&](VH msg) { this->result = this->commit(msg); });
 	AddFunction(u"Checkout", u"Checkout", [&](VH name, VH create) { this->result = this->checkout(name, create); }, { {1, false} });
-	AddFunction(u"Fetch", u"Fetch", [&](VH name, VH ref) { this->result = this->fetch(name, ref); }, { { 0, u"" } });
-	AddFunction(u"Push", u"Push", [&](VH name, VH ref) { this->result = this->push(name, ref); }, { { 0, u"" } });
+	AddFunction(u"Fetch", u"Fetch", [&](VH name, VH ref) { this->result = this->fetch(name, ref); }, { { 1, u"" } });
+	AddFunction(u"Push", u"Push", [&](VH name, VH ref) { this->result = this->push(name, ref); }, { { 1, u"" } });
 	AddFunction(u"Add", u"Add", [&](VH append, VH remove) { this->result = this->add(append, remove); }, { {1, u""} });
 	AddFunction(u"Reset", u"Reset", [&](VH path) { this->result = this->reset(path); });
 	AddFunction(u"Remove", u"Remove", [&](VH path) { this->result = this->remove(path); });
 	AddFunction(u"Discard", u"Discard", [&](VH path) { this->result = this->discard(path); });
 	AddFunction(u"History", u"History", [&](VH path) { this->result = this->history(path); }, { { 0, u"HEAD" } });
-	AddFunction(u"IsBinary", u"IsBinary", [&](VH blob, VH encoding) { this->result = this->isBinary(blob, encoding); }, { {1, 0} });
-	AddFunction(u"GetFullpath", u"GetFullpath", [&](VH path) { this->result = this->getFullpath(path); });
+	AddFunction(u"IsBinary", u"IsBinary", [&](VH blob, VH encoding) { this->result = this->isBinary(blob, encoding); }, { {1, (int64_t)0} });
 	AddFunction(u"GetEncoding", u"GetEncoding", [&](VH path) { this->result = this->getEncoding(path); });
 
 	AddFunction(u"FindFiles", u"НайтиФайлы", [&](VH path, VH mask, VH text, VH ignore) {
@@ -64,39 +68,38 @@ GitManager::GitManager()
 #pragma comment(lib, "crypt32")
 #pragma comment(lib, "rpcrt4")
 #pragma comment(lib, "winhttp")
-#endif _WINDOWS
+#endif//_WINDOWS
 
 #define CHECK_REPO() {if (m_repo == nullptr) return ::error(0);}
 
 #define ASSERT(t) {if (t < 0) return ::error();}
 
-#define AUTO_GIT(N, T, F)              \
-class N {                              \
-private:                               \
-	T* h = nullptr;                    \
-public:                                \
-	N() {}                             \
-	N(T* h) { this->h = h; }           \
-	~N() { if (h) (F(h)); }            \
-	operator T*() const { return h; }  \
-	T** operator &() { return &h; }    \
-	T* operator->() { return h; }      \
-	operator bool() { return h; }      \
-}                                      \
-;
+template<class T, void destructor(T*)>
+class AutoGit {
+private:
+	T* h = nullptr;
+public:
+	AutoGit() {}
+	AutoGit(T* h) { this->h = h; }
+	~AutoGit() { if (h) destructor(h); }
+	operator T* () const { return h; }
+	T** operator &() { return &h; }
+	T* operator->() { return h; }
+	operator bool() { return h; }
+};
 
-AUTO_GIT(GIT_branch_iterator, git_branch_iterator, git_branch_iterator_free);
-AUTO_GIT(GIT_status_list, git_status_list, git_status_list_free)
-AUTO_GIT(GIT_signature, git_signature, git_signature_free)
-AUTO_GIT(GIT_reference, git_reference, git_reference_free);
-AUTO_GIT(GIT_revwalk, git_revwalk, git_revwalk_free)
-AUTO_GIT(GIT_commit, git_commit, git_commit_free)
-AUTO_GIT(GIT_object, git_object, git_object_free)
-AUTO_GIT(GIT_remote, git_remote, git_remote_free)
-AUTO_GIT(GIT_index, git_index, git_index_free)
-AUTO_GIT(GIT_blob, git_blob, git_blob_free)
-AUTO_GIT(GIT_diff, git_diff, git_diff_free)
-AUTO_GIT(GIT_tree, git_tree, git_tree_free)
+using GIT_branch_iterator = AutoGit<git_branch_iterator, git_branch_iterator_free>;
+using GIT_status_list = AutoGit<git_status_list, git_status_list_free>;
+using GIT_signature = AutoGit<git_signature, git_signature_free>;
+using GIT_reference = AutoGit<git_reference, git_reference_free>;
+using GIT_revwalk = AutoGit<git_revwalk, git_revwalk_free>;
+using GIT_commit = AutoGit<git_commit, git_commit_free>;
+using GIT_object = AutoGit<git_object, git_object_free>;
+using GIT_remote = AutoGit<git_remote, git_remote_free>;
+using GIT_index = AutoGit<git_index, git_index_free>;
+using GIT_blob = AutoGit<git_blob, git_blob_free>;
+using GIT_diff = AutoGit<git_diff, git_diff_free>;
+using GIT_tree = AutoGit<git_tree, git_tree_free>;
 
 GitManager::~GitManager()
 {
@@ -170,18 +173,19 @@ std::string GitManager::open(const std::string& path)
 	return success(true);
 }
 
-bool GitManager::close()
+std::string GitManager::close()
 {
 	if (m_repo) git_repository_free(m_repo);
 	m_repo = nullptr;
-	return true;
+	return success(true);
 }
 
 std::string GitManager::find(const std::string& path)
 {
+	std::string res;
 	git_buf buffer = { 0 };
 	ASSERT(git_repository_discover(&buffer, path.c_str(), 0, nullptr));
-	std::string res = buffer.ptr;
+	if (buffer.ptr) res = buffer.ptr;
 	git_buf_free(&buffer);
 	return success(res);
 }
@@ -342,7 +346,7 @@ std::string GitManager::branchList()
 	CHECK_REPO();
 	GIT_branch_iterator iterator;
 	ASSERT(git_branch_iterator_new(&iterator, m_repo, GIT_BRANCH_LOCAL));
-	git_reference *ref;
+	git_reference* ref;
 	git_branch_t type;
 	JSON json;
 	while (git_branch_next(&ref, &type, iterator) == 0) {
@@ -589,7 +593,7 @@ int diff_file_cb(const git_diff_delta* delta, float progress, void* payload)
 	return 0;
 }
 
-std::string GitManager::diff(const std::u16string s1, const std::u16string& s2)
+std::string GitManager::diff(const std::u16string& s1, const std::u16string& s2)
 {
 	CHECK_REPO();
 	GIT_diff diff = NULL;
@@ -717,7 +721,7 @@ void GitManager::blob(VH id, VH encoding)
 	GIT::git_bom_t bom;
 	bool binary = git_buf_is_binary(&buf);
 	if (!binary) GIT::git_buf_text_detect_bom(&bom, &buf);
-	encoding = binary ? -1 : bom;
+	encoding = int64_t(binary ? -1 : bom);
 }
 
 bool GitManager::isBinary(VH blob, VH encoding)
@@ -726,11 +730,11 @@ bool GitManager::isBinary(VH blob, VH encoding)
 	GIT::git_bom_t bom;
 	GIT::git_buf_text_detect_bom(&bom, &buf);
 	bool binary = git_buf_is_binary(&buf);
-	encoding = binary ? -1 : bom;
+	encoding = int64_t(binary ? -1 : bom);
 	return binary;
 }
 
-long GitManager::getEncoding(VH blob)
+int64_t GitManager::getEncoding(VH blob)
 {
 	const git_buf buf = GIT_BUF_INIT_CONST(blob.data(), blob.size());
 	GIT::git_bom_t bom;
@@ -738,19 +742,10 @@ long GitManager::getEncoding(VH blob)
 	return bom;
 }
 
-#include <filesystem>
-
-std::wstring GitManager::getFullpath(const std::wstring& path)
-{
-	if (m_repo == nullptr) return {};
-	std::filesystem::path root = MB2WC(git_repository_path(m_repo));
-	return root.parent_path().parent_path().append(path).make_preferred();
-}
-
 std::string GitManager::checkout(const std::string& name, bool create)
 {
 	if (create) {
-		git_object *head;
+		git_object* head;
 		const char* spec = "HEAD^{commit}";
 		ASSERT(git_revparse_single(&head, m_repo, spec));
 		GIT_commit commit = (git_commit*)head;
@@ -767,11 +762,48 @@ std::string GitManager::checkout(const std::string& name, bool create)
 	return success(true);
 }
 
+int credential_cb(git_cred** out, const char* url, const char* username_from_url, unsigned int allowed_types, void* payload)
+{
+	int error = 1;
+	auto credential = (GitCredential*)payload;
+	std::string username = credential->username;
+	if (username_from_url) username = username_from_url;
+	if (allowed_types & GIT_CREDENTIAL_SSH_KEY) {
+		error = git_credential_ssh_key_new(out,
+			username.c_str(),
+			credential->pubkey.c_str(),
+			credential->privkey.c_str(),
+			credential->password.c_str()
+		);
+	}
+	else if (allowed_types & GIT_CREDENTIAL_USERPASS_PLAINTEXT) {
+		error = git_credential_userpass_plaintext_new(out,
+			username.c_str(),
+			credential->password.c_str()
+		);
+	}
+	else if (allowed_types & GIT_CREDENTIAL_USERNAME) {
+		error = git_credential_username_new(out, username.c_str());
+	}
+	return error;
+}
+
 std::string GitManager::fetch(const std::string& name, const std::string& ref)
 {
 	GIT_remote remote;
+	git_remote_callbacks callbacks = GIT_REMOTE_CALLBACKS_INIT;
+	git_fetch_options options = GIT_FETCH_OPTIONS_INIT;
+	options.callbacks.credentials = credential_cb;
+	options.callbacks.payload = &m_credential;
 	ASSERT(git_remote_lookup(&remote, m_repo, name.c_str()));
-	ASSERT(git_remote_fetch(remote, nullptr, nullptr, nullptr));
+	if (ref.empty()) {
+		ASSERT(git_remote_fetch(remote, nullptr, &options, nullptr));
+	}
+	else {
+		const char* paths[] = { ref.c_str() };
+		const git_strarray strarray = { (char**)paths, 1 };
+		ASSERT(git_remote_fetch(remote, &strarray, &options, nullptr));
+	}
 	return success(true);
 }
 
@@ -780,6 +812,8 @@ std::string GitManager::push(const std::string& name, const std::string& ref)
 	GIT_remote remote;
 	git_push_options options;
 	git_push_options_init(&options, GIT_PUSH_OPTIONS_VERSION);
+	options.callbacks.credentials = credential_cb;
+	options.callbacks.payload = &m_credential;
 	ASSERT(git_remote_lookup(&remote, m_repo, name.c_str()));
 	if (ref.empty()) {
 		ASSERT(git_remote_push(remote, nullptr, &options));
@@ -804,3 +838,5 @@ std::string GitManager::compare(const std::string& name, const std::string& ref)
 	while (!git_revwalk_next(&id, walker)) count++;
 	return success(count);
 }
+
+#endif //USE_LIBGIT2

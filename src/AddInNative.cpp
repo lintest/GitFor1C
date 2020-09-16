@@ -1,7 +1,10 @@
 ﻿#include "stdafx.h"
 
+#include "../version.h"
+#define STRINGIZE2(s) #s
+#define STRINGIZE(s) STRINGIZE2(s)
+
 #ifdef _WINDOWS
-#include <locale>
 #pragma warning (disable : 4267)
 #pragma warning (disable : 4302)
 #pragma warning (disable : 4311)
@@ -11,9 +14,11 @@
 #include <signal.h>
 #endif
 
+#include <locale>
 #include <wchar.h>
 #include <string>
 #include <algorithm>
+#include <iterator>
 #include <codecvt>
 #include <cwctype>
 #include <sstream>
@@ -21,11 +26,17 @@
 #include "AddInNative.h"
 
 #ifdef _WINDOWS
-BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved)
+
+HMODULE hModule = NULL;
+
+BOOL APIENTRY DllMain(HMODULE module, DWORD  ul_reason_for_call, LPVOID lpReserved)
 {
 	switch (ul_reason_for_call)
 	{
 	case DLL_PROCESS_ATTACH:
+		::DisableThreadLibraryCalls(module);
+		::hModule = module;
+		break;
 	case DLL_THREAD_ATTACH:
 	case DLL_THREAD_DETACH:
 	case DLL_PROCESS_DETACH:
@@ -56,77 +67,28 @@ long DestroyObject(IComponentBase** pInterface)
 	return 0;
 }
 
-#ifdef _WINDOWS
-
 std::string WC2MB(const std::wstring& wstr)
 {
-	DWORD locale = CP_UTF8;
-	if (wstr.empty()) return {};
-	const int sz = WideCharToMultiByte(locale, 0, &wstr[0], (int)wstr.size(), 0, 0, 0, 0);
-	std::string res(sz, 0);
-	WideCharToMultiByte(locale, 0, &wstr[0], (int)wstr.size(), &res[0], sz, 0, 0);
-	return res;
+	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+	return converter.to_bytes(wstr);
 }
 
 std::wstring MB2WC(const std::string& str)
 {
-	DWORD locale = CP_UTF8;
-	if (str.empty()) return {};
-	const int sz = MultiByteToWideChar(locale, 0, &str[0], (int)str.size(), 0, 0);
-	std::wstring res(sz, 0);
-	MultiByteToWideChar(locale, 0, &str[0], (int)str.size(), &res[0], sz);
-	return res;
+	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+	return converter.from_bytes(str);
 }
-
-#else //_WINDOWS
-
-#include <iconv.h>
-
-std::wstring MB2WC(const std::string& source)
-{
-	std::string tocode = sizeof(wchar_t) == 4 ? "UTF-32" : "UTF-16";
-	iconv_t cd = iconv_open(tocode.c_str(), "UTF-8");
-	if (cd == (iconv_t)-1) return {};
-
-	std::wstring result;
-	result.resize(source.size() + 1);
-
-	char* src = const_cast<char*>(source.data());
-	wchar_t* trg = const_cast<wchar_t*>(result.data());
-
-	size_t succeed = (size_t)-1;
-	size_t f = source.size() * sizeof(char);
-	size_t t = result.size() * sizeof(wchar_t);
-	succeed = iconv(cd, (char**)&src, &f, (char**)&trg, &t);
-	iconv_close(cd);
-	if (succeed == (size_t)-1) return {};
-	return result;
-}
-
-std::string WC2MB(const std::wstring& source)
-{
-	std::string fromcode = sizeof(wchar_t) == 4 ? "UTF-32" : "UTF-16";
-	iconv_t cd = iconv_open("UTF-8", fromcode.c_str());
-	if (cd == (iconv_t)-1) return {};
-
-	std::string result;
-	result.resize(source.size() * sizeof(wchar_t) + 1);
-
-	wchar_t* src = const_cast<wchar_t*>(source.data());
-	char* trg = const_cast<char*>(result.data());
-
-	size_t succeed = (size_t)-1;
-	size_t f = source.size() * sizeof(wchar_t);
-	size_t t = result.size() * sizeof(char);
-	succeed = iconv(cd, (char**)&src, &f, (char**)&trg, &t);
-	iconv_close(cd);
-	if (succeed == (size_t)-1) return {};
-	return result;
-}
-
-#endif //_WINDOWS
 
 std::map<std::u16string, CompFunction> AddInNative::components;
+
+AddInNative::AddInNative(void) : result(nullptr, this) {
+	AddProperty(u"Version", u"Версия", [&](VH var) { var = this->version(); });
+}
+
+std::string AddInNative::version()
+{
+	return STRINGIZE(VERSION_FULL);
+}
 
 bool AddInNative::Init(void* pConnection)
 {
@@ -162,14 +124,14 @@ long AddInNative::GetNProps()
 long AddInNative::FindProp(const WCHAR_T* wsPropName)
 {
 	std::u16string name((char16_t*)wsPropName);
-	for (auto it = properties.begin(); it != properties.end(); it++) {
-		for (auto n = it->names.begin(); n != it->names.end(); n++) {
+	for (auto it = properties.begin(); it != properties.end(); ++it) {
+		for (auto n = it->names.begin(); n != it->names.end(); ++n) {
 			if (n->compare(name) == 0) return long(it - properties.begin());
 		}
 	}
 	name = upper(name);
-	for (auto it = properties.begin(); it != properties.end(); it++) {
-		for (auto n = it->names.begin(); n != it->names.end(); n++) {
+	for (auto it = properties.begin(); it != properties.end(); ++it) {
+		for (auto n = it->names.begin(); n != it->names.end(); ++n) {
 			if (upper(*n).compare(name) == 0) return long(it - properties.begin());
 		}
 	}
@@ -178,11 +140,16 @@ long AddInNative::FindProp(const WCHAR_T* wsPropName)
 
 const WCHAR_T* AddInNative::GetPropName(long lPropNum, long lPropAlias)
 {
-	auto it = std::next(properties.begin(), lPropNum);
-	if (it == properties.end()) return nullptr;
-	auto nm = std::next(it->names.begin(), lPropAlias);
-	if (nm == it->names.end()) return nullptr;
-	return W(nm->c_str());
+	try {
+		auto it = std::next(properties.begin(), lPropNum);
+		if (it == properties.end()) return nullptr;
+		auto nm = std::next(it->names.begin(), lPropAlias);
+		if (nm == it->names.end()) return nullptr;
+		return W(nm->c_str());
+	}
+	catch (...) {
+		return nullptr;
+	}
 }
 
 bool AddInNative::GetPropVal(const long lPropNum, tVariant* pvarPropVal)
@@ -191,8 +158,12 @@ bool AddInNative::GetPropVal(const long lPropNum, tVariant* pvarPropVal)
 	if (it == properties.end()) return false;
 	if (!it->getter) return false;
 	try {
-		it->getter(VA(pvarPropVal));
+		it->getter(VA(pvarPropVal, &(*it)));
 		return true;
+	}
+	catch (const std::u16string& msg) {
+		AddError(msg);
+		return false;
 	}
 	catch (...) {
 		return false;
@@ -205,8 +176,12 @@ bool AddInNative::SetPropVal(const long lPropNum, tVariant* pvarPropVal)
 	if (it == properties.end()) return false;
 	if (!it->setter) return false;
 	try {
-		it->setter(VA(pvarPropVal));
+		it->setter(VA(pvarPropVal, &(*it)));
 		return true;
+	}
+	catch (const std::u16string& msg) {
+		AddError(msg);
+		return false;
 	}
 	catch (...) {
 		return false;
@@ -235,14 +210,14 @@ long AddInNative::GetNMethods()
 long AddInNative::FindMethod(const WCHAR_T* wsMethodName)
 {
 	std::u16string name((char16_t*)wsMethodName);
-	for (auto it = methods.begin(); it != methods.end(); it++) {
-		for (auto n = it->names.begin(); n != it->names.end(); n++) {
+	for (auto it = methods.begin(); it != methods.end(); ++it) {
+		for (auto n = it->names.begin(); n != it->names.end(); ++n) {
 			if (n->compare(name) == 0) return long(it - methods.begin());
 		}
 	}
 	name = upper(name);
-	for (auto it = methods.begin(); it != methods.end(); it++) {
-		for (auto n = it->names.begin(); n != it->names.end(); n++) {
+	for (auto it = methods.begin(); it != methods.end(); ++it) {
+		for (auto n = it->names.begin(); n != it->names.end(); ++n) {
 			if (upper(*n).compare(name) == 0) return long(it - methods.begin());
 		}
 	}
@@ -251,11 +226,16 @@ long AddInNative::FindMethod(const WCHAR_T* wsMethodName)
 
 const WCHAR_T* AddInNative::GetMethodName(const long lMethodNum, const long lMethodAlias)
 {
-	auto it = std::next(methods.begin(), lMethodNum);
-	if (it == methods.end()) return nullptr;
-	auto nm = std::next(it->names.begin(), lMethodAlias);
-	if (nm == it->names.end()) return nullptr;
-	return W(nm->c_str());
+	try {
+		auto it = std::next(methods.begin(), lMethodNum);
+		if (it == methods.end()) return nullptr;
+		auto nm = std::next(it->names.begin(), lMethodAlias);
+		if (nm == it->names.end()) return nullptr;
+		return W(nm->c_str());
+	}
+	catch (...) {
+		return nullptr;
+	}
 }
 
 long AddInNative::GetNParams(const long lMethodNum)
@@ -286,7 +266,7 @@ bool AddInNative::GetParamDefValue(const long lMethodNum, const long lParamNum, 
 			VA(pvarParamDefValue) = *value;
 			return true;
 		}
-		if (auto value = std::get_if<int32_t>(var)) {
+		if (auto value = std::get_if<int64_t>(var)) {
 			VA(pvarParamDefValue) = *value;
 			return true;
 		}
@@ -300,6 +280,10 @@ bool AddInNative::GetParamDefValue(const long lMethodNum, const long lParamNum, 
 		}
 		return true;
 	}
+	catch (const std::u16string& msg) {
+		AddError(msg);
+		return false;
+	}
 	catch (...) {
 		return false;
 	}
@@ -307,50 +291,55 @@ bool AddInNative::GetParamDefValue(const long lMethodNum, const long lParamNum, 
 
 bool AddInNative::HasRetVal(const long lMethodNum)
 {
-	auto it = std::next(methods.begin(), lMethodNum);
-	if (it == methods.end()) return false;
-	return it->hasRetVal;
+	try {
+		auto it = std::next(methods.begin(), lMethodNum);
+		if (it == methods.end()) return false;
+		return it->hasRetVal;
+	}
+	catch (...) {
+		return false;
+	}
 }
 
-bool AddInNative::CallMethod(MethFunction* function, tVariant* p, const long lSizeArray)
+bool AddInNative::CallMethod(MethFunction* func, tVariant* p, Meth* m, const long lSizeArray)
 {
-	if (auto handler = std::get_if<MethFunction0>(function)) {
+	if (auto handler = std::get_if<MethFunction0>(func)) {
 		(*handler)();
 		return true;
 	}
-	if (auto handler = std::get_if<MethFunction1>(function)) {
+	if (auto handler = std::get_if<MethFunction1>(func)) {
 		if (lSizeArray < 1) throw std::bad_function_call();
-		(*handler)(VA(p));
+		(*handler)(VA(p, m, 0));
 		return true;
 	}
-	if (auto handler = std::get_if<MethFunction2>(function)) {
+	if (auto handler = std::get_if<MethFunction2>(func)) {
 		if (lSizeArray < 2) throw std::bad_function_call();
-		(*handler)(VA(p), VA(p + 1));
+		(*handler)(VA(p, m, 0), VA(p, m, 1));
 		return true;
 	}
-	if (auto handler = std::get_if<MethFunction3>(function)) {
+	if (auto handler = std::get_if<MethFunction3>(func)) {
 		if (lSizeArray < 3) throw std::bad_function_call();
-		(*handler)(VA(p), VA(p + 1), VA(p + 2));
+		(*handler)(VA(p, m, 0), VA(p, m, 1), VA(p, m, 2));
 		return true;
 	}
-	if (auto handler = std::get_if<MethFunction4>(function)) {
+	if (auto handler = std::get_if<MethFunction4>(func)) {
 		if (lSizeArray < 4) throw std::bad_function_call();
-		(*handler)(VA(p), VA(p + 1), VA(p + 2), VA(p + 3));
+		(*handler)(VA(p, m, 0), VA(p, m, 1), VA(p, m, 2), VA(p, m, 3));
 		return true;
 	}
-	if (auto handler = std::get_if<MethFunction5>(function)) {
+	if (auto handler = std::get_if<MethFunction5>(func)) {
 		if (lSizeArray < 5) throw std::bad_function_call();
-		(*handler)(VA(p), VA(p + 1), VA(p + 2), VA(p + 3), VA(p + 4));
+		(*handler)(VA(p, m, 0), VA(p, m, 1), VA(p, m, 2), VA(p, m, 3), VA(p, m, 4));
 		return true;
 	}
-	if (auto handler = std::get_if<MethFunction6>(function)) {
+	if (auto handler = std::get_if<MethFunction6>(func)) {
 		if (lSizeArray < 6) throw std::bad_function_call();
-		(*handler)(VA(p), VA(p + 1), VA(p + 2), VA(p + 3), VA(p + 4), VA(p + 5));
+		(*handler)(VA(p, m, 0), VA(p, m, 1), VA(p, m, 2), VA(p, m, 3), VA(p, m, 4), VA(p, m, 5));
 		return true;
 	}
-	if (auto handler = std::get_if<MethFunction7>(function)) {
+	if (auto handler = std::get_if<MethFunction7>(func)) {
 		if (lSizeArray < 7) throw std::bad_function_call();
-		(*handler)(VA(p), VA(p + 1), VA(p + 2), VA(p + 3), VA(p + 4), VA(p + 5), VA(p + 6));
+		(*handler)(VA(p, m, 0), VA(p, m, 1), VA(p, m, 2), VA(p, m, 3), VA(p, m, 4), VA(p, m, 5), VA(p, m, 6));
 		return true;
 	}
 	return false;
@@ -362,7 +351,11 @@ bool AddInNative::CallAsProc(const long lMethodNum, tVariant* paParams, const lo
 	if (it == methods.end()) return false;
 	try {
 		result << VA(nullptr);
-		return CallMethod(&it->handler, paParams, lSizeArray);
+		return CallMethod(&it->handler, paParams, &(*it), lSizeArray);
+	}
+	catch (const std::u16string& msg) {
+		AddError(msg);
+		return false;
 	}
 	catch (...) {
 		return false;
@@ -375,9 +368,13 @@ bool AddInNative::CallAsFunc(const long lMethodNum, tVariant* pvarRetValue, tVar
 	if (it == methods.end()) return false;
 	try {
 		result << VA(pvarRetValue);
-		bool ok = CallMethod(&it->handler, paParams, lSizeArray);
+		bool ok = CallMethod(&it->handler, paParams, &(*it), lSizeArray);
 		result << VA(nullptr);
 		return ok;
+	}
+	catch (const std::u16string& msg) {
+		AddError(msg);
+		return false;
 	}
 	catch (...) {
 		result << VA(nullptr);
@@ -388,7 +385,9 @@ bool AddInNative::CallAsFunc(const long lMethodNum, tVariant* pvarRetValue, tVar
 void AddInNative::SetLocale(const WCHAR_T* locale)
 {
 	try {
-		std::locale::global(std::locale{ WCHAR2MB(locale) });
+		std::string loc = WCHAR2MB(locale);
+		this->alias = loc == "rus";
+		std::locale::global(std::locale{ loc.c_str() });
 	}
 	catch (std::runtime_error&) {
 		std::locale::global(std::locale{ "" });
@@ -420,19 +419,19 @@ AddInNative* AddInNative::CreateObject(const std::u16string& name) {
 	return object;
 }
 
-void AddInNative::AddProperty(const std::u16string& nameEn, const std::u16string& nameRu, PropFunction getter, PropFunction setter)
+void AddInNative::AddProperty(const std::u16string& nameEn, const std::u16string& nameRu, const PropFunction& getter, const PropFunction& setter)
 {
-	properties.push_back({ { nameRu, nameEn }, getter, setter });
+	properties.push_back({ { nameEn, nameRu }, getter, setter });
 }
 
-void AddInNative::AddProcedure(const std::u16string& nameEn, const std::u16string& nameRu, MethFunction handler, MethDefaults defs)
+void AddInNative::AddProcedure(const std::u16string& nameEn, const std::u16string& nameRu, const MethFunction& handler, const MethDefaults& defs)
 {
-	methods.push_back({ { nameRu, nameEn }, handler, defs, false });
+	methods.push_back({ { nameEn, nameRu }, handler, defs, false });
 }
 
-void AddInNative::AddFunction(const std::u16string& nameEn, const std::u16string& nameRu, MethFunction handler, MethDefaults defs)
+void AddInNative::AddFunction(const std::u16string& nameEn, const std::u16string& nameRu, const MethFunction& handler, const MethDefaults& defs)
 {
-	methods.push_back({ { nameRu, nameEn }, handler, defs, true });
+	methods.push_back({ { nameEn, nameRu }, handler, defs, true });
 }
 
 bool ADDIN_API AddInNative::AllocMemory(void** pMemory, unsigned long ulCountByte) const
@@ -447,38 +446,35 @@ void ADDIN_API AddInNative::FreeMemory(void** pMemory) const
 
 std::string AddInNative::WCHAR2MB(std::basic_string_view<WCHAR_T> src)
 {
-	if (sizeof(wchar_t) == 2) {
-		static std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> cvt_utf8_utf16;
-		return cvt_utf8_utf16.to_bytes(src.data(), src.data() + src.size());
-	}
-	else {
-		static std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> cvt_utf8_utf16;
-		return cvt_utf8_utf16.to_bytes(reinterpret_cast<const char16_t*>(src.data()),
-			reinterpret_cast<const char16_t*>(src.data() + src.size()));
-	}
+#ifdef _WINDOWS
+	static std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> cvt_utf8_utf16;
+	return cvt_utf8_utf16.to_bytes(src.data(), src.data() + src.size());
+#else
+	static std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> cvt_utf8_utf16;
+	return cvt_utf8_utf16.to_bytes(reinterpret_cast<const char16_t*>(src.data()),
+		reinterpret_cast<const char16_t*>(src.data() + src.size()));
+#endif//_WINDOWS
 }
 
 std::wstring AddInNative::WCHAR2WC(std::basic_string_view<WCHAR_T> src) {
-	if (sizeof(wchar_t) == 2) {
-		return std::wstring(src);
-	}
-	else {
-		std::wstring_convert<std::codecvt_utf16<wchar_t, 0x10ffff, std::little_endian>> conv;
-		return conv.from_bytes(reinterpret_cast<const char*>(src.data()),
-			reinterpret_cast<const char*>(src.data() + src.size()));
-	}
+#ifdef _WINDOWS
+	return std::wstring(src);
+#else
+	std::wstring_convert<std::codecvt_utf16<wchar_t, 0x10ffff, std::little_endian>> conv;
+	return conv.from_bytes(reinterpret_cast<const char*>(src.data()),
+		reinterpret_cast<const char*>(src.data() + src.size()));
+#endif//_WINDOWS
 }
 
 std::u16string AddInNative::MB2WCHAR(std::string_view src) {
-	if (sizeof(wchar_t) == 2) {
-		static std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> cvt_utf8_utf16;
-		std::wstring tmp = cvt_utf8_utf16.from_bytes(src.data(), src.data() + src.size());
-		return std::u16string(reinterpret_cast<const char16_t*>(tmp.data()), tmp.size());
-	}
-	else {
-		static std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> cvt_utf8_utf16;
-		return cvt_utf8_utf16.from_bytes(src.data(), src.data() + src.size());
-	}
+#ifdef _WINDOWS
+	static std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> cvt_utf8_utf16;
+	std::wstring tmp = cvt_utf8_utf16.from_bytes(src.data(), src.data() + src.size());
+	return std::u16string(reinterpret_cast<const char16_t*>(tmp.data()), tmp.size());
+#else
+	static std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> cvt_utf8_utf16;
+	return cvt_utf8_utf16.from_bytes(src.data(), src.data() + src.size());
+#endif//_WINDOWS
 }
 
 std::u16string AddInNative::upper(std::u16string& str)
@@ -493,17 +489,23 @@ std::wstring AddInNative::upper(std::wstring& str)
 	return str;
 }
 
+TYPEVAR AddInNative::VarinantHelper::type()
+{
+	if (pvar == nullptr) throw std::bad_variant_access();
+	return pvar->vt;
+}
+
 uint32_t AddInNative::VarinantHelper::size()
 {
 	if (pvar == nullptr) throw std::bad_variant_access();
-	if (pvar->vt != VTYPE_BLOB) throw std::bad_typeid();
+	if (pvar->vt != VTYPE_BLOB) throw error(VTYPE_BLOB);
 	return pvar->strLen;
 }
 
 char* AddInNative::VarinantHelper::data()
 {
 	if (pvar == nullptr) throw std::bad_variant_access();
-	if (pvar->vt != VTYPE_BLOB) throw std::bad_typeid();
+	if (pvar->vt != VTYPE_BLOB) throw error(VTYPE_BLOB);
 	return pvar->pstrVal;
 }
 
@@ -534,11 +536,17 @@ void AddInNative::VarinantHelper::clear()
 	tVarInit(pvar);
 }
 
-AddInNative::VarinantHelper& AddInNative::VarinantHelper::operator=(int32_t value)
+AddInNative::VarinantHelper& AddInNative::VarinantHelper::operator=(int64_t value)
 {
 	clear();
-	TV_VT(pvar) = VTYPE_I4;
-	TV_I4(pvar) = value;
+	if (INT32_MIN <= value && value <= INT32_MAX) {
+		TV_VT(pvar) = VTYPE_I4;
+		TV_I4(pvar) = (int32_t)value;
+	}
+	else {
+		TV_VT(pvar) = VTYPE_R8;
+		TV_R8(pvar) = (double)value;
+	}
 	return *this;
 }
 
@@ -571,6 +579,63 @@ AddInNative::VarinantHelper& AddInNative::VarinantHelper::operator=(const std::u
 	return *this;
 }
 
+bool AddInNative::AddError(const std::u16string& descr, long scode)
+{
+	std::u16string info = u"AddIn." + name;
+	return m_iConnect && m_iConnect->AddError(ADDIN_E_IMPORTANT, (WCHAR_T*)info.c_str(), (WCHAR_T*)descr.c_str(), scode);
+}
+
+static std::u16string typeinfo(TYPEVAR vt, bool alias)
+{
+	switch (vt) {
+	case VTYPE_EMPTY:
+		return alias ? u"Неопределено" : u"Undefined";
+	case VTYPE_I2:
+	case VTYPE_I4:
+	case VTYPE_ERROR:
+	case VTYPE_UI1:
+		return alias ? u"Целое число" : u"Integer";
+	case VTYPE_BOOL:
+		return alias ? u"Булево" : u"Boolean";
+	case VTYPE_R4:
+	case VTYPE_R8:
+		return alias ? u"Число" : u"Float";
+	case VTYPE_DATE:
+	case VTYPE_TM:
+		return alias ? u"Дата" : u"Date";
+	case VTYPE_PSTR:
+	case VTYPE_PWSTR:
+		return alias ? u"Строка" : u"String";
+	case VTYPE_BLOB:
+		return alias ? u"Двоичные данные" : u"Binary";
+	default:
+		return alias ? u"Неопределено" : u"Undefined";
+	}
+}
+
+std::exception AddInNative::VarinantHelper::error(TYPEVAR vt) const
+{
+	std::basic_stringstream<char16_t, std::char_traits<char16_t>, std::allocator<char16_t>> ss;
+	if (addin && addin->alias) {
+		ss << u"Ошибка получения значения";
+		if (prop) ss << u" при обращении к свойству <" << prop->names[1] << ">";
+		if (meth) ss << u" при вызове метода <" << meth->names[1] << ">";
+		if (number >= 0) ss << u" параметр <" << number + 1 << ">";
+		ss << u" ожидается <" + typeinfo(vt, true) << u">";
+		if (pvar) ss << u" фактически <" + typeinfo(pvar->vt, true) << u">";
+	}
+	else {
+		ss << u"Error getting value";
+		if (prop) ss << u" of property <" << prop->names[0] << ">";
+		if (meth) ss << u" when calling method <" << meth->names[0] << ">";
+		if (number >= 0) ss << u" parameter <" << number + 1 << ">";
+		ss << u" expected <" + typeinfo(vt, false) << u">";
+		if (pvar) ss << u" actual value <" + typeinfo(pvar->vt, false) << u">";
+	}
+	if (addin) addin->AddError(ss.str());
+	return std::bad_typeid();
+}
+
 AddInNative::VarinantHelper::operator std::string() const
 {
 	std::u16string str(*this);
@@ -586,22 +651,41 @@ AddInNative::VarinantHelper::operator std::wstring() const
 AddInNative::VarinantHelper::operator std::u16string() const
 {
 	if (pvar == nullptr) throw std::bad_variant_access();
-	if (pvar->vt != VTYPE_PWSTR) throw std::bad_typeid();
+	if (pvar->vt != VTYPE_PWSTR) throw error(VTYPE_PWSTR);
 	return reinterpret_cast<char16_t*>(pvar->pwstrVal);
 }
 
-AddInNative::VarinantHelper::operator int32_t() const
+AddInNative::VarinantHelper::operator int64_t() const
 {
 	if (pvar == nullptr) throw std::bad_variant_access();
-	if (TV_VT(pvar) != VTYPE_I4) throw std::bad_typeid();
 	switch (TV_VT(pvar)) {
 	case VTYPE_I2:
 	case VTYPE_I4:
 	case VTYPE_UI1:
 	case VTYPE_ERROR:
-		return pvar->lVal;
+		return (int64_t)pvar->lVal;
+	case VTYPE_R4:
+	case VTYPE_R8:
+		return (int64_t)pvar->dblVal;
 	default:
-		throw std::bad_typeid();
+		throw error(VTYPE_I4);
+	}
+}
+
+AddInNative::VarinantHelper::operator int() const
+{
+	if (pvar == nullptr) throw std::bad_variant_access();
+	switch (TV_VT(pvar)) {
+	case VTYPE_I2:
+	case VTYPE_I4:
+	case VTYPE_UI1:
+	case VTYPE_ERROR:
+		return (int)pvar->lVal;
+	case VTYPE_R4:
+	case VTYPE_R8:
+		return (int)pvar->dblVal;
+	default:
+		throw error(VTYPE_I4);
 	}
 }
 
@@ -609,19 +693,33 @@ AddInNative::VarinantHelper::operator double() const
 {
 	if (pvar == nullptr) throw std::bad_variant_access();
 	switch (TV_VT(pvar)) {
+	case VTYPE_I2:
+	case VTYPE_I4:
+	case VTYPE_UI1:
+	case VTYPE_ERROR:
+		return (double)pvar->lVal;
 	case VTYPE_R4:
 	case VTYPE_R8:
-		return pvar->dblVal;
+		return (double)pvar->dblVal;
 	default:
-		throw std::bad_typeid();
+		throw error(VTYPE_R4);
 	}
 }
 
 AddInNative::VarinantHelper::operator bool() const
 {
 	if (pvar == nullptr) throw std::bad_variant_access();
-	if (TV_VT(pvar) != VTYPE_BOOL) throw std::bad_typeid();
-	return TV_BOOL(pvar);
+	switch (TV_VT(pvar)) {
+	case VTYPE_BOOL:
+		return TV_BOOL(pvar);
+	case VTYPE_I2:
+	case VTYPE_I4:
+	case VTYPE_UI1:
+	case VTYPE_ERROR:
+		return (bool)pvar->lVal;
+	default:
+		throw error(VTYPE_BOOL);
+	}
 }
 
 void AddInNative::VarinantHelper::AllocMemory(unsigned long size)

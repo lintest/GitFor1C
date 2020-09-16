@@ -1,5 +1,4 @@
 #include "FileFinder.h"
-#include "json.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -25,14 +24,13 @@ bool FileFinder::search(const std::wstring& path)
 {
 	std::wifstream wif(path);
 	wif.imbue(std::locale(std::locale(), new std::codecvt_utf8<wchar_t>));
-
 	const size_t text_len = m_text.length();
 	const size_t buf_size = 8192;
 	wchar_t buf[buf_size];
 	size_t offset = 0;
 	while (true) {
 		wif.read(buf + offset, buf_size - offset);
-		unsigned read = wif.gcount();
+		auto read = wif.gcount();
 		if (read == 0) return false;
 		wchar_t* end = buf + offset + read;
 		if (m_ignoreCase) std::use_facet<std::ctype<wchar_t> >(std::locale()).tolower(buf + offset, end);
@@ -109,27 +107,12 @@ std::wstring FileFinder::find(const std::wstring& path, const std::wstring& mask
 	return MB2WC(m_json.dump());
 }
 
-#else
+#else //_WINDOWS
 
-void FileFinder::dirs(const std::wstring& root, const std::wstring& mask) {}
-
-void FileFinder::files(const std::wstring& root, const std::wstring& mask) {}
-
-bool FileFinder::search(const std::wstring& path) {}
-
-std::wstring FileFinder::find(const std::wstring& path, const std::wstring& mask)
-{
-	return {};
-}
-
-#endif //_WINDOWS
-
-#ifdef XXXXX
+#ifdef USE_BOOST
 
 #include <boost/regex.hpp>
 #include <boost/filesystem.hpp>
-
-#include <boost/regex.hpp>
 #include <boost/algorithm/string/replace.hpp>
 
 static void EscapeRegex(std::wstring& regex)
@@ -194,5 +177,14 @@ std::wstring FileFinder::find(const std::wstring& path, const std::wstring& mask
 	dirs(path, L"^" + regex + L"$");
 	return MB2WC(m_json.dump());
 }
+
+#else //USE_BOOST
+
+std::wstring FileFinder::find(const std::wstring& path, const std::wstring& mask) { return {}; }
+void FileFinder::dirs(const std::wstring& root, const std::wstring& mask) {}
+void FileFinder::files(const std::wstring& root, const std::wstring& mask) {} 
+bool FileFinder::search(const std::wstring& path) { return false; }
+
+#endif //USE_BOOST
 
 #endif //_WINDOWS

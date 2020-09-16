@@ -1,9 +1,18 @@
 #ifndef __CLIPMNGR_H__
 #define __CLIPMNGR_H__
 
+#ifdef USE_LIBGIT2
+
 #include "stdafx.h"
 #include "AddInNative.h"
 #include <git2.h> 
+
+struct GitCredential {
+	std::string username;
+	std::string password;
+	std::string privkey;
+	std::string pubkey;
+};
 
 class GitManager : public AddInNative {
 
@@ -23,6 +32,7 @@ class GitManager : public AddInNative {
 	};
 
 private:
+	GitCredential m_credential;
 	git_repository* m_repo = nullptr;
 	Signature* m_author = nullptr;
 	Signature* m_committer = nullptr;
@@ -36,13 +46,11 @@ public:
 	virtual ~GitManager();
 
 private:
-	bool close();
 	void setAuthor(const std::string& name, const std::string& email);
 	void setCommitter(const std::string& name, const std::string& email);
-	long getEncoding(VH blob);
 	bool isBinary(VH blob, VH encoding);
 	void blob(VH id, VH encoding);
-	std::wstring getFullpath(const std::wstring& path);
+	int64_t getEncoding(VH blob);
 	std::string init(const std::string& path);
 	std::string clone(const std::string& url, const std::string& path);
 	std::string info(const std::string& msg);
@@ -58,7 +66,7 @@ private:
 	std::string commit(const std::string& msg);
 	std::string history(const std::string& msg);
 	std::string compare(const std::string& ref1, const std::string& ref2);
-	std::string diff(const std::u16string s1, const std::u16string& s2);
+	std::string diff(const std::u16string &s1, const std::u16string& s2);
 	std::string file(const std::string& path, bool full);
 	std::string tree(const std::string& id);
 	std::string branchList();
@@ -66,6 +74,9 @@ private:
 	std::string signature();
 	std::string status();
 	std::string head();
+	std::string close();
 };
+
+#endif //USE_LIBGIT2
 
 #endif //__CLIPMNGR_H__

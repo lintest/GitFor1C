@@ -6,7 +6,11 @@
 /build32Win
 /build64Lin
 /build32Lin
+/build64
+/build32
 /build
+/bin64
+/bin32
 /bin
 /.vc
 /.vs
