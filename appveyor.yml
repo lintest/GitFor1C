@@ -10,10 +10,6 @@ branches:
 skip_branch_with_pr: true
 
 environment:
-  global:
-    KEY_1CV8T:
-      secure: OolAVEKkEg1cGCpG/VK2FaM0LWrPgMR/Kn4nTLYyKR0=
-
   matrix:
     - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu1804
       job_name: Linux
@@ -55,7 +51,7 @@ init:
 
 build_script:
   - sh: echo "#define VERSION_FULL " ${APPVEYOR_BUILD_VERSION} > "version.h"
-  - cmd: Powershell.exe -File manifest.ps1
+  - cmd: powershell -File manifest.ps1
 
   - mkdir build32
   - cd build32
@@ -90,8 +86,9 @@ for:
     after_build:
       - copy bin32\Release\lib%APPVEYOR_PROJECT_NAME%Win32.dll .
       - copy bin64\Release\lib%APPVEYOR_PROJECT_NAME%Win64.dll .
-      - Powershell.exe -File appveyor.ps1
+      - powershell -File appveyor.ps1
       - appveyor PushArtifact AddIn.zip
+      - powershell -File lib\packages.ps1
       - mkdir database
       - bin\1cv8t.exe CREATEINFOBASE File=%CD%/database
       - bin\1cv8t.exe DESIGNER /F %CD%/database /LoadExternalDataProcessorOrReportFromFiles Example.xml %APPVEYOR_PROJECT_NAME%.epf /Out example.log
@@ -101,6 +98,10 @@ for:
       - path: ${APPVEYOR_PROJECT_NAME}.epf
       - path: autotest.log
       - path: example.log
+
+    environment:
+      KEY_1CV8T:
+        secure: OolAVEKkEg1cGCpG/VK2FaM0LWrPgMR/Kn4nTLYyKR0=
 
     deploy:
       - provider: GitHub

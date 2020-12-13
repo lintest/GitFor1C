@@ -21,6 +21,7 @@
 /Example/Templates/VAEditor/Ext/Template.bin
 AddIn.zip
 XxCompile.bat
+*.tmp
 *.epf
 *.o
 *.d

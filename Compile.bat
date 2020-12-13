@@ -22,12 +22,10 @@ cd ..
 
 oscript .\tools\MakePack.os
 
-mkdir .\Example\Templates\VAEditor
-mkdir .\Example\Templates\VAEditor\Ext
-copy /b ..\VAEditor\example\VanessaEditorSample\Templates\VanessaEditor\Ext\Template.bin .\Example\Templates\VAEditor\Ext\Template.bin
-
 mkdir .\Example\Templates\GitFor1C
 mkdir .\Example\Templates\GitFor1C\Ext
 copy /b .\AddIn.zip .\Example\Templates\GitFor1C\Ext\Template.bin
+
+oscript .\lib\packages.os download
 
 oscript .\tools\Compile.os .\
