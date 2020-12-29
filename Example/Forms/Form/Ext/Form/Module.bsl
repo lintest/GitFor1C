@@ -423,7 +423,7 @@ Procedure SetEditorContent(Content, FileName, Title, ReadOnly)
 	
 	File = New File(Title);
 	VanessaTabs = Items.Editor.Document.defaultView.VanessaTabs;
-	VanessaTabs.edit(Content, FileName, FileName, File.Name, 0, ReadOnly);
+	VanessaTabs.edit(Content, FileName, FileName, File.Name, 0, ReadOnly, False);
 	
 EndProcedure
 
@@ -436,11 +436,13 @@ Procedure VanessaEditorOnReceiveEventHandler(Event, Data)
 		SaveEditorFile(Data);
 		Data.model.resetModified();
 	ElsIf Event = "ON_TAB_CLOSING" Then
-		NotifyDescription = New NotifyDescription("BeforeTabClosing", ThisForm, Data);
-		MessageText = "Do you want to save the changes you made to file?
-			|
-			|Filename: " + Data.title;
-		ShowQueryBox(NotifyDescription, MessageText, QuestionDialogMode.YesNoCancel, 10);
+		If Data.modified Then 
+			NotifyDescription = New NotifyDescription("BeforeTabClosing", ThisForm, Data);
+			MessageText = "Do you want to save the changes you made to file?
+				|
+				|Filename: " + Data.title;
+			ShowQueryBox(NotifyDescription, MessageText, QuestionDialogMode.YesNoCancel, 10);
+		EndIf;
 	EndIf;
 	
 EndProcedure
@@ -898,7 +900,7 @@ Procedure EndReadingDiff(ResultCall, ParametersCall, AdditionalParameters) Expor
 	old_path = "blob:" + RowData.old_id;
 	new_path = ?(IsBlankString(RowData.new_id), Repository + new_name, "blob:" + RowData.new_id);
 	VanessaTabs = Items.Editor.Document.defaultView.VanessaTabs;
-	DiffEditor = VanessaTabs.diff(old_text, old_name, old_path, new_text, new_name, new_path, File.Name, ReadOnly, Encoding, ReadOnly);
+	DiffEditor = VanessaTabs.diff(old_text, old_name, old_path, new_text, new_name, new_path, File.Name, ReadOnly, Encoding, False);
 	
 EndProcedure
 
