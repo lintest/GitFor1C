@@ -37,7 +37,9 @@ install:
   - cd ..
 
   - sh: sudo dpkg --add-architecture i386
-  - sudo apt -qq update
+  - sudo apt -qq update 
+      --allow-unauthenticated
+      --fix-missing
   - sh: sudo apt -qq -y install 
       --allow-unauthenticated
       --fix-missing
