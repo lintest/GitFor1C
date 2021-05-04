@@ -11,7 +11,7 @@ skip_branch_with_pr: true
 
 environment:
   matrix:
-    - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu1804
+    - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu2004
       job_name: Linux
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
       job_depends_on: Linux
@@ -37,6 +37,7 @@ install:
   - cd ..
 
   - sh: sudo dpkg --add-architecture i386
+  - sudo apt -qq update
   - sh: sudo apt -qq -y install 
       --allow-unauthenticated
       --fix-missing
