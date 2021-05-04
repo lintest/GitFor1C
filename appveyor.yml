@@ -37,8 +37,10 @@ install:
   - cd ..
 
   - sh: sudo dpkg --add-architecture i386
-  - sh: sudo apt -qq update
-  - sh: sudo apt -qq -y install
+  - sh: sudo apt -qq update 
+      --allow-unauthenticated
+  - sh: sudo apt -qq -y install 
+      --allow-unauthenticated
       uuid-dev uuid-dev:i386
       libz-dev libz-dev:i386
       libssl-dev libssl-dev:i386
