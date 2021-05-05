@@ -11,8 +11,6 @@ skip_branch_with_pr: true
 
 environment:
   matrix:
-    - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu2004
-      job_name: Linux
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
       job_depends_on: Linux
       job_name: Windows
@@ -72,17 +70,6 @@ build_script:
   - cd ..
 
 for:
-  - matrix:
-      only:
-        - job_name: Linux
-
-    after_build:
-      - 7z a AddIn.zip ./bin32/lib${APPVEYOR_PROJECT_NAME}Lin32.so
-      - 7z a AddIn.zip ./bin64/lib${APPVEYOR_PROJECT_NAME}Lin64.so
-
-    artifacts:
-      - path: AddIn.zip
-
   - matrix:
       only:
         - job_name: Windows
