@@ -606,23 +606,6 @@ int diff_hunk_cb(const git_diff_delta* delta, const git_diff_hunk* hunk, void* p
 	return 0;
 }
 
-#ifdef _WINDOWS
-
-#include <Wincrypt.h>
-#pragma comment (lib, "Crypt32.lib")
-
-std::string ToBase64Crypto(const std::string &src)
-{
-	DWORD nLenOut = 0;
-	DWORD dwFlags = CRYPT_STRING_BASE64 | CRYPT_STRING_NOCRLF;
-	CryptBinaryToStringA((const BYTE*)src.c_str(), (DWORD)src.size(), dwFlags, NULL, &nLenOut);
-	std::string buff(nLenOut, 0);
-	CryptBinaryToStringA((const BYTE*)src.c_str(), (DWORD)src.size(), dwFlags, buff.data(), &nLenOut);
-	return buff;
-}
-
-#endif//_WINDOWS
-
 int diff_line_cb(const git_diff_delta* delta, const git_diff_hunk* hunk, const git_diff_line* line, void* payload)
 {
 	JSON j, &json = *(JSON*)payload;
@@ -632,11 +615,6 @@ int diff_line_cb(const git_diff_delta* delta, const git_diff_hunk* hunk, const g
 	j["num_lines"] = line->new_lineno;
 	j["content_len"] = line->content_len;
 	j["content_offset"] = line->content_offset;
-#ifdef _WINDOWS
-	j["content"] = ToBase64Crypto(line->content);
-#else	
-	j["content"] = line->content;
-#endif//_WINDOWS
 	json["line"].push_back(j);
 	return 0;
 }
